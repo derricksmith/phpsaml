@@ -113,7 +113,6 @@ function plugin_init_phpsaml()
 
    //Redirect code
    $PLUGIN_HOOKS['redirect_page']['phpsaml'] = 'phpsaml.form.php';
-
 }
 
 function plugin_post_init_phpsaml()
@@ -152,4 +151,5 @@ function plugin_post_init_phpsaml()
 			}		
 		}
 	}
+	
 }
