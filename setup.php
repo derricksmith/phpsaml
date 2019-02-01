@@ -120,7 +120,6 @@ function plugin_post_init_phpsaml()
 	$phpsamlConfig = new PluginPhpsamlConfig();
 	$config = $phpsamlConfig->getConfig();
 	
-	PluginPhpsamlPhpsaml::init($config);
 	if (strpos($_SERVER['REQUEST_URI'], 'front/cron.php')){
 		return;
 	}
@@ -140,13 +139,13 @@ function plugin_post_init_phpsaml()
 	}
 
 	if (!empty($config['saml_idp_entity_id']) && !empty($config['saml_idp_single_sign_on_service']) && !empty($config['saml_idp_certificate'])){
-		
+		PluginPhpsamlPhpsaml::init($config);
 		if (!PluginPhpsamlPhpsaml::isUserAuthenticated()) {
 			PluginPhpsamlPhpsaml::ssoRequest();
 		} else {
 			if (strpos($_SERVER['REQUEST_URI'], 'logout.php')){
 				if (empty($config['saml_idp_single_logout_service'])){
-					Html::redirect($CFG_GLPI['root_doc'] . '/logout.php')
+					PluginPhpsamlPhpsaml::glpiLogout();
 				} else {
 					PluginPhpsamlPhpsaml::sloRequest();
 				}

@@ -80,7 +80,7 @@ class PluginPhpsamlPhpsaml
 	
 	static public function ssoRequest()
 	{
-		//$auth = new OneLogin\Saml2\Auth();
+
 		try {
 			self::$auth->login();
 		} catch (Exception $e) {
@@ -108,7 +108,6 @@ class PluginPhpsamlPhpsaml
 
 		self::glpiLogout();
 		
-		//$auth = new OneLogin\Saml2\Auth();
 		try {
 			self::$auth->logout($returnTo, $parameters, $nameId, $sessionIndex, false, $nameIdFormat);
 		} catch (Exception $e) {
