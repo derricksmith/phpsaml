@@ -63,7 +63,7 @@ function plugin_phpsaml_install() {
       $DB->query($query) or die("error creating glpi_plugin_phpsaml_configs ". $DB->error());
 	  
 	  $query = "INSERT INTO `glpi_plugin_phpsaml_configs`
-                     (`id`, `strict`, `degub`, `saml_idp_entity_id`, `saml_sp_certificate`, `saml_sp_certificate_key`, `saml_idp_single_sign_on_service`, `saml_idp_single_logout_service`, `saml_idp_certificate`)
+                     (`id`, `strict`, `debug`, `saml_idp_entity_id`, `saml_sp_certificate`, `saml_sp_certificate_key`, `saml_idp_single_sign_on_service`, `saml_idp_single_logout_service`, `saml_idp_certificate`)
                 VALUES
                      ('1', '', '', '', '', '', '', '', '')";
       $DB->query($query) or die("error populate glpi_plugin_phpsaml_configs ". $DB->error());
