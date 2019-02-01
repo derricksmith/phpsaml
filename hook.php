@@ -48,7 +48,7 @@ function plugin_phpsaml_install() {
 	global $DB;
 
 	if (!$DB->tableExists("glpi_plugin_phpsaml_configs")) {
-      		$query = "CREATE TABLE `glpi_plugin_phpsaml_configs` (
+      	$query = "CREATE TABLE `glpi_plugin_phpsaml_configs` (
 			`id` int(11) NOT NULL auto_increment,
 			`strict` int(2) NOT NULL,
 			`debug` int(2) NOT NULL,
@@ -58,15 +58,15 @@ function plugin_phpsaml_install() {
 			`saml_idp_single_sign_on_service` varchar(128) collate utf8_unicode_ci NOT NULL,
 			`saml_idp_single_logout_service` varchar(128) collate utf8_unicode_ci NOT NULL,
 			`saml_idp_certificate` text collate utf8_unicode_ci NOT NULL,
-                  	PRIMARY KEY  (`id`)
-               ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
-      $DB->query($query) or die("error creating glpi_plugin_phpsaml_configs ". $DB->error());
+            PRIMARY KEY  (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
+		$DB->query($query) or die("error creating glpi_plugin_phpsaml_configs ". $DB->error());
 	  
-	  $query = "INSERT INTO `glpi_plugin_phpsaml_configs`
-                     (`id`, `strict`, `debug`, `saml_idp_entity_id`, `saml_sp_certificate`, `saml_sp_certificate_key`, `saml_idp_single_sign_on_service`, `saml_idp_single_logout_service`, `saml_idp_certificate`)
-                VALUES
-                     ('1', '', '', '', '', '', '', '', '')";
-      $DB->query($query) or die("error populate glpi_plugin_phpsaml_configs ". $DB->error());
+		$query = "INSERT INTO `glpi_plugin_phpsaml_configs`
+            (`id`, `strict`, `debug`, `saml_idp_entity_id`, `saml_sp_certificate`, `saml_sp_certificate_key`, `saml_idp_single_sign_on_service`, `saml_idp_single_logout_service`, `saml_idp_certificate`)
+            VALUES
+            ('1', '', '', '', '', '', '', '', '')";
+		$DB->query($query) or die("error populate glpi_plugin_phpsaml_configs ". $DB->error());
 	}
 	return true;
 }
