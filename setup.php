@@ -82,8 +82,8 @@ function plugin_phpsaml_check_prerequisites()
  */
 function plugin_phpsaml_check_config($verbose = false)
 {
-    if (true) { // Your configuration check
-       return true;
+    if (!empty($config['saml_idp_entity_id']) && !empty($config['saml_idp_single_sign_on_service']) && !empty($config['saml_idp_certificate'])){ // Your configuration check
+       echo 'Installed / not configured';
     }
 
     if ($verbose) {
@@ -139,15 +139,17 @@ function plugin_post_init_phpsaml()
 		return;
 	}
 
-	if (!empty($config['saml_sp_certificate']) && !empty($config['saml_sp_certificate_key']) && !empty($config['saml_idp_entity_id']) && !empty($config['saml_idp_single_sign_on_service']) && !empty($config['saml_idp_single_logout_service']) && !empty($config['saml_idp_certificate'])){
-		
-		
+	if (!empty($config['saml_idp_entity_id']) && !empty($config['saml_idp_single_sign_on_service']) && !empty($config['saml_idp_certificate'])){
 		
 		if (!PluginPhpsamlPhpsaml::isUserAuthenticated()) {
 			PluginPhpsamlPhpsaml::ssoRequest();
 		} else {
 			if (strpos($_SERVER['REQUEST_URI'], 'logout.php')){
-				PluginPhpsamlPhpsaml::sloRequest();
+				if (empty($config['saml_idp_single_logout_service'])){
+					Html::redirect($CFG_GLPI['root_doc'] . '/logout.php')
+				} else {
+					PluginPhpsamlPhpsaml::sloRequest();
+				}
 			}		
 		}
 	}
