@@ -117,7 +117,10 @@ function plugin_init_phpsaml()
 
 function plugin_post_init_phpsaml()
 {
-	PluginPhpsamlPhpsaml::init();
+	$phpsamlConfig = new PluginPhpsamlConfig();
+	$config = $phpsamlConfig->getConfig();
+	
+	PluginPhpsamlPhpsaml::init($config);
 	if (strpos($_SERVER['REQUEST_URI'], 'front/cron.php')){
 		return;
 	}
@@ -135,9 +138,6 @@ function plugin_post_init_phpsaml()
 		syslog(LOG_WARNING, "Fusion Inventory: $access {$_SERVER['REMOTE_ADDR']} ({$_SERVER['HTTP_USER_AGENT']})");
 		return;
 	}
-	
-	$phpsamlConfig = new PluginPhpsamlConfig();
-	$config = $phpsamlConfig->getConfig();
 
 	if (!empty($config['saml_sp_certificate']) && !empty($config['saml_sp_certificate_key']) && !empty($config['saml_idp_entity_id']) && !empty($config['saml_idp_single_sign_on_service']) && !empty($config['saml_idp_single_logout_service']) && !empty($config['saml_idp_certificate'])){
 		

@@ -26,15 +26,17 @@ class PluginPhpsamlPhpsaml
 		require_once('libs.php');
 	}
 	
-	public static function init() 
+	public static function init($config) 
 	{
 		if (!self::$init) {
-			require_once('libs.php');
-			require_once(GLPI_ROOT .'/plugins/phpsaml/lib/php-saml/settings.php');
-			//$samlSettings = new OneLogin\Saml2\Settings($phpsamlsettings);
-			self::$phpsamlsettings = $phpsamlsettings;
-			self::$auth = new OneLogin\Saml2\Auth(self::$phpsamlsettings);
-			self::$init = true; 
+			if (!empty($config['saml_sp_certificate']) && !empty($config['saml_sp_certificate_key']) && !empty($config['saml_idp_entity_id']) && !empty($config['saml_idp_single_sign_on_service']) && !empty($config['saml_idp_single_logout_service']) && !empty($config['saml_idp_certificate'])){
+				require_once('libs.php');
+				require_once(GLPI_ROOT .'/plugins/phpsaml/lib/php-saml/settings.php');
+				//$samlSettings = new OneLogin\Saml2\Settings($phpsamlsettings);
+				self::$phpsamlsettings = $phpsamlsettings;
+				self::$auth = new OneLogin\Saml2\Auth(self::$phpsamlsettings);
+				self::$init = true; 
+			}
 		}
 	}
 	
