@@ -82,8 +82,8 @@ function plugin_phpsaml_check_prerequisites()
  */
 function plugin_phpsaml_check_config($verbose = false)
 {
-    if (!empty($config['saml_idp_entity_id']) && !empty($config['saml_idp_single_sign_on_service']) && !empty($config['saml_idp_certificate'])){ // Your configuration check
-       echo 'Installed / not configured';
+    if (true) { // Your configuration check
+       return true;
     }
 
     if ($verbose) {
@@ -101,18 +101,24 @@ function plugin_phpsaml_check_config($verbose = false)
 function plugin_init_phpsaml()
 {
     global $PLUGIN_HOOKS;
-    $PLUGIN_HOOKS['post_init']['phpsaml'] = 'plugin_post_init_phpsaml';
+
     $PLUGIN_HOOKS['csrf_compliant']['phpsaml'] = true;
 	
 	Plugin::registerClass('PluginPhpsaml');
 	
-	// Config page
-   if (Session::haveRight('config', UPDATE)) {
-      $PLUGIN_HOOKS['config_page']['phpsaml'] = 'front/config.php';
-   }
+	if (Session::getLoginUserID()) {
+		$plugin = new Plugin();
+		if ($plugin->isActivated("phpsaml")) {
+			if (Session::haveRight('config', UPDATE)) {
+				// Config page
+				$PLUGIN_HOOKS['config_page']['phpsaml'] = 'front/config.php';
+				//Redirect code
+				$PLUGIN_HOOKS['redirect_page']['phpsaml'] = 'phpsaml.form.php';
+			}
+		}
+	}
 
-   //Redirect code
-   $PLUGIN_HOOKS['redirect_page']['phpsaml'] = 'phpsaml.form.php';
+	$PLUGIN_HOOKS['post_init']['phpsaml'] = 'plugin_post_init_phpsaml';
 }
 
 function plugin_post_init_phpsaml()
@@ -120,35 +126,29 @@ function plugin_post_init_phpsaml()
 	$phpsamlConfig = new PluginPhpsamlConfig();
 	$config = $phpsamlConfig->getConfig();
 	
-	if (strpos($_SERVER['REQUEST_URI'], 'front/cron.php')){
-		return;
-	}
-	
-	if (strpos($_SERVER['REQUEST_URI'], 'apirest.php')){
-		return;
-	}
-	
-	if (strpos($_SERVER['REQUEST_URI'], 'front/acs.php')){
-		return;
-	}
-
-	if (class_exists('PluginFusioninventoryCommunication') && strpos($_SERVER['REQUEST_URI'], '/plugins/fusioninventory/') !== false && strpos($_SERVER['HTTP_USER_AGENT'], 'FusionInventory-Agent_') !== false){
-		$access = date("Y/m/d H:i:s");
-		syslog(LOG_WARNING, "Fusion Inventory: $access {$_SERVER['REMOTE_ADDR']} ({$_SERVER['HTTP_USER_AGENT']})");
-		return;
-	}
-
 	if (!empty($config['saml_idp_entity_id']) && !empty($config['saml_idp_single_sign_on_service']) && !empty($config['saml_idp_certificate'])){
-		PluginPhpsamlPhpsaml::init($config);
-		if (!PluginPhpsamlPhpsaml::isUserAuthenticated()) {
-			PluginPhpsamlPhpsaml::ssoRequest();
+		$phpsaml = new PluginPhpsamlPhpsaml();
+		if (strpos($_SERVER['REQUEST_URI'], 'front/cron.php')){
+			return;
+		}
+		
+		if (strpos($_SERVER['REQUEST_URI'], 'apirest.php')){
+			return;
+		}
+		
+		if (strpos($_SERVER['REQUEST_URI'], 'front/acs.php')){
+			return;
+		}
+
+		if (class_exists('PluginFusioninventoryCommunication') && strpos($_SERVER['REQUEST_URI'], '/plugins/fusioninventory/') !== false && strpos($_SERVER['HTTP_USER_AGENT'], 'FusionInventory-Agent_') !== false){
+			return;
+		}
+		
+		if (!$phpsaml::isUserAuthenticated()) {
+			$phpsaml::ssoRequest();
 		} else {
 			if (strpos($_SERVER['REQUEST_URI'], 'logout.php')){
-				if (empty($config['saml_idp_single_logout_service'])){
-					PluginPhpsamlPhpsaml::glpiLogout();
-				} else {
-					PluginPhpsamlPhpsaml::sloRequest();
-				}
+				$phpsaml::sloRequest();
 			}		
 		}
 	}

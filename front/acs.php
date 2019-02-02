@@ -13,7 +13,6 @@ include (GLPI_ROOT.'/inc/includes.php');
 
 try {
     if (isset($post['SAMLResponse'])) {
-		print_r($phpsamlsettings);
         $samlSettings = new OneLogin\Saml2\Settings(PluginPhpsamlPhpsaml::$phpsamlsettings);
         $samlResponse = new OneLogin\Saml2\Response($samlSettings, $post['SAMLResponse']);
         if ($samlResponse->isValid()) {

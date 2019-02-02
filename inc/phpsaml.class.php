@@ -22,21 +22,18 @@ class PluginPhpsamlPhpsaml
      * Constructor
     **/
 	function __construct() {
-		
-		require_once('libs.php');
+		self::init();
 	}
 	
-	public static function init($config) 
+	public static function init() 
 	{
 		if (!self::$init) {
-			if (!empty($config['saml_idp_entity_id']) && !empty($config['saml_idp_single_sign_on_service']) && !empty($config['saml_idp_certificate'])){
-				require_once('libs.php');
-				require_once(GLPI_ROOT .'/plugins/phpsaml/lib/php-saml/settings.php');
-				//$samlSettings = new OneLogin\Saml2\Settings($phpsamlsettings);
-				self::$phpsamlsettings = $phpsamlsettings;
-				self::$auth = new OneLogin\Saml2\Auth(self::$phpsamlsettings);
-				self::$init = true; 
-			}
+			require_once('libs.php');
+			require_once(GLPI_ROOT .'/plugins/phpsaml/lib/php-saml/settings.php');
+		
+			self::$phpsamlsettings = $phpsamlsettings;
+			self::$auth = new OneLogin\Saml2\Auth(self::$phpsamlsettings);
+			self::$init = true; 
 		}
 	}
 	
@@ -61,30 +58,35 @@ class PluginPhpsamlPhpsaml
 			Session::init($auth);
 			self::redirectToMainPage($relayState);
 		}
-		throw new Exception('User not found.');
+		$error = "User not found.";
+		Toolbox::logInFile("php-errors", $error . "\n", true);
+		throw new Exception($error);
     }
 	
 	static public function glpiLogout()
 	{
+		$valid_id = $_SESSION['valid_id'];
+		$cookie_key = array_search($valid_id, $_COOKIE);
+		
 		Session::destroy();
-
+		
 		//Remove cookie to allow new login
-		$cookie_name = session_name() . '_rememberme';
 		$cookie_path = ini_get('session.cookie_path');
-
-		if (isset($_COOKIE[$cookie_name])) {
-		   setcookie($cookie_name, '', time() - 3600, $cookie_path);
-		   unset($_COOKIE[$cookie_name]);
+		
+		if (isset($_COOKIE[$cookie_key])) {
+		   setcookie($cookie_key, '', time() - 3600, $cookie_path);
+		   unset($_COOKIE[$cookie_key]);
 		}
 	}
 	
 	static public function ssoRequest()
 	{
-
 		try {
 			self::$auth->login();
 		} catch (Exception $e) {
-			echo 'Caught Exception: ', $e->getMessage(), "\n";
+			$error = $e->getMessage();
+			Toolbox::logInFile("php-errors", $error . "\n", true);
+			echo 'Caught Exception: ', $error, "\n";
 		}
 	}
 	
@@ -107,12 +109,18 @@ class PluginPhpsamlPhpsaml
 		}
 
 		self::glpiLogout();
-		
-		try {
-			self::$auth->logout($returnTo, $parameters, $nameId, $sessionIndex, false, $nameIdFormat);
-		} catch (Exception $e) {
-			echo 'Caught Exception: ', $e->getMessage(), "\n";
+
+		if (!empty(self::$phpsamlsettings['idp']['singleLogoutService'])){
+			try {
+				self::$auth->logout($returnTo, $parameters, $nameId, $sessionIndex, false, $nameIdFormat);
+			} catch (Exception $e) {
+				$error = $e->getMessage();
+				Toolbox::logInFile("php-errors", $error . "\n", true);
+				echo 'Caught Exception: ', $error, "\n";
+			}
 		}
+		
+		Html::redirect($CFG_GLPI["root_doc"]."/index.php");
 	}
 	
     static public function redirectToMainPage($relayState = null)

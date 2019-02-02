@@ -44,9 +44,13 @@ include ('../../../inc/includes.php');
 $phpsamlconf = new PluginPhpsamlConfig();
 
 if (isset($_POST["update"])) {
-   $phpsamlconf->update($_POST);
-   
-   Html::back();
+	$messages = $phpsamlconf->validate($_POST);
+	if(empty($messages['errors'])){
+		$phpsamlconf->update($_POST);
+	} 
+	$_SESSION['phpsaml_messages'] = $messages;
+	
+	Html::back();
 } else {
    Html::header(__('PHP SAML', 'phpsaml'), $_SERVER['PHP_SELF'], "config", "plugins");
    
