@@ -126,6 +126,10 @@ function plugin_post_init_phpsaml()
 	$phpsamlConfig = new PluginPhpsamlConfig();
 	$config = $phpsamlConfig->getConfig();
 	
+	if (strpos($_SERVER['REQUEST_URI'], 'front/logout.php')){
+		$_SESSION['noAUTO'] = 1;
+	}
+	
 	if (!empty($config['saml_idp_entity_id']) && !empty($config['saml_idp_single_sign_on_service']) && !empty($config['saml_idp_certificate'])){
 		$phpsaml = new PluginPhpsamlPhpsaml();
 		if (strpos($_SERVER['REQUEST_URI'], 'front/cron.php')){
@@ -144,12 +148,30 @@ function plugin_post_init_phpsaml()
 			return;
 		}
 		
-		if (!$phpsaml::isUserAuthenticated()) {
-			$phpsaml::ssoRequest();
-		} else {
-			if (strpos($_SERVER['REQUEST_URI'], 'logout.php')){
+		if (strpos($_SERVER['REQUEST_URI'], 'front/logout.php')){
+			if (!empty($config['saml_idp_single_logout_service'])){
 				$phpsaml::sloRequest();
-			}		
+			} 
+		}
+		
+		if (!$phpsaml::isUserAuthenticated()) {
+			if ($_GET['noAUTO'] == 1){
+				
+				//lets make sure the session is cleared.
+				$phpsaml::glpiLogout();
+				
+				$error = "You have logged out of GLPI but are still logged into your Identity Provider.  Select Log in Again to automatically log back into GLPI or close this window.  Configure the SAML setting in the PHPSAML plugin configuration to enable Single Logout.";
+				
+				// we have done at least a good login? No, we exit.
+				Html::nullHeader("Login", $CFG_GLPI["root_doc"] . '/index.php');
+				echo '<div class="center b">'.$error.'<br><br>';
+				// Logout whit noAUto to manage auto_login with errors
+				echo '<a href="' . $CFG_GLPI["root_doc"] .'/index.php">' .__('Log in again') . '</a></div>';
+				Html::nullFooter();
+				exit();
+			} else {
+				$phpsaml::ssoRequest();
+			}
 		}
 	}
 	

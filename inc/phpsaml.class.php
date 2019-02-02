@@ -58,9 +58,11 @@ class PluginPhpsamlPhpsaml
 			Session::init($auth);
 			self::redirectToMainPage($relayState);
 		}
+		
 		$error = "User not found.";
 		Toolbox::logInFile("php-errors", $error . "\n", true);
 		throw new Exception($error);
+		sloRequest();
     }
 	
 	static public function glpiLogout()
@@ -120,7 +122,6 @@ class PluginPhpsamlPhpsaml
 			}
 		}
 		
-		Html::redirect($CFG_GLPI["root_doc"]."/index.php");
 	}
 	
     static public function redirectToMainPage($relayState = null)
