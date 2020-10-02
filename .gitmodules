@@ -1,0 +1,3 @@
+[submodule "xmlseclibs"]
+	path = lib/xmlseclibs
+	url = https://github.com/robrichards/xmlseclibs
