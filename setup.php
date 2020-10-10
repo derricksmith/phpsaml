@@ -66,7 +66,7 @@ function plugin_version_phpsaml()
 function plugin_phpsaml_check_prerequisites()
 {
 
-    if (version_compare(GLPI_VERSION, '0.84', 'lt') || version_compare(GLPI_VERSION, '9.4', 'gt')) {
+    if (version_compare(GLPI_VERSION, '0.84', 'lt') || version_compare(GLPI_VERSION, '9.6', 'gt')) {
         echo "This plugin requires GLPI >= 0.84 and GLPI <= 9.4";
         return false;
     }
@@ -144,7 +144,7 @@ function plugin_post_init_phpsaml()
 			return;
 		}
 
-		if (class_exists('PluginFusioninventoryCommunication' && strpos($_SERVER['HTTP_USER_AGENT'], 'FusionInventory-Agent_')){ 
+		if (class_exists('PluginFusioninventoryCommunication') && strpos($_SERVER['HTTP_USER_AGENT'], 'FusionInventory-Agent_')){ 
 			if(strpos($_SERVER['REQUEST_URI'], '/plugins/fusioninventory/') || strpos($_SERVER['REQUEST_URI'], '\plugins\fusioninventory/')){
 				return;
 			}
