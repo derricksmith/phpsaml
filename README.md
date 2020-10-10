@@ -18,15 +18,15 @@ SAML is an XML-based standard for web browser single sign-on and is defined by t
 Enter settings on the Plugin Page
 ![GLPI Settings Page](https://derrick-smith.com/wp-content/uploads/2020/10/Settings.png)
 
-SP Certificate = Your webserver certificate
-SP Certificate Key = Your webserver certificate key
+* SP Certificate = Your webserver certificate
+* SP Certificate Key = Your webserver certificate key
 
 #### Azure AD
 1. Create a new enterprise application
 2. Enable SAML Authentication
 3. Configuration
-Entity ID = {Your GLPI web server base URL}
-Reply URL (Assertion Consumer Service URL) = {Your GLPI web server base URL}/front/acs.php
+* Entity ID = {Your GLPI web server base URL}
+* Reply URL (Assertion Consumer Service URL) = {Your GLPI web server base URL}/front/acs.php
 
 ##### Where to IdP settings required for GLPI?
 ![Azure AD Configuration](https://derrick-smith.com/wp-content/uploads/2020/10/Azure-Configuration.png)
