@@ -51,7 +51,7 @@ function plugin_version_phpsaml()
         'author' => 'Derrick Smith',
         'license' => 'GPLv2+',
         'homepage' => 'http://derrick-smith.com',
-        'minGlpiVersion' => '0.84'); // For compatibility / no install in version < 0.80
+        'minGlpiVersion' => '9.4'); // For compatibility / no install in version < 0.80
 }
 
 /**
@@ -66,8 +66,8 @@ function plugin_version_phpsaml()
 function plugin_phpsaml_check_prerequisites()
 {
 
-    if (version_compare(GLPI_VERSION, '0.84', 'lt') || version_compare(GLPI_VERSION, '9.6', 'gt')) {
-        echo "This plugin requires GLPI >= 0.84 and GLPI <= 9.4";
+    if (version_compare(GLPI_VERSION, '9.4', 'lt') || version_compare(GLPI_VERSION, '9.6', 'gt')) {
+        echo "This plugin requires GLPI >= 9.4 and GLPI <= 9.6";
         return false;
     }
 
