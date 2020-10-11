@@ -54,9 +54,11 @@ class PluginPhpsamlPhpsaml
 	static public function glpiLogin($relayState = null)
     {
         $auth = new PluginPhpsamlAuth();
+		
         if($auth->loadUserData(self::$nameid)->checkUserData()){
 			Session::init($auth);
 			self::redirectToMainPage($relayState);
+			return;
 		}
 		
 		$error = "User not found.";
