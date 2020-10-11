@@ -1,5 +1,4 @@
 <?php
-// Bypass csrf protection since we are not posting to glpi
 
 if (!defined('GLPI_ROOT')) {
     define('GLPI_ROOT', '../../..');
@@ -21,16 +20,16 @@ try {
 			PluginPhpsamlPhpsaml::$nameidformat = PluginPhpsamlPhpsaml::$auth->getNameIdFormat();
 			PluginPhpsamlPhpsaml::$sessionindex = PluginPhpsamlPhpsaml::$auth->getSessionIndex();
 			try {
-				PluginPhpsamlPhpsaml::glpiLogin($post['RelayState']);
+				PluginPhpsamlPhpsaml::glpiLogin((isset($post['RelayState']) && $post['RelayState'] != '' ? $post['RelayState'] : ''));
 			} catch(Exception $e) {
-				echo $e->getMessage();
+				Toolbox::logInFile("php-errors", $e->getMessage() . "\n", true);
 			}
         } else {
-            echo 'Invalid SAML Response';
+			Toolbox::logInFile("php-errors", 'Invalid SAML Response' . "\n", true);
         }
     } else {
-        echo 'No SAML Response found in POST.';
+		Toolbox::logInFile("php-errors", 'No SAML Response found in POST.' . "\n", true);
     }
 } catch (Exception $e) {
-    echo 'Invalid SAML Response: ' . $e->getMessage();
+	Toolbox::logInFile("php-errors", 'Invalid SAML Response: ' . $e->getMessage() . "\n", true);
 }
