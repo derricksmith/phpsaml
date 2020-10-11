@@ -1,6 +1,6 @@
 <?php
 global $CFG_GLPI;
-$glpiUrl = $CFG_GLPI['url_base'] . $CFG_GLPI['root_doc'];
+$glpiUrl = $CFG_GLPI['url_base'];
 
 $phpsamlconf = new PluginPhpsamlConfig();
 $config = $phpsamlconf->getConfig();

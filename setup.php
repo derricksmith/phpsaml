@@ -126,7 +126,7 @@ function plugin_post_init_phpsaml()
 	$phpsamlConfig = new PluginPhpsamlConfig();
 	$config = $phpsamlConfig->getConfig();
 	
-	if (strpos($_SERVER['REQUEST_URI'], 'front/logout.php')){
+	if (strpos($_SERVER['REQUEST_URI'], 'front/logout.php') || strpos($_SERVER['REQUEST_URI'], 'front\logout.php')){
 		$_SESSION['noAUTO'] = 1;
 	}
 	
@@ -157,7 +157,7 @@ function plugin_post_init_phpsaml()
 		}
 		
 		if (!$phpsaml::isUserAuthenticated()) {
-			if ($_GET['noAUTO'] == 1){
+			if (isset($_GET['noAUTO']) && $_GET['noAUTO'] == 1){
 				
 				//lets make sure the session is cleared.
 				$phpsaml::glpiLogout();
