@@ -126,7 +126,7 @@ function plugin_post_init_phpsaml()
 	$phpsamlConfig = new PluginPhpsamlConfig();
 	$config = $phpsamlConfig->getConfig();
 	
-	if (strpos($_SERVER['REQUEST_URI'], 'front/logout.php')){
+	if (strpos($_SERVER['REQUEST_URI'], 'front/logout.php') || strpos($_SERVER['REQUEST_URI'], 'front\logout.php')){
 		$_SESSION['noAUTO'] = 1;
 	}
 	
