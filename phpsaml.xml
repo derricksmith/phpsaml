@@ -12,7 +12,7 @@
       </long>
    </description>
    <homepage>https://github.com/derricksmith/phpsaml</homepage>
-   <download>https://github.com/derricksmith/phpsaml/archive/master.zip</download>
+   <download>https://github.com/derricksmith/phpsaml/archive/Version-1.0.0.zip</download>
    <authors>
       <author>Derrick Smith</author>
    </authors>
@@ -33,5 +33,8 @@
             <tag>Setup</tag>
          </en>
    </tags>
-   <screenshots/>
+   <screenshots>
+      <screenshot>https://derrick-smith.com/wp-content/uploads/2020/10/Settings.png</screenshot>
+      <screenshot>https://derrick-smith.com/wp-content/uploads/2020/10/Azure-Configuration.png</screenshot>
+   </screenshots>
 </root>
