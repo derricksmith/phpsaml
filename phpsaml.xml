@@ -12,7 +12,7 @@
       </long>
    </description>
    <homepage>https://github.com/derricksmith/phpsaml</homepage>
-   <download>https://github.com/derricksmith/phpsaml/archive/Version-1.0.0.zip</download>
+   <download>https://github.com/derricksmith/phpsaml/releases</download>
    <authors>
       <author>Derrick Smith</author>
    </authors>
@@ -22,6 +22,7 @@
          <compatibility>9.6</compatibility>
          <compatibility>9.5</compatibility>
          <compatibility>9.4</compatibility>
+         <download_url>https://github.com/derricksmith/phpsaml/archive/1.0.0.zip</download>
       </version>
    </versions>
    <langs>
