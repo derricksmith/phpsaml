@@ -22,7 +22,7 @@
          <compatibility>9.6</compatibility>
          <compatibility>9.5</compatibility>
          <compatibility>9.4</compatibility>
-         <download_url>https://github.com/derricksmith/phpsaml/archive/1.0.0.zip</download>
+         <download_url>https://github.com/derricksmith/phpsaml/archive/1.0.0.zip</download_url>
       </version>
    </versions>
    <langs>
