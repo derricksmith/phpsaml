@@ -26,7 +26,7 @@ Enter settings on the Plugin Page
 2. Enable SAML Authentication
 3. Configuration
 * Entity ID = {Your GLPI web server base URL}
-* Reply URL (Assertion Consumer Service URL) = {Your GLPI web server base URL}/front/acs.php
+* Reply URL (Assertion Consumer Service URL) = {Your GLPI web server base URL}/plugins/phpsaml/front/acs.php
 
 ##### Where to IdP settings required for GLPI?
 ![Azure AD Configuration](https://derrick-smith.com/wp-content/uploads/2020/10/Azure-Configuration.png)
