@@ -67,4 +67,9 @@ $phpsamlsettings = array (
         'x509cert' => (isset($config['saml_idp_certificate']) ? $config['saml_idp_certificate'] : ''),
         
     ),
+	
+	// Security Settings
+	'security' => array (
+        'requestedAuthnContext' => (isset($config['requested_authn_context']) && $config['requested_authn_context'] == 1 ? true : false)
+    )
 );
