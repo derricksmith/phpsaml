@@ -29,17 +29,21 @@ class PluginPhpsamlUpdate {
 		}
 	}
 	
-	public static function set_installed_version(){
+	public static function set_installed_version($version){
 		global $DB;
-		$query = "UPDATE `glpi_plugin_phpsaml_configs` SET version = '". PLUGIN_PHPSAML_VERSION ."' WHERE id = '1'";
-		$DB->query($query) or die("error set version ". $DB->error());
+		self::$installed_version = $version;
+		$query = "UPDATE `glpi_plugin_phpsaml_configs` SET version = '". $version ."' WHERE id = '1'";
+		$DB->query($query);
+		if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
 	}
 	
 	public static function do_upgrade(){	
-		if(self::$installed_version == '1.0.0'){
+		if(self::$installed_version <= '1.0.0'){
+			Toolbox::logInFile("php-errors", "Upgrading to 1.0.0" . "\n", true);
 			self::do_109();
 		}
 		if(self::$installed_version == '1.0.9'){
+			Toolbox::logInFile("php-errors", "Upgrading to 1.1.0"  . "\n", true);
 			self::do_110();
 		}
 	}
@@ -48,27 +52,32 @@ class PluginPhpsamlUpdate {
 		global $DB;
 		
 		$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD version VARCHAR(15) after id";
-		$DB->query($query) or die("error add version column 'version' ". $DB->error());
+		$DB->query($query);
+		if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
 			
 		$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD enforced int(2) after version";
-		$DB->query($query) or die("error add version column 'enforced' ". $DB->error());
+		$DB->query($query);
+		if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
 		
 		$query = "UPDATE `glpi_plugin_phpsaml_configs` SET enforced = '0' WHERE id = '1'";
-		$DB->query($query) or die("error set enforced = 0' ". $DB->error());
+		$DB->query($query);
+		if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
 		
-		self::set_installed_version();
+		self::set_installed_version("1.0.9");
 	}
 	
 	public static function do_110(){
 		global $DB;
 			
 		$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD requested_authn_context text after saml_idp_certificate";
-		$DB->query($query) or die("error add version column 'requested_authn_context' ". $DB->error());
+		$DB->query($query);
+		if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
 		
 		$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD requested_authn_context_comparison varchar(25) after requested_authn_context";
-		$DB->query($query) or die("error add version column 'requested_authn_context_comparison' ". $DB->error());
+		$DB->query($query);
+		if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
 		
-		self::set_installed_version();
+		self::set_installed_version("1.1.0");
 	}
 }
 ?>
