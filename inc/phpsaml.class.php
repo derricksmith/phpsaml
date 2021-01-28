@@ -29,7 +29,7 @@ class PluginPhpsamlPhpsaml
 	{
 		if (!self::$init) {
 			require_once('libs.php');
-			require_once(GLPI_ROOT .'/plugins/phpsaml/lib/php-saml/settings.php');
+			//require_once(GLPI_ROOT .'/plugins/phpsaml/lib/php-saml/settings.php');
 		
 			self::$phpsamlsettings = self::getSettings();
 			self::$auth = new OneLogin\Saml2\Auth(self::$phpsamlsettings);

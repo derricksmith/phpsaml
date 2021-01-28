@@ -136,7 +136,7 @@ function plugin_init_phpsaml()
 }
 
 function plugin_post_init_phpsaml(){
-	global $DB;
+	global $DB, $CFG_GLPI;
 	
 	$phpsamlConfig = new PluginPhpsamlConfig();
 	$config = $phpsamlConfig->getConfig();
@@ -193,6 +193,7 @@ function plugin_post_init_phpsaml(){
 			}
 		}
 	}
+	return;
 }
 
 function plugin_display_login(){
