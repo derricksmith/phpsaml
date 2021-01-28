@@ -146,7 +146,7 @@ function plugin_post_init_phpsaml(){
 	}
 	
 	//Added 1.1.0 - SSO enforcement and signin with SSO button on login page
-	if (isset($config['enforced']) && $config['enforced'] == 1){
+	if ((isset($_GET['SSO']) && $_GET['SSO'] == 1) || (isset($config['enforced']) && $config['enforced'] == 1)){
 		$phpsaml = new PluginPhpsamlPhpsaml();
 		
 		if (strpos($_SERVER['REQUEST_URI'], 'front/cron.php') || strpos($_SERVER['REQUEST_URI'], 'front\cron.php')){
