@@ -149,25 +149,25 @@ function plugin_post_init_phpsaml(){
 	if ((isset($_GET['SSO']) && $_GET['SSO'] == 1) || (isset($config['enforced']) && $config['enforced'] == 1)){
 		$phpsaml = new PluginPhpsamlPhpsaml();
 		
-		if (strpos($_SERVER['REQUEST_URI'], 'front/cron.php') || strpos($_SERVER['REQUEST_URI'], 'front\cron.php')){
+		if (strpos($_SERVER['REQUEST_URI'], 'front/cron.php') !== false || strpos($_SERVER['REQUEST_URI'], 'front\cron.php') !== false){
 			return;
 		}
 		
-		if (strpos($_SERVER['REQUEST_URI'], 'apirest.php')){
+		if (strpos($_SERVER['REQUEST_URI'], 'apirest.php') !== false){
 			return;
 		}
 		
-		if (strpos($_SERVER['REQUEST_URI'], 'front/acs.php') || strpos($_SERVER['REQUEST_URI'], 'front\acs.php')){
+		if (strpos($_SERVER['REQUEST_URI'], 'front/acs.php') !== false || strpos($_SERVER['REQUEST_URI'], 'front\acs.php') !== false){
 			return;
 		}
 
-		if (class_exists('PluginFusioninventoryCommunication') && strpos($_SERVER['HTTP_USER_AGENT'], 'FusionInventory-Agent_')){ 
-			if(strpos($_SERVER['REQUEST_URI'], '/plugins/fusioninventory/') || strpos($_SERVER['REQUEST_URI'], '\plugins\fusioninventory/')){
+		if (class_exists('PluginFusioninventoryCommunication') && strpos($_SERVER['HTTP_USER_AGENT'], 'FusionInventory-Agent_') !== false){ 
+			if(strpos($_SERVER['REQUEST_URI'], '/plugins/fusioninventory/') !== false || strpos($_SERVER['REQUEST_URI'], '\plugins\fusioninventory/') !== false){
 				return;
 			}
 		}
 		
-		if (strpos($_SERVER['REQUEST_URI'], 'front/logout.php') || strpos($_SERVER['REQUEST_URI'], 'front\logout.php')){
+		if (strpos($_SERVER['REQUEST_URI'], 'front/logout.php') !== false || strpos($_SERVER['REQUEST_URI'], 'front\logout.php') !== false){
 			if (!empty($config['saml_idp_single_logout_service'])){
 				$phpsaml::sloRequest();
 			} 
