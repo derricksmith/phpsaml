@@ -36,7 +36,9 @@
    ------------------------------------------------------------------------
  */
  
-define ("PLUGIN_PHPSAML_VERSION", "1.0.0");
+define ("PLUGIN_PHPSAML_VERSION", "1.1.0");
+define('PLUGIN_PHPSAML_DIR', __DIR__);
+define('PLUGIN_PHPSAML_BASEURL', GLPI_ROOT .'/plugins/phpsaml/');
 
 /**
  * Definition of the plugin version and its compatibility with the version of core
@@ -117,12 +119,25 @@ function plugin_init_phpsaml()
 			}
 		}
 	}
-
+	// Hook for Single Sign On
 	$PLUGIN_HOOKS['post_init']['phpsaml'] = 'plugin_post_init_phpsaml';
+	
+	// Hook login form - Display Single Sign On Button
+	$PLUGIN_HOOKS['display_login']['phpsaml'] = 'plugin_display_login';
+	
+	if (strpos($_SERVER['REQUEST_URI'], 'plugins/phpsaml/front/config.php') || strpos($_SERVER['REQUEST_URI'], 'plugins\phpsaml\front\config.php')){
+		// Load JS on config page
+		$PLUGIN_HOOKS['add_javascript']['phpsaml'][] = 'js/jquery.multi-select.js';
+		//$PLUGIN_HOOKS['add_javascript']['phpsaml'][] = 'js/phpsaml.js';
+		
+		// Load CSS on config page
+		$PLUGIN_HOOKS['add_css']['phpsaml'] = 'css/multi-select.css';
+	}
 }
 
-function plugin_post_init_phpsaml()
-{
+function plugin_post_init_phpsaml(){
+	global $DB;
+	
 	$phpsamlConfig = new PluginPhpsamlConfig();
 	$config = $phpsamlConfig->getConfig();
 	
@@ -130,8 +145,10 @@ function plugin_post_init_phpsaml()
 		$_SESSION['noAUTO'] = 1;
 	}
 	
-	if (!empty($config['saml_idp_entity_id']) && !empty($config['saml_idp_single_sign_on_service']) && !empty($config['saml_idp_certificate'])){
+	//Added 1.1.0 - SSO enforcement and signin with SSO button on login page
+	if (isset($config['enforced']) && $config['enforced'] == 1){
 		$phpsaml = new PluginPhpsamlPhpsaml();
+		
 		if (strpos($_SERVER['REQUEST_URI'], 'front/cron.php') || strpos($_SERVER['REQUEST_URI'], 'front\cron.php')){
 			return;
 		}
@@ -157,7 +174,7 @@ function plugin_post_init_phpsaml()
 		}
 		
 		if (!$phpsaml::isUserAuthenticated()) {
-			if (isset($_GET['noAUTO']) && $_GET['noAUTO'] == 1){
+			if ((isset($_GET['noAUTO']) && $_GET['noAUTO'] == 1) || (isset($_SESSION['noAUTO']) && $_SESSION['noAUTO'] == 1)){
 				
 				//lets make sure the session is cleared.
 				$phpsaml::glpiLogout();
@@ -176,5 +193,10 @@ function plugin_post_init_phpsaml()
 			}
 		}
 	}
-	
+}
+
+function plugin_display_login(){
+	?>
+	<input class="submit" value="Sign In with SSO" onclick="window.location.href='?SSO=1'" />
+	<?php
 }
