@@ -26,13 +26,14 @@ use OneLogin\Saml2\Response;
 
 $error = null;
 $phpsaml = new PluginPhpsamlPhpsaml();
-$settings = $phpsaml::$phpsamlsettings;
 		
 try {
     if (isset($post['SAMLResponse'])) {
+		$settings = $phpsaml::$phpsamlsettings;
         $samlSettings = new OneLogin\Saml2\Settings($settings);
         $samlResponse = new OneLogin\Saml2\Response($samlSettings, $post['SAMLResponse']);
         if ($samlResponse->isValid()) {
+			$phpsaml::auth();
 			$phpsaml::$nameid = $samlResponse->getNameId();
 			$phpsaml::$userdata = $samlResponse->getAttributes();
 			$phpsaml::$nameidformat = $phpsaml::$auth->getNameIdFormat();

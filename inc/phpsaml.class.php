@@ -32,10 +32,16 @@ class PluginPhpsamlPhpsaml
 			//require_once(GLPI_ROOT .'/plugins/phpsaml/lib/php-saml/settings.php');
 		
 			self::$phpsamlsettings = self::getSettings();
-			self::$auth = new OneLogin\Saml2\Auth(self::$phpsamlsettings);
 			self::$init = true; 
 		}
 	}
+	
+	public static function auth(){
+		if (!self::$auth){
+			self::$auth = new OneLogin\Saml2\Auth(self::$phpsamlsettings);
+		}
+	}
+
 	
     /**
      * @return bool
@@ -86,11 +92,19 @@ class PluginPhpsamlPhpsaml
 	static public function ssoRequest()
 	{
 		try {
+			self::auth();
 			self::$auth->login();
 		} catch (Exception $e) {
 			$error = $e->getMessage();
 			Toolbox::logInFile("php-errors", $error . "\n", true);
-			echo 'Caught Exception: ', $error, "\n";
+			
+			
+			Html::nullHeader("Login", $CFG_GLPI["root_doc"] . '/index.php');
+			echo '<div class="center b">'.$error.'<br><br>';
+			// Logout whit noAUto to manage auto_login with errors
+			echo '<a href="' . $CFG_GLPI["root_doc"] .'/index.php">' .__('Log in again') . '</a></div>';
+			Html::nullFooter();
+			
 		}
 	}
 	
@@ -116,11 +130,18 @@ class PluginPhpsamlPhpsaml
 
 		if (!empty(self::$phpsamlsettings['idp']['singleLogoutService'])){
 			try {
+				self::auth();
 				self::$auth->logout($returnTo, $parameters, $nameId, $sessionIndex, false, $nameIdFormat);
 			} catch (Exception $e) {
 				$error = $e->getMessage();
 				Toolbox::logInFile("php-errors", $error . "\n", true);
-				echo 'Caught Exception: ', $error, "\n";
+				
+				Html::nullHeader("Login", $CFG_GLPI["root_doc"] . '/index.php');
+				echo '<div class="center b">'.$error.'<br><br>';
+				// Logout whit noAUto to manage auto_login with errors
+				echo '<a href="' . $CFG_GLPI["root_doc"] .'/index.php">' .__('Log in again') . '</a></div>';
+				Html::nullFooter();
+				
 			}
 		}
 		
@@ -247,19 +268,19 @@ class PluginPhpsamlPhpsaml
 
 				// Indicates that the nameID of the <samlp:logoutRequest> sent by this SP
 				// will be encrypted.
-				'nameIdEncrypted' => false,
+				//'nameIdEncrypted' => false,
 
 				// Indicates whether the <samlp:AuthnRequest> messages sent by this SP
 				// will be signed.              [The Metadata of the SP will offer this info]
-				'authnRequestsSigned' => true,
+				//'authnRequestsSigned' => true,
 
 				// Indicates whether the <samlp:logoutRequest> messages sent by this SP
 				// will be signed.
-				'logoutRequestSigned' => true,
+				//'logoutRequestSigned' => true,
 
 				// Indicates whether the <samlp:logoutResponse> messages sent by this SP
 				// will be signed.
-				'logoutResponseSigned' =>true,
+				//'logoutResponseSigned' =>true,
 
 				/* Sign the Metadata
 				 False || True (use sp certs) || array (
@@ -267,30 +288,30 @@ class PluginPhpsamlPhpsaml
 															certFileName => 'metadata.crt'
 														)
 				*/
-				'signMetadata' => false,
+				//'signMetadata' => false,
 
 
 				/** signatures and encryptions required **/
 
 				// Indicates a requirement for the <samlp:Response>, <samlp:LogoutRequest> and
 				// <samlp:LogoutResponse> elements received by this SP to be signed.
-				'wantMessagesSigned' => false,
+				//'wantMessagesSigned' => false,
 
 				// Indicates a requirement for the <saml:Assertion> elements received by
 				// this SP to be encrypted.
-				'wantAssertionsEncrypted' => false,
+				//'wantAssertionsEncrypted' => false,
 
 				// Indicates a requirement for the <saml:Assertion> elements received by
 				// this SP to be signed.        [The Metadata of the SP will offer this info]
-				'wantAssertionsSigned' => false,
+				//'wantAssertionsSigned' => false,
 
 				// Indicates a requirement for the NameID element on the SAMLResponse received
 				// by this SP to be present.
-				'wantNameId' => true,
+				//'wantNameId' => true,
 
 				// Indicates a requirement for the NameID received by
 				// this SP to be encrypted.
-				'wantNameIdEncrypted' => false,
+				//'wantNameIdEncrypted' => false,
 
 				// Authentication context.
 				// Set to false and no AuthContext will be sent in the AuthNRequest,
