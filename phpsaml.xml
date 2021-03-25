@@ -8,7 +8,7 @@
          <en><![CDATA[GLPI plugin that allows you to use SAML to authenticate and authorize users.]]></en>
       </short>
       <long>
-         <en><![CDATA[This is a GLPI plugin that facilitates single sign on authentication with an identity provider using the SAML 2.0 protocol. This tool leverages the Onelogin PHP library. Tested with ADFS 2.0+ and Google IDP. You can find installation instructions at plugin homepage.<br/><br/>Changelog:<br/><br/> 2015.12:<br/><br/> - plugin is now compatible with GLPI 0.90<br/><br/>2017.05:<br/><br/>- plugin is now compatible with GLPI 9.1.3<br/><br/><a href="https://github.com/derricksmith/phpsaml">PHP SAML on Github</a>]]></en>
+         <en><![CDATA[This is a GLPI plugin that facilitates single sign on authentication with an identity provider using the SAML 2.0 protocol. This tool leverages the Onelogin PHP library. Tested with ADFS 2.0+, Google IDP and Azure AD. You can find installation instructions at plugin homepage.<br/><br/>Changelog:<br/><br/> 2015.12:<br/><br/> - plugin is now compatible with GLPI 0.90<br/><br/>2017.05:<br/><br/>- plugin is now compatible with GLPI 9.1.3<br/><br/>2021.01:,br/><br/>- Version 1.1 release<br/><br/><a href="https://github.com/derricksmith/phpsaml">PHP SAML on Github</a>]]></en>
       </long>
    </description>
    <homepage>https://github.com/derricksmith/phpsaml</homepage>
