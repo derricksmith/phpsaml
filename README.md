@@ -28,7 +28,13 @@ Enter settings on the Plugin Page
 * Entity ID = {Your GLPI web server base URL}
 * Reply URL (Assertion Consumer Service URL) = {Your GLPI web server base URL}/front/acs.php
 
-##### Where to IdP settings required for GLPI?
+##### Name ID requirement
+PHPSAML expects the NameID format to be "Email Address".  There is currently no way to change this dynamically in the plugin.  Sending an incorrect NameID claim will result in a SAML Response error.
+
+For Azure AD, the folling NameID configuration is correct.  You could also use user.mail as the Source Attribute.
+![Azure AD NameID](https://derrick-smith.com/wp-content/uploads/2021/03/PHPSAML-nameid.png)
+
+##### Where to find IdP settings required for GLPI?
 ![Azure AD Configuration](https://derrick-smith.com/wp-content/uploads/2020/10/Azure-Configuration.png)
 
 
