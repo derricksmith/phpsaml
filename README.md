@@ -31,7 +31,7 @@ Enter settings on the Plugin Page
 ##### Name ID requirement
 PHPSAML expects the NameID format to be "Email Address".  There is currently no way to change this dynamically in the plugin.  Sending an incorrect NameID claim will result in a SAML Response error.
 
-For Azure AD, the folling NameID configuration is correct.  You could also use user.mail as the Source Attribute.
+For Azure AD, the following NameID configuration is correct.  You could also use user.mail as the Source Attribute.
 ![Azure AD NameID](https://derrick-smith.com/wp-content/uploads/2021/03/PHPSAML-nameid.png)
 
 ##### Where to find IdP settings required for GLPI?
