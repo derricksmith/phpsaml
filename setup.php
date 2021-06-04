@@ -189,7 +189,9 @@ function plugin_post_init_phpsaml(){
 				Html::nullFooter();
 				exit();
 			} else {
-				$phpsaml::ssoRequest();
+				
+				$returnTo = (isset($_GET['redirect']) ? $_GET['redirect'] : null);
+				$phpsaml::ssoRequest($returnTo);
 			}
 		}
 	}
@@ -197,7 +199,8 @@ function plugin_post_init_phpsaml(){
 }
 
 function plugin_display_login(){
+	$redirect = (isset($_GET['redirect']) ? '&redirect='.urlencode($_GET['redirect']) : null);
 	?>
-	<input class="submit" value="Sign In with SSO" onclick="window.location.href='?SSO=1'" />
+	<input class="submit" value="Sign In with SSO" onclick="window.location.href='?SSO=1<?php echo $redirect; ?>'" />
 	<?php
 }
