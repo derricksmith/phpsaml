@@ -22,6 +22,7 @@ foreach ($folderInfo as $element) {
 use OneLogin\Saml2\Auth;
 use OneLogin\Saml2\Utils;
 $auth = new OneLogin\Saml2\Auth();
+
 if (!isset($_SESSION['samlUserdata'])) {
     $auth->login();
 } else {
