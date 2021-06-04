@@ -61,16 +61,17 @@ class PluginPhpsamlPhpsaml
     {
         $auth = new PluginPhpsamlAuth();
 		
-        if($auth->loadUserData(self::$nameid)->checkUserData()){
+		if($auth->loadUserData(self::$nameid) && $auth->checkUserData()){
 			Session::init($auth);
 			self::redirectToMainPage($relayState);
 			return;
 		}
 		
-		$error = "User not found.";
+		$error = "User or NameID not found";
 		Toolbox::logInFile("php-errors", $error . "\n", true);
 		throw new Exception($error);
 		sloRequest();
+		
     }
 	
 	static public function glpiLogout()
@@ -89,11 +90,12 @@ class PluginPhpsamlPhpsaml
 		}
 	}
 	
-	static public function ssoRequest()
+	static public function ssoRequest($redirect)
 	{
+		
 		try {
 			self::auth();
-			self::$auth->login();
+			self::$auth->login($returnTo = $redirect);
 		} catch (Exception $e) {
 			$error = $e->getMessage();
 			Toolbox::logInFile("php-errors", $error . "\n", true);
