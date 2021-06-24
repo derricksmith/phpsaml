@@ -36,7 +36,7 @@
    ------------------------------------------------------------------------
  */
  
-define ("PLUGIN_PHPSAML_VERSION", "0");
+define ("PLUGIN_PHPSAML_VERSION", "1.1.1");
 define('PLUGIN_PHPSAML_DIR', __DIR__);
 define('PLUGIN_PHPSAML_BASEURL', GLPI_ROOT .'/plugins/phpsaml/');
 
