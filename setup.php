@@ -189,8 +189,8 @@ function plugin_post_init_phpsaml(){
 				Html::nullFooter();
 				exit();
 			} else {
-				
-				$returnTo = (isset($_GET['redirect']) ? $_GET['redirect'] : null);
+				// lets check for the redirect parameter, if it doesn't exist lets redirect the visitor back to the original page
+				$returnTo = (isset($_GET['redirect']) ? $_GET['redirect'] : (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]");
 				$phpsaml::ssoRequest($returnTo);
 			}
 		}
@@ -199,6 +199,7 @@ function plugin_post_init_phpsaml(){
 }
 
 function plugin_display_login(){
+	// lets check for the redirect parameter, if it doesn't exist we will redirect back to front page
 	$redirect = (isset($_GET['redirect']) ? '&redirect='.urlencode($_GET['redirect']) : null);
 	?>
 	<input class="submit" value="Sign In with SSO" onclick="window.location.href='?SSO=1<?php echo $redirect; ?>'" />
