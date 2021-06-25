@@ -182,10 +182,10 @@ function plugin_post_init_phpsaml(){
 				$error = "You have logged out of GLPI but are still logged into your Identity Provider.  Select Log in Again to automatically log back into GLPI or close this window.  Configure the SAML setting in the PHPSAML plugin configuration to enable Single Logout.";
 				
 				// we have done at least a good login? No, we exit.
-				Html::nullHeader("Login", $CFG_GLPI["root_doc"] . '/index.php');
+				Html::nullHeader("Login", $CFG_GLPI['url_base'] . '/index.php');
 				echo '<div class="center b">'.$error.'<br><br>';
 				// Logout whit noAUto to manage auto_login with errors
-				echo '<a href="' . $CFG_GLPI["root_doc"] .'/index.php">' .__('Log in again') . '</a></div>';
+				echo '<a href="' . $CFG_GLPI['url_base'] .'/index.php">' .__('Log in again') . '</a></div>';
 				Html::nullFooter();
 				exit();
 			} else {
