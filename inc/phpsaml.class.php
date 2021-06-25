@@ -233,7 +233,7 @@ class PluginPhpsamlPhpsaml
 				// Specifies constraints on the name identifier to be used to
 				// represent the requested subject.
 				// Take a look on lib/Saml2/Constants.php to see the NameIdFormat supported
-				'NameIDFormat' => 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified',
+				'NameIDFormat' => 'urn:oasis:names:tc:SAML:1.1:nameid-format:'.(isset($config['saml_sp_nameid_format']) ? $config['saml_sp_nameid_format'] : 'unspecified'),
 			),
 
 			// Identity Provider Data that we want connect with our SP

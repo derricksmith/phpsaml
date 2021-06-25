@@ -247,6 +247,22 @@ class PluginPhpsamlConfig extends CommonDBTM {
 					?>
 					<textarea name="saml_sp_certificate_key" rows=15 cols=75><?php echo (isset($config["saml_sp_certificate_key"]) ? $config["saml_sp_certificate_key"] : ""); ?></textarea>
 				</p>
+				<p class="full-width">
+					<label for="saml_idp_nameid_format">
+						<?php echo __("Name ID Format", "phpsaml"); ?>
+						<i class="pointer fa fa-info" title="<?php echo __("The name id format that is sent to the iDP.", "phpsaml"); ?>"></i>
+					</label>
+					<?php 
+						echo (isset($messages["errors"]["saml_sp_nameid_format"]) ? "<br /><small style='color:red; max-width:400px'>".$messages["errors"]["saml_sp_nameid_format"]."</small>" : "");
+						echo (isset($messages["warnings"]["saml_sp_nameid_format"]) ? "<br /><small style='color:orange; max-width:400px'>".$messages["warnings"]["saml_sp_nameid_format"]."</small>" : "");
+					?>
+					<select name="saml_sp_nameid_format">
+						<option value="unspecified" <?php echo (!isset($config["saml_sp_nameid_format"]) || $config["saml_sp_nameid_format"] == 'unspecified' ? "selected" : ""); ?>>Unspecified</option>
+						<option value="emailAddress" <?php echo (isset($config["saml_sp_nameid_format"]) && $config["saml_sp_nameid_format"] == 'emailAddress' ? "selected" : ""); ?>>Email Address</option>
+						<option value="transient" <?php echo (isset($config["saml_sp_nameid_format"]) && $config["saml_sp_nameid_format"] == 'transient' ? "selected" : ""); ?>>Transient</option>
+						<option value="persistent" <?php echo (isset($config["saml_sp_nameid_format"]) && $config["saml_sp_nameid_format"] == 'persistent' ? "selected" : ""); ?>>Persistent</option>
+					</select>
+				</p>
 				
 				<h2 class="full-width"><?php echo __("Identity Provider Configuration", "phpsaml"); ?></h2>
 				
@@ -387,6 +403,7 @@ class PluginPhpsamlConfig extends CommonDBTM {
 				"debug"										=> $phpsamlconf->fields["debug"],
 				"saml_sp_certificate" 						=> $phpsamlconf->fields["saml_sp_certificate"],
 				"saml_sp_certificate_key" 					=> $phpsamlconf->fields["saml_sp_certificate_key"],
+				"saml_sp_nameid_format" 					=> $phpsamlconf->fields["saml_sp_nameid_format"],
 				"saml_idp_entity_id" 						=> $phpsamlconf->fields["saml_idp_entity_id"],
 				"saml_idp_single_sign_on_service" 			=> $phpsamlconf->fields["saml_idp_single_sign_on_service"],
 				"saml_idp_single_logout_service" 			=> $phpsamlconf->fields["saml_idp_single_logout_service"],
