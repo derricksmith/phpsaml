@@ -92,7 +92,6 @@ class PluginPhpsamlPhpsaml
 	
 	static public function ssoRequest($redirect)
 	{
-		global $CFG_GLPI;
 		
 		try {
 			self::auth();
@@ -102,10 +101,10 @@ class PluginPhpsamlPhpsaml
 			Toolbox::logInFile("php-errors", $error . "\n", true);
 			
 			
-			Html::nullHeader("Login", $CFG_GLPI["url_base"] . '/index.php');
+			Html::nullHeader("Login", $CFG_GLPI["root_doc"] . '/index.php');
 			echo '<div class="center b">'.$error.'<br><br>';
 			// Logout whit noAUto to manage auto_login with errors
-			echo '<a href="' . $CFG_GLPI["url_base"] .'/index.php">' .__('Log in again') . '</a></div>';
+			echo '<a href="' . $CFG_GLPI["root_doc"] .'/index.php">' .__('Log in again') . '</a></div>';
 			Html::nullFooter();
 			
 		}
@@ -113,8 +112,6 @@ class PluginPhpsamlPhpsaml
 	
 	static public function sloRequest()
 	{
-		global $CFG_GLPI;
-		
 		$returnTo 		= null;
 		$parameters 	= array();
 		$nameId 		= null;
@@ -141,10 +138,10 @@ class PluginPhpsamlPhpsaml
 				$error = $e->getMessage();
 				Toolbox::logInFile("php-errors", $error . "\n", true);
 				
-				Html::nullHeader("Login", $CFG_GLPI["url_base"] . '/index.php');
+				Html::nullHeader("Login", $CFG_GLPI["root_doc"] . '/index.php');
 				echo '<div class="center b">'.$error.'<br><br>';
 				// Logout whit noAUto to manage auto_login with errors
-				echo '<a href="' . $CFG_GLPI["url_base"] .'/index.php">' .__('Log in again') . '</a></div>';
+				echo '<a href="' . $CFG_GLPI["root_doc"] .'/index.php">' .__('Log in again') . '</a></div>';
 				Html::nullFooter();
 				
 			}
@@ -167,18 +164,18 @@ class PluginPhpsamlPhpsaml
                 if ($_SESSION['glpiactiveprofile']['create_ticket_on_login']
                     && empty($REDIRECT)
                 ) {
-                    $destinationUrl .= "/front/helpdesk.public.php?create_ticket=1";
+                    $destinationUrl .= $CFG_GLPI['root_doc'] . "/front/helpdesk.public.php?create_ticket=1";
                 } else {
-                    $destinationUrl .= "/front/helpdesk.public.php$REDIRECT";
+                    $destinationUrl .= $CFG_GLPI['root_doc'] . "/front/helpdesk.public.php$REDIRECT";
                 }
 
             } else {
                 if ($_SESSION['glpiactiveprofile']['create_ticket_on_login']
                     && empty($REDIRECT)
                 ) {
-                    $destinationUrl .= "/front/ticket.form.php";
+                    $destinationUrl .= $CFG_GLPI['root_doc'] . "/front/ticket.form.php";
                 } else {
-                    $destinationUrl .= "/front/central.php$REDIRECT";
+                    $destinationUrl .= $CFG_GLPI['root_doc'] . "/front/central.php$REDIRECT";
                 }
             }
         }
