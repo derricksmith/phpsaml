@@ -222,6 +222,16 @@ class PluginPhpsamlConfig extends CommonDBTM {
 						<option value="0" <?php echo ((isset($config["debug"]) && $config["debug"] == 0) || !isset($config["debug"]) ? "selected" : ""); ?>>No</option>
 					</select>
 				</p>
+				<p class="full-width">
+					<label for="jit">
+						<?php echo __("Just In Time (JIT) Provisioning", "phpsaml"); ?>
+						<i class="pointer fa fa-info" title="<?php echo __("Toggle 'yes' to create new users if they do not already exist.  Toggle 'no' will cause an error if the user does not already exist in GLPI.", "phpsaml"); ?>"></i>
+					</label>
+					<select name="jit">
+						<option value="1" <?php echo ((isset($config["jit"]) && $config["jit"] == 1) ? "selected" : ""); ?>>Yes</option>
+						<option value="0" <?php echo ((isset($config["jit"]) && $config["jit"] == 0) || !isset($config["jit"]) ? "selected" : ""); ?>>No</option>
+					</select>
+				</p>
 				
 				<h2 class="full-width"><?php echo __("Service Provider Configuration", "phpsaml"); ?></h2>
 				
@@ -401,6 +411,7 @@ class PluginPhpsamlConfig extends CommonDBTM {
 				"enforced"									=> $phpsamlconf->fields["enforced"],
 				"strict"									=> $phpsamlconf->fields["strict"],
 				"debug"										=> $phpsamlconf->fields["debug"],
+				"jit"										=> $phpsamlconf->fields["jit"],
 				"saml_sp_certificate" 						=> $phpsamlconf->fields["saml_sp_certificate"],
 				"saml_sp_certificate_key" 					=> $phpsamlconf->fields["saml_sp_certificate_key"],
 				"saml_sp_nameid_format" 					=> $phpsamlconf->fields["saml_sp_nameid_format"],

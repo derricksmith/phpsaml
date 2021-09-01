@@ -59,6 +59,9 @@ class PluginPhpsamlPhpsaml
 	
 	static public function glpiLogin($relayState = null)
     {
+		
+		$phpsamlconf = new PluginPhpsamlConfig();
+		$config = $phpsamlconf->getConfig();
         $auth = new PluginPhpsamlAuth();
 		
 		if($auth->loadUserData(self::$nameid) && $auth->checkUserData()){
@@ -67,11 +70,47 @@ class PluginPhpsamlPhpsaml
 			return;
 		}
 		
-		$error = "User or NameID not found";
-		Toolbox::logInFile("php-errors", $error . "\n", true);
+		// JIT Provisioning added version 1.1.3
+		if (isset($config['jit']) && $config['jit'] == 1){
+			$user = new User();
+			if(!$user->getFromDBbyEmail(self::$nameid)){
+				if ((!empty(SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'][0])) && (!empty(SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'][0]))){
+					
+					$password = bin2hex(random_bytes(20));
+					
+					$input = array(
+						"name" => SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'][0],
+						"realname" => SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname'][0],
+						"firstname" => SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname'][0],
+						"_useremails" => array(SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'][0]),
+						"password" => $password,
+						"password2" => $password,
+					);
+					
+					$newuser = new User();
+					
+					$id = $newuser->add($input);
+					
+					if($auth->loadUserData(self::$nameid) && $auth->checkUserData()){
+						Session::init($auth);
+						self::redirectToMainPage($relayState);
+						return;
+					}
+				} else {
+					$error = "JIT Error: Unable to create user because missing claims (emailaddress)";
+					Toolbox::logInFile("php-errors", $error . "\n", true);
+				}	
+			} else {
+				$error = "JIT Error: Unable to create user because the email address already exists";
+				Toolbox::logInFile("php-errors", $error . "\n", true);
+			}
+		} else {
+			$error = "User or NameID not found.  Enable JIT Provisioning or manually create the user account";
+			Toolbox::logInFile("php-errors", $error . "\n", true);
+		}
+		
 		throw new Exception($error);
 		sloRequest();
-		
     }
 	
 	static public function glpiLogout()
