@@ -21,6 +21,7 @@ Enter settings on the Plugin Page
 * Plugin Enforced = Force SSO login or allow visitors to login using internal GLPI authentication (useful for testing).
 * Strict = PHPSAML setting rejects unsigned or unencrypted messages and follows SAML standard strictly, read more ![here](https://github.com/onelogin/php-saml)
 * Debug = Logs to the GLPI PHP log
+* JIT = Just in Time Provisioning adds the authenticated user to GLPI if it does not already exist
 
 * SP Certificate = Your webserver certificate
 * SP Certificate Key = Your webserver certificate key
@@ -41,7 +42,3 @@ For Azure AD, the following NameID configuration is correct.  You could also use
 
 ##### Where to find IdP settings required for GLPI?
 ![Azure AD Configuration](https://derrick-smith.com/wp-content/uploads/2020/10/Azure-Configuration.png)
-
-
-
-

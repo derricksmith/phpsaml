@@ -36,7 +36,7 @@
    ------------------------------------------------------------------------
  */
  
-define ("PLUGIN_PHPSAML_VERSION", "1.1.2");
+define ("PLUGIN_PHPSAML_VERSION", "1.1.3");
 define('PLUGIN_PHPSAML_DIR', __DIR__);
 define('PLUGIN_PHPSAML_BASEURL', GLPI_ROOT .'/plugins/phpsaml/');
 
@@ -150,6 +150,10 @@ function plugin_post_init_phpsaml(){
 		$phpsaml = new PluginPhpsamlPhpsaml();
 		
 		if (strpos($_SERVER['REQUEST_URI'], 'front/cron.php') !== false || strpos($_SERVER['REQUEST_URI'], 'front\cron.php') !== false){
+			return;
+		}
+		
+		if (strpos($_SERVER['REQUEST_URI'], 'ldap_mass_sync.php') !== false){
 			return;
 		}
 		
