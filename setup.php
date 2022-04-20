@@ -53,7 +53,7 @@ function plugin_version_phpsaml()
         'author' => 'Derrick Smith',
         'license' => 'GPLv2+',
         'homepage' => 'http://derrick-smith.com',
-        'minGlpiVersion' => '9.6'); // For compatibility / no install in version < 0.80
+        'minGlpiVersion' => '9.4'); // For compatibility / no install in version < 0.80
 }
 
 /**
