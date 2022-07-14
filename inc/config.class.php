@@ -460,7 +460,11 @@ class PluginPhpsamlConfig extends CommonDBTM {
 				"saml_idp_single_logout_service" 			=> $phpsamlconf->fields["saml_idp_single_logout_service"],
 				"saml_idp_certificate" 						=> $phpsamlconf->fields["saml_idp_certificate"],
 				"requested_authn_context" 					=> $phpsamlconf->fields["requested_authn_context"],
-				"requested_authn_context_comparison" 		=> $phpsamlconf->fields["requested_authn_context_comparison"]
+				"requested_authn_context_comparison" 		=> $phpsamlconf->fields["requested_authn_context_comparison"],
+				"saml_security_nameidencrypted" 		=> $phpsamlconf->fields["saml_security_nameidencrypted"],
+				"saml_security_authnrequestssigned" 		=> $phpsamlconf->fields["saml_security_authnrequestssigned"],
+				"saml_security_logoutrequestsigned" 		=> $phpsamlconf->fields["saml_security_logoutrequestsigned"],
+				"saml_security_logoutresponsesigned" 		=> $phpsamlconf->fields["saml_security_logoutresponsesigned"]
 			);
 		} else {
 			$config = array();
