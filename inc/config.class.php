@@ -50,7 +50,7 @@ class PluginPhpsamlConfig extends CommonDBTM {
    static $rightname = "plugin_phpsaml_config";
 
 
-   function showForm(){
+	function showForm($ID, array $options = []) {
 		global $DB, $CFG_GLPI;
 		$config = PluginPhpsamlConfig::getConfig();
 		if (isset($_SESSION["phpsaml_messages"])){
@@ -346,6 +346,46 @@ class PluginPhpsamlConfig extends CommonDBTM {
 						<option value="maximum" <?php echo ((isset($config["requested_authn_context_comparison"]) && $config["requested_authn_context_comparison"] == 'maximum') || !isset($config["requested_authn_context_comparison"]) ? "selected" : ""); ?>>Maximum</option>
 						<option value="better" <?php echo ((isset($config["requested_authn_context_comparison"]) && $config["requested_authn_context_comparison"] == 'better') || !isset($config["requested_authn_context_comparison"]) ? "selected" : ""); ?>>Better</option>
 					</select>	
+				</p>
+				<p>
+					<label for="saml_security_nameidencrypted">
+						<?php echo __("Encrypt NameID", "phpsaml"); ?>
+						<i class="pointer fa fa-info" title="<?php echo __("Toggle yes to encrypt NameID.", "phpsaml"); ?>"></i>
+					</label>
+					<select name="saml_security_nameidencrypted">
+						<option value="1" <?php echo ((isset($config["saml_security_nameidencrypted"]) && $config["saml_security_nameidencrypted"] == 1) ? "selected" : ""); ?>>Yes</option>
+						<option value="0" <?php echo ((isset($config["saml_security_nameidencrypted"]) && $config["saml_security_nameidencrypted"] == 0) || !isset($config["saml_security_nameidencrypted"]) ? "selected" : ""); ?>>No</option>
+					</select>
+				</p>
+				<p>
+					<label for="saml_security_authnrequestssigned">
+						<?php echo __("Sign Authn Requests", "phpsaml"); ?>
+						<i class="pointer fa fa-info" title="<?php echo __("Toggle yes to sign Authn Requests.", "phpsaml"); ?>"></i>
+					</label>
+					<select name="saml_security_authnrequestssigned">
+						<option value="1" <?php echo ((isset($config["saml_security_authnrequestssigned"]) && $config["saml_security_authnrequestssigned"] == 1) ? "selected" : ""); ?>>Yes</option>
+						<option value="0" <?php echo ((isset($config["saml_security_authnrequestssigned"]) && $config["saml_security_authnrequestssigned"] == 0) || !isset($config["saml_security_authnrequestssigned"]) ? "selected" : ""); ?>>No</option>
+					</select>
+				</p>
+				<p>
+					<label for="saml_security_logoutrequestsigned">
+						<?php echo __("Sign Logout Requests", "phpsaml"); ?>
+						<i class="pointer fa fa-info" title="<?php echo __("Toggle yes to sign Logout Requests.", "phpsaml"); ?>"></i>
+					</label>
+					<select name="saml_security_logoutrequestsigned">
+						<option value="1" <?php echo ((isset($config["saml_security_logoutrequestsigned"]) && $config["saml_security_logoutrequestsigned"] == 1) ? "selected" : ""); ?>>Yes</option>
+						<option value="0" <?php echo ((isset($config["saml_security_logoutrequestsigned"]) && $config["saml_security_logoutrequestsigned"] == 0) || !isset($config["saml_security_logoutrequestsigned"]) ? "selected" : ""); ?>>No</option>
+					</select>
+				</p>
+				<p>
+					<label for="saml_security_logoutresponsesigned">
+						<?php echo __("Sign Logout Response", "phpsaml"); ?>
+						<i class="pointer fa fa-info" title="<?php echo __("Toggle yes to sign Logout Response.", "phpsaml"); ?>"></i>
+					</label>
+					<select name="saml_security_logoutresponsesigned">
+						<option value="1" <?php echo ((isset($config["saml_security_logoutresponsesigned"]) && $config["saml_security_logoutresponsesigned"] == 1) ? "selected" : ""); ?>>Yes</option>
+						<option value="0" <?php echo ((isset($config["saml_security_logoutresponsesigned"]) && $config["saml_security_logoutresponsesigned"] == 0) || !isset($config["saml_security_logoutresponsesigned"]) ? "selected" : ""); ?>>No</option>
+					</select>
 				</p>
 				
 				<p class="full-width">

@@ -55,7 +55,7 @@ if (isset($_POST["update"])) {
    Html::header(__('PHP SAML', 'phpsaml'), $_SERVER['PHP_SELF'], "config", "plugins");
    
    Session::checkRight("config", UPDATE);
-   $phpsamlconf->showForm();
+   $phpsamlconf->showForm($_POST["id"]);
 	
    Html::footer();
 

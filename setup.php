@@ -36,7 +36,9 @@
    ------------------------------------------------------------------------
  */
  
-define ("PLUGIN_PHPSAML_VERSION", "1.2.0");
+define ("PLUGIN_PHPSAML_VERSION", "1.2.1");
+define("PLUGIN_PHPSAML_MIN_GLPI", "9.4");
+define("PLUGIN_PHPSAML_MAX_GLPI", "10.0.99");
 define('PLUGIN_PHPSAML_DIR', __DIR__);
 define('PLUGIN_PHPSAML_BASEURL', GLPI_ROOT .'/plugins/phpsaml/');
 
@@ -53,7 +55,14 @@ function plugin_version_phpsaml()
         'author' => 'Derrick Smith',
         'license' => 'GPLv2+',
         'homepage' => 'http://derrick-smith.com',
-        'minGlpiVersion' => '9.4'); // For compatibility / no install in version < 0.80
+		'requirements'   => [
+            'glpi' => [
+                'min' => PLUGIN_PHPSAML_MIN_GLPI,
+                'max' => PLUGIN_PHPSAML_MAX_GLPI,
+                'dev' => true, //Required to allow 9.2-dev
+            ]
+        ]
+		
 }
 
 /**
@@ -68,9 +77,14 @@ function plugin_version_phpsaml()
 function plugin_phpsaml_check_prerequisites()
 {
 
-    if (version_compare(GLPI_VERSION, '9.4', 'lt') || version_compare(GLPI_VERSION, '10.0.0', 'gt')) {
-        echo "This plugin requires GLPI >= 9.4 and GLPI <= 10.0.0";
-        return false;
+    if (version_compare(GLPI_VERSION, PLUGIN_PHPSAML_MIN_GLPI, 'lt') || version_compare(GLPI_VERSION, PLUGIN_PHPSAML_MAX_GLPI, 'gt')) {
+        if (method_exists('Plugin', 'messageIncompatible')) {
+			//since GLPI 9.2
+			Plugin::messageIncompatible('core', PLUGIN_PHPSAML_MIN_GLPI, PLUGIN_PHPSAML_MAX_GLPI);
+		} else {
+			echo "This plugin requires GLPI >= ".PLUGIN_PHPSAML_MIN_GLPI." and GLPI <= ".PLUGIN_PHPSAML_MAX_GLPI;
+        }
+		return false;
     }
 
     return true;
@@ -122,6 +136,9 @@ function plugin_init_phpsaml()
 	// Hook for Single Sign On
 	$PLUGIN_HOOKS['post_init']['phpsaml'] = 'plugin_post_init_phpsaml';
 	
+	// Hook for setting into session saml values
+	$PLUGIN_HOOKS['init_session']['phpsaml'] = 'plugin_init_session_phpsaml';
+	
 	// Hook login form - Display Single Sign On Button
 	$PLUGIN_HOOKS['display_login']['phpsaml'] = 'plugin_display_login';
 	
@@ -146,7 +163,7 @@ function plugin_post_init_phpsaml(){
 	}
 	
 	//Added 1.1.0 - SSO enforcement and signin with SSO button on login page
-	if ((isset($_GET['SSO']) && $_GET['SSO'] == 1) || (isset($config['enforced']) && $config['enforced'] == 1)){
+	if ((isset($_GET['SSO']) && $_GET['SSO'] == 1) || (isset($config['enforced']) && $config['enforced'] == 1) || (!empty($_SESSION['plugin_phpsaml_nameid'])){
 		$phpsaml = new PluginPhpsamlPhpsaml();
 		
 		//Added 1.2.0 - Return if cli, cannot use SSO on cli
@@ -206,6 +223,14 @@ function plugin_post_init_phpsaml(){
 		}
 	}
 	return;
+}
+
+function plugin_init_session_phpsaml() {
+   $phpsaml = new PluginPhpsamlPhpsaml();
+
+   if(!empty($phpsaml::$nameid)) $_SESSION['plugin_phpsaml_nameid'] = $phpsaml::$nameid;
+   if(!empty($phpsaml::$nameidformat)) $_SESSION['plugin_phpsaml_nameidformat'] = $phpsaml::$nameidformat;
+   if(!empty($phpsaml::$sessionindex)) $_SESSION['plugin_phpsaml_sessionindex'] = $phpsaml::$sessionindex;
 }
 
 function plugin_display_login(){

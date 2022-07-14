@@ -32,7 +32,14 @@ class PluginPhpsamlPhpsaml
 			//require_once(GLPI_ROOT .'/plugins/phpsaml/lib/php-saml/settings.php');
 		
 			self::$phpsamlsettings = self::getSettings();
+			
+			if(!empty($_SESSION['plugin_phpsaml_nameid'])) self::$nameid = $_SESSION['plugin_phpsaml_nameid'];
+			if(!empty($_SESSION['plugin_phpsaml_nameidformat'])) self::$nameidformat = $_SESSION['plugin_phpsaml_nameidformat'];
+			if(!empty($_SESSION['plugin_phpsaml_sessionindex'])) self::$sessionindex = $_SESSION['plugin_phpsaml_sessionindex'];
+			
 			self::$init = true; 
+			
+			
 		}
 	}
 	
@@ -312,19 +319,19 @@ class PluginPhpsamlPhpsaml
 
 				// Indicates that the nameID of the <samlp:logoutRequest> sent by this SP
 				// will be encrypted.
-				//'nameIdEncrypted' => false,
+				'nameIdEncrypted' => (isset($config['saml_security_nameidencrypted']) && $config['saml_security_nameidencrypted'] == 1 ? true : false),
 
 				// Indicates whether the <samlp:AuthnRequest> messages sent by this SP
 				// will be signed.              [The Metadata of the SP will offer this info]
-				//'authnRequestsSigned' => true,
+				'authnRequestsSigned' => (isset($config['saml_security_authnrequestssigned']) && $config['saml_security_authnrequestssigned'] == 1 ? true : false),
 
 				// Indicates whether the <samlp:logoutRequest> messages sent by this SP
 				// will be signed.
-				//'logoutRequestSigned' => true,
+				'logoutRequestSigned' => (isset($config['saml_security_logoutrequestsigned']) && $config['saml_security_logoutrequestsigned'] == 1 ? true : false),
 
 				// Indicates whether the <samlp:logoutResponse> messages sent by this SP
 				// will be signed.
-				//'logoutResponseSigned' =>true,
+				'logoutResponseSigned' => (isset($config['saml_security_logoutresponsesigned']) && $config['saml_security_logoutresponsesigned'] == 1 ? true : false),
 
 				/* Sign the Metadata
 				 False || True (use sp certs) || array (
