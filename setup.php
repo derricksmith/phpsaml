@@ -36,7 +36,7 @@
    ------------------------------------------------------------------------
  */
  
-define ("PLUGIN_PHPSAML_VERSION", "1.1.3");
+define ("PLUGIN_PHPSAML_VERSION", "1.2.0");
 define('PLUGIN_PHPSAML_DIR', __DIR__);
 define('PLUGIN_PHPSAML_BASEURL', GLPI_ROOT .'/plugins/phpsaml/');
 
@@ -68,8 +68,8 @@ function plugin_version_phpsaml()
 function plugin_phpsaml_check_prerequisites()
 {
 
-    if (version_compare(GLPI_VERSION, '9.4', 'lt') || version_compare(GLPI_VERSION, '9.6', 'gt')) {
-        echo "This plugin requires GLPI >= 9.4 and GLPI <= 9.6";
+    if (version_compare(GLPI_VERSION, '9.4', 'lt') || version_compare(GLPI_VERSION, '10.0.0', 'gt')) {
+        echo "This plugin requires GLPI >= 9.4 and GLPI <= 10.0.0";
         return false;
     }
 
@@ -149,6 +149,11 @@ function plugin_post_init_phpsaml(){
 	if ((isset($_GET['SSO']) && $_GET['SSO'] == 1) || (isset($config['enforced']) && $config['enforced'] == 1)){
 		$phpsaml = new PluginPhpsamlPhpsaml();
 		
+		//Added 1.2.0 - Return if cli, cannot use SSO on cli
+		if (PHP_SAPI === 'cli'){
+			return;
+		}
+		
 		if (strpos($_SERVER['REQUEST_URI'], 'front/cron.php') !== false || strpos($_SERVER['REQUEST_URI'], 'front\cron.php') !== false){
 			return;
 		}
@@ -194,7 +199,8 @@ function plugin_post_init_phpsaml(){
 				exit();
 			} else {
 				// lets check for the redirect parameter, if it doesn't exist lets redirect the visitor back to the original page
-				$returnTo = (isset($_GET['redirect']) ? $_GET['redirect'] : (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]");
+				// Fixed in 1.2.0 - Resolved Undefinded index: HTTP_HOST
+				$returnTo = (isset($_GET['redirect']) ? $_GET['redirect'] : (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
 				$phpsaml::ssoRequest($returnTo);
 			}
 		}

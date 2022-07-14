@@ -25,7 +25,7 @@ class PluginPhpsamlUpdate {
 			$array = $result->fetch_array();
 			self::$installed_version = $array['version'];
 		} else {
-			self::$installed_version = '1.0.0';
+			self::$installed_version = '';
 		}
 	}
 	
@@ -49,113 +49,156 @@ class PluginPhpsamlUpdate {
 		
 		self::do_113();
 		
+		self::do_120();
+		
 	}
 	
 	public static function do_109(){
 		global $DB;
 		
-		Toolbox::logInFile("php-errors", "Checking Settings and Upgrading to 1.0.0 if necessary" . "\n", true);
+		Toolbox::logInFile("phpsaml", "INFO -- Checking Settings and Upgrading to 1.0.0 if necessary" . "\n", true);
 		
-		//Check for version column
-		$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'version'";
-		$result = $DB->query($query);
-		if (!$result || $DB->numrows($result) == 0){
-			$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD version VARCHAR(15) after id";
-			$DB->query($query);
-			if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
-		}
-		
-		//Check for enforced column
-		$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'enforced'";
-		$result = $DB->query($query);
-		if (!$result || $DB->numrows($result) == 0){
-			$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD enforced int(2) after version";
-			$DB->query($query);
-			if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
+		if(self::$installed_version <= '1.0.9' || self::$installed_version == ''){
+			Toolbox::logInFile("phpsaml", "INFO -- Upgrading PHPSAML plugin to 1.0.9" . "\n", true);
 			
-			$query = "UPDATE `glpi_plugin_phpsaml_configs` SET enforced = '0' WHERE id = '1'";
-			$DB->query($query);
-			if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
-		}
-		
-		if(self::$installed_version <= '1.0.0'){
+			//Check for version column
+			$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'version'";
+			$result = $DB->query($query);
+			//Alter table if 'version' column is missing
+			if (!$result || $DB->numrows($result) == 0){
+				Toolbox::logInFile("phpsaml", "INFO -- Column 'version' missing, updating table" . "\n", true);
+				$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD version VARCHAR(15) after id";
+				$DB->query($query);
+				if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
+				if (!$DB->error()) Toolbox::logInFile("phpsaml", "INFO -- Column 'version' added to 'glpi_plugin_phpsaml_configs'" . "\n", true);
+			}
+			
+			//Check for enforced column
+			$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'enforced'";
+			$result = $DB->query($query);
+			//Alter table if 'enforced' column is missing
+			if (!$result || $DB->numrows($result) == 0){
+				Toolbox::logInFile("phpsaml", "INFO -- Column 'enforced' missing, updating table" . "\n", true);
+				$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD enforced int(2) after version";
+				$DB->query($query);
+				if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
+				
+				//Update 'enforced' column if there were not issues creating it
+				if (!$DB->error()) {
+					Toolbox::logInFile("phpsaml", "INFO -- Column 'version' added to 'glpi_plugin_phpsaml_configs'" . "\n", true);
+					$query = "UPDATE `glpi_plugin_phpsaml_configs` SET enforced = '0' WHERE id = '1'";
+					$DB->query($query);
+					if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
+					if (!$DB->error()) Toolbox::logInFile("phpsaml", "INFO -- Column 'enforced' set to 0" . "\n", true);
+				}
+			}
+			
 			self::set_installed_version("1.0.9");
+			Toolbox::logInFile("phpsaml", "INFO -- PHPSAML upgraded to 1.0.9" . "\n", true);
 		}
 	}
 	
 	public static function do_110(){
 		global $DB;
+		
+		Toolbox::logInFile("phpsaml", "INFO -- Checking Settings and Upgrading to 1.1.0 if necessary"  . "\n", true);
+		
+		if(self::$installed_version <= '1.1.0'){
+		
+			//Check for requested_authn_context column
+			$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'requested_authn_context'";
+			$result = $DB->query($query);
+			//Alter table if 'requested_authn_context column' column is missing
+			if (!$result || $DB->numrows($result) == 0){
+				Toolbox::logInFile("phpsaml", "INFO -- Column 'requested_authn_context column' missing, updating table" . "\n", true);
+				$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD requested_authn_context text after saml_idp_certificate";
+				$DB->query($query);
+				if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
+				if (!$DB->error()) Toolbox::logInFile("phpsaml", "INFO -- Column 'requested_authn_context' added to 'glpi_plugin_phpsaml_configs'" . "\n", true);
+			}
 			
-		Toolbox::logInFile("php-errors", "Checking Settings and Upgrading to 1.1.0 if necessary"  . "\n", true);
+			//Check for requested_authn_context_comparison column
+			$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'requested_authn_context_comparison'";
+			$result = $DB->query($query);
+			//Alter table if 'requested_authn_context_comparison' column is missing
+			if (!$result || $DB->numrows($result) == 0){
+				Toolbox::logInFile("phpsaml", "INFO -- Column 'requested_authn_context_comparison' missing, updating table" . "\n", true);
+				$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD requested_authn_context_comparison varchar(25) after requested_authn_context";
+				$DB->query($query);
+				if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
+				if (!$DB->error()) Toolbox::logInFile("phpsaml", "INFO -- Column 'requested_authn_context_comparison' added to 'glpi_plugin_phpsaml_configs'" . "\n", true);
+			}
 		
-		//Check for requested_authn_context column
-		$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'requested_authn_context'";
-		$result = $DB->query($query);
-		if (!$result || $DB->numrows($result) == 0){
-			$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD requested_authn_context text after saml_idp_certificate";
-			$DB->query($query);
-			if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
-		}
-		
-		//Check for requested_authn_context_comparison column
-		$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'requested_authn_context_comparison'";
-		$result = $DB->query($query);
-		if (!$result || $DB->numrows($result) == 0){
-			$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD requested_authn_context_comparison varchar(25) after requested_authn_context";
-			$DB->query($query);
-			if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
-		}
-		
-		if(self::$installed_version < '1.1.0'){
 			self::set_installed_version("1.1.0");
+			Toolbox::logInFile("phpsaml", "INFO -- PHPSAML upgraded to 1.1.0" . "\n", true);
 		}
 	}
 	
 	public static function do_111(){
 		global $DB;
 		
-		Toolbox::logInFile("php-errors", "Checking Settings and Upgrading to 1.1.1 if necessary"  . "\n", true);
-		
+		Toolbox::logInFile("phpsaml", "INFO -- Checking Settings and Upgrading to 1.1.1 if necessary"  . "\n", true);
+		//No database operations required for version 1.1.1
 		if(self::$installed_version < '1.1.1'){
 			self::set_installed_version("1.1.1");
+			Toolbox::logInFile("phpsaml", "INFO -- PHPSAML upgraded to 1.1.1" . "\n", true);
 		}
 	}
 	
 	public static function do_112(){
 		global $DB;
 		
-		Toolbox::logInFile("php-errors", "Checking Settings and Upgrading to 1.1.2 if necessary"  . "\n", true);
+		Toolbox::logInFile("phpsaml", "INFO -- Checking Settings and Upgrading to 1.1.2 if necessary"  . "\n", true);
 		
-		//Check for saml_sp_nameid_format column
-		$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'saml_sp_nameid_format'";
-		$result = $DB->query($query);
-		if (!$result || $DB->numrows($result) == 0){
-			$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD saml_sp_nameid_format varchar(255) after saml_sp_certificate_key";
-			$DB->query($query);
-			if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
-		}
+			if(self::$installed_version < '1.1.2'){
+			
+			//Check for saml_sp_nameid_format column
+			$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'saml_sp_nameid_format'";
+			$result = $DB->query($query);
+			//Alter table if 'saml_sp_nameid_format' column is missing
+			if (!$result || $DB->numrows($result) == 0){
+				$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD saml_sp_nameid_format varchar(255) after saml_sp_certificate_key";
+				$DB->query($query);
+				if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
+				if (!$DB->error()) Toolbox::logInFile("phpsaml", "INFO -- Column 'saml_sp_nameid_format' added to 'glpi_plugin_phpsaml_configs'" . "\n", true);
+			}
 		
-		if(self::$installed_version < '1.1.2'){
 			self::set_installed_version("1.1.2");
+			Toolbox::logInFile("phpsaml", "INFO -- PHPSAML upgraded to 1.1.2" . "\n", true);
 		}
 	}
 	
 	public static function do_113(){
 		global $DB;
 		
-		Toolbox::logInFile("php-errors", "Checking Settings and Upgrading to 1.1.3 if necessary"  . "\n", true);
-		
-		//Check for jit column
-		$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'jit'";
-		$result = $DB->query($query);
-		if (!$result || $DB->numrows($result) == 0){
-			$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD jit int(2) after debug";
-			$DB->query($query);
-			if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
-		}
+		Toolbox::logInFile("phpsaml", "INFO -- Checking Settings and Upgrading to 1.1.3 if necessary"  . "\n", true);
 		
 		if(self::$installed_version < '1.1.3'){
+		
+			//Check for jit column
+			$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'jit'";
+			$result = $DB->query($query);
+			//Alter table if 'jit' column is missing
+			if (!$result || $DB->numrows($result) == 0){
+				$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD jit int(2) after debug";
+				$DB->query($query);
+				if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
+				if (!$DB->error()) Toolbox::logInFile("phpsaml", "INFO -- Column 'jit' added to 'glpi_plugin_phpsaml_configs'" . "\n", true);
+			}
+		
 			self::set_installed_version("1.1.3");
+			Toolbox::logInFile("phpsaml", "INFO -- PHPSAML upgraded to 1.1.3" . "\n", true);
+		}
+	}
+	
+	public static function do_120(){
+		global $DB;
+		
+		Toolbox::logInFile("phpsaml", "INFO -- Checking Settings and Upgrading to 1.2.0 if necessary"  . "\n", true);
+		//No database operations required for version 1.2.0
+		if(self::$installed_version < '1.2.0'){
+			self::set_installed_version("1.2.0");
+			Toolbox::logInFile("phpsaml", "INFO -- PHPSAML upgraded to 1.2.0" . "\n", true);
 		}
 	}
 }

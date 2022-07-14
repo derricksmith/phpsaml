@@ -54,8 +54,10 @@ function plugin_phpsaml_install() {
 			`enforced` int(2) NOT NULL,
 			`strict` int(2) NOT NULL,
 			`debug` int(2) NOT NULL,
+			`jit` int(2) NOT NULL,
 			`saml_sp_certificate` text collate utf8_unicode_ci NOT NULL,
 			`saml_sp_certificate_key` text collate utf8_unicode_ci NOT NULL,
+			`saml_sp_nameid_format` varchar(128) collate utf8_unicode_ci NOT NULL,
 			`saml_idp_entity_id` varchar(128) collate utf8_unicode_ci NOT NULL,
 			`saml_idp_single_sign_on_service` varchar(128) collate utf8_unicode_ci NOT NULL,
 			`saml_idp_single_logout_service` varchar(128) collate utf8_unicode_ci NOT NULL,
@@ -67,9 +69,9 @@ function plugin_phpsaml_install() {
 		$DB->query($query) or die("error creating glpi_plugin_phpsaml_configs ". $DB->error());
 		
 		$query = "INSERT INTO `glpi_plugin_phpsaml_configs`
-            (`id`,`version`, `enforced`, `strict`, `debug`, `saml_idp_entity_id`, `saml_sp_certificate`, `saml_sp_certificate_key`, `saml_idp_single_sign_on_service`, `saml_idp_single_logout_service`, `saml_idp_certificate`, `requested_authn_context`, `requested_authn_context_comparison`)
+            (`id`,`version`, `enforced`, `strict`, `debug`, `jit`, `saml_sp_certificate`, `saml_sp_certificate_key`, `saml_sp_nameid_format`, `saml_idp_entity_id`, `saml_idp_single_sign_on_service`, `saml_idp_single_logout_service`, `saml_idp_certificate`, `requested_authn_context`, `requested_authn_context_comparison`)
             VALUES
-            ('1', '". PLUGIN_PHPSAML_VERSION ."', '0', '1', '', '', '', '', '', '', '', '', '')";
+            ('1', '". PLUGIN_PHPSAML_VERSION ."', '0', '1','0', '', '', '', '', '', '', '', '', '', '')";
 		$DB->query($query) or die("error populate glpi_plugin_phpsaml_configs ". $DB->error());
 	}
 	
