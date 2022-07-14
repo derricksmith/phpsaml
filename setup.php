@@ -61,8 +61,8 @@ function plugin_version_phpsaml()
                 'max' => PLUGIN_PHPSAML_MAX_GLPI,
                 'dev' => true, //Required to allow 9.2-dev
             ]
-        ]
-		
+        ],
+	);
 }
 
 /**
@@ -163,7 +163,7 @@ function plugin_post_init_phpsaml(){
 	}
 	
 	//Added 1.1.0 - SSO enforcement and signin with SSO button on login page
-	if ((isset($_GET['SSO']) && $_GET['SSO'] == 1) || (isset($config['enforced']) && $config['enforced'] == 1) || (!empty($_SESSION['plugin_phpsaml_nameid'])){
+	if ((isset($_GET['SSO']) && $_GET['SSO'] == 1) || (isset($config['enforced']) && $config['enforced'] == 1) || (!empty($_SESSION['plugin_phpsaml_nameid']))){
 		$phpsaml = new PluginPhpsamlPhpsaml();
 		
 		//Added 1.2.0 - Return if cli, cannot use SSO on cli

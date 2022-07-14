@@ -335,7 +335,7 @@ class PluginPhpsamlConfig extends CommonDBTM {
 					</select>	
 					<input id="requested-authn-context" type="hidden" name="requested_authn_context" value="<?php echo (isset($config["requested_authn_context"])) ? $config["requested_authn_context"] : '' ?>" />
 				</p>
-				<p>
+				<p class="full-width">
 					<label for="requested_authn_context_comparison">
 						<?php echo __("Requested Authn Comparison", "phpsaml"); ?>
 						<i class="pointer fa fa-info" title="<?php echo __("How should the library compare the requested Authn Context?  The value defaults to 'Exact'.", "phpsaml"); ?>"></i>
