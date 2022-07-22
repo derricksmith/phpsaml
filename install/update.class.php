@@ -19,7 +19,8 @@ class PluginPhpsamlUpdate {
 		$query = "SELECT * FROM `glpi_plugin_phpsaml_configs` WHERE id = '1'";
 		$result = $DB->query($query);
 		$array = $result->fetch_array();
-		if (array_key_exists('version', $array)) {
+		// Fixed for PHP8
+		if (is_array($array) && array_key_exists('version', $array)) {
 			$query = "SELECT * FROM `glpi_plugin_phpsaml_configs` WHERE id = '1'";
 			$result = $DB->query($query);
 			$array = $result->fetch_array();
