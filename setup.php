@@ -215,9 +215,13 @@ function plugin_post_init_phpsaml(){
 				Html::nullFooter();
 				exit();
 			} else {
+				// Fix for invalid redirect errors when port number is included in HTTP_HOST.
+				// Maybe replace it with GLPI config: URL of the application? 
+				list($realhost,)=explode(':',$_SERVER['HTTP_HOST']);
+				
 				// lets check for the redirect parameter, if it doesn't exist lets redirect the visitor back to the original page
 				// Fixed in 1.2.0 - Resolved Undefinded index: HTTP_HOST
-				$returnTo = (isset($_GET['redirect']) ? $_GET['redirect'] : (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
+				$returnTo = (isset($_GET['redirect']) ? $_GET['redirect'] : (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $realhost . $_SERVER['REQUEST_URI']);
 				$phpsaml::ssoRequest($returnTo);
 			}
 		}
