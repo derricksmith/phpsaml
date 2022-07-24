@@ -409,25 +409,27 @@ class PluginPhpsamlPhpsaml
 	}
 	
 	static public function getAuthn($value){
-		if (!isset($value) || $value == ''){
+		if(preg_match('/^none,.+/i', $value)){
+			$array = explode(',', $value);
+			$output = array();
+			// TODO: Current configuration input field allows multiple Items, logic below will select the first found then break. 
+			// Because of this the end result might not be what the user expects based on the config screen.
+			foreach ($array as $item){
+				switch($item){
+					case 'PasswordProtectedTransport':
+						$output[] = 'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport';
+						break;
+					case 'Password':
+						$output[] = 'urn:oasis:names:tc:SAML:2.0:ac:classes:Password';
+						break;
+					case 'X509':
+						$output[] = 'urn:oasis:names:tc:SAML:2.0:ac:classes:X509';
+						break;
+				}
+			}
+			return $output;
+		}else{
 			return false;
 		}
-		
-		$array = explode(',', $value);
-		$output = array();
-		foreach ($array as $item){
-			switch($item){
-				case 'PasswordProtectedTransport':
-					$output[] = 'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport';
-					break;
-				case 'Password':
-					$output[] = 'urn:oasis:names:tc:SAML:2.0:ac:classes:Password';
-					break;
-				case 'X509':
-					$output[] = 'urn:oasis:names:tc:SAML:2.0:ac:classes:X509';
-					break;
-			}
-		}
-		return $output;
 	}
 }
