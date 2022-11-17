@@ -42,3 +42,6 @@ For Azure AD, the following NameID configuration is correct.  You could also use
 
 ##### Where to find IdP settings required for GLPI?
 ![Azure AD Configuration](https://derrick-smith.com/wp-content/uploads/2020/10/Azure-Configuration.png)
+
+##### Single Logout?
+![Azure AD Single Logout](https://derrick-smith.com/wp-content/uploads/2022/11/logout.png)
