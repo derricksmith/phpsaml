@@ -36,7 +36,7 @@
    ------------------------------------------------------------------------
  */
  
-define ("PLUGIN_PHPSAML_VERSION", "1.2.1");
+define ("PLUGIN_PHPSAML_VERSION", "1.3.0");
 define("PLUGIN_PHPSAML_MIN_GLPI", "9.4");
 define("PLUGIN_PHPSAML_MAX_GLPI", "10.0.99");
 define('PLUGIN_PHPSAML_DIR', __DIR__);
