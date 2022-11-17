@@ -104,7 +104,8 @@ class PluginPhpsamlPhpsaml
 						return;
 					}
 				} else {
-					$error = "JIT Error: Unable to create user because missing claims (emailaddress)";
+					$missing = (empty(SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'][0]) ? 'name' : 'emailaddress');
+					$error = "JIT Error: Unable to create user because missing claims ($missing)";
 					Toolbox::logInFile("php-errors", $error . "\n", true);
 				}	
 			} else {
