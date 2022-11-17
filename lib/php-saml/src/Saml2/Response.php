@@ -81,9 +81,10 @@ class Response
      * Constructs the SAML Response object.
      *
      * @param Settings $settings Settings.
-     * @param string                  $response A UUEncoded SAML response from the IdP.
+     * @param string   $response A UUEncoded SAML response from the IdP.
      *
      * @throws Exception
+     * @throws ValidationError
      */
     public function __construct(\OneLogin\Saml2\Settings $settings, $response)
     {
@@ -122,6 +123,7 @@ class Response
      * @return bool Validate the document
      *
      * @throws Exception
+     * @throws ValidationError
      */
     public function isValid($requestId = null)
     {
@@ -142,7 +144,7 @@ class Response
                 );
             }
 
-            $status = $this->checkStatus();
+            $this->checkStatus();
 
             $singleAssertion = $this->validateNumAssertions();
             if (!$singleAssertion) {
@@ -170,7 +172,7 @@ class Response
 
                 if ($security['wantXMLValidation']) {
                     $errorXmlMsg = "Invalid SAML Response. Not match the saml-schema-protocol-2.0.xsd";
-                    $res = Utils::validateXML($this->document, 'saml-schema-protocol-2.0.xsd', $this->_settings->isDebugActive());
+                    $res = Utils::validateXML($this->document, 'saml-schema-protocol-2.0.xsd', $this->_settings->isDebugActive(), $this->_settings->getSchemasPath());
                     if (!$res instanceof DOMDocument) {
                         throw new ValidationError(
                             $errorXmlMsg,
@@ -180,7 +182,7 @@ class Response
 
                     // If encrypted, check also the decrypted document
                     if ($this->encrypted) {
-                        $res = Utils::validateXML($this->decryptedDocument, 'saml-schema-protocol-2.0.xsd', $this->_settings->isDebugActive());
+                        $res = Utils::validateXML($this->decryptedDocument, 'saml-schema-protocol-2.0.xsd', $this->_settings->isDebugActive(), $this->_settings->getSchemasPath());
                         if (!$res instanceof DOMDocument) {
                             throw new ValidationError(
                                 $errorXmlMsg,
@@ -193,13 +195,26 @@ class Response
 
                 $currentURL = Utils::getSelfRoutedURLNoQuery();
 
+                $responseInResponseTo = null;
                 if ($this->document->documentElement->hasAttribute('InResponseTo')) {
                     $responseInResponseTo = $this->document->documentElement->getAttribute('InResponseTo');
                 }
 
+                if (!isset($requestId) && isset($responseInResponseTo) && $security['rejectUnsolicitedResponsesWithInResponseTo']) {
+                    throw new ValidationError(
+                        "The Response has an InResponseTo attribute: " . $responseInResponseTo . " while no InResponseTo was expected",
+                        ValidationError::WRONG_INRESPONSETO
+                    );
+                }
+
                 // Check if the InResponseTo of the Response matchs the ID of the AuthNRequest (requestId) if provided
-                if (isset($requestId) && isset($responseInResponseTo)) {
-                    if ($requestId != $responseInResponseTo) {
+                if (isset($requestId) && $requestId != $responseInResponseTo) {
+                    if ($responseInResponseTo == null) {
+                        throw new ValidationError(
+                            "No InResponseTo at the Response, but it was provided the requestId related to the AuthNRequest sent by the SP: $requestId",
+                            ValidationError::WRONG_INRESPONSETO
+                        );
+                    } else {
                         throw new ValidationError(
                             "The InResponseTo of the Response: $responseInResponseTo, does not match the ID of the AuthNRequest sent by the SP: $requestId",
                             ValidationError::WRONG_INRESPONSETO
@@ -254,7 +269,10 @@ class Response
 
                 // Check destination
                 if ($this->document->documentElement->hasAttribute('Destination')) {
-                    $destination = trim($this->document->documentElement->getAttribute('Destination'));
+                    $destination = $this->document->documentElement->getAttribute('Destination');
+                    if (isset($destination)) {
+                        $destination = trim($destination);
+                    }
                     if (empty($destination)) {
                         if (!$security['relaxDestinationValidation']) {
                             throw new ValidationError(
@@ -263,10 +281,11 @@ class Response
                             );
                         }
                     } else {
-                        if (strpos($destination, $currentURL) !== 0) {
+                        $urlComparisonLength = $security['destinationStrictlyMatches'] ? strlen($destination) : strlen($currentURL);
+                        if (strncmp($destination, $currentURL, $urlComparisonLength) !== 0) {
                             $currentURLNoRouted = Utils::getSelfURLNoQuery();
-
-                            if (strpos($destination, $currentURLNoRouted) !== 0) {
+                            $urlComparisonLength = $security['destinationStrictlyMatches'] ? strlen($destination) : strlen($currentURLNoRouted);
+                            if (strncmp($destination, $currentURLNoRouted, $urlComparisonLength) !== 0) {
                                 throw new ValidationError(
                                     "The response was received at $currentURL instead of $destination",
                                     ValidationError::WRONG_DESTINATION
@@ -292,12 +311,14 @@ class Response
                 // Check the issuers
                 $issuers = $this->getIssuers();
                 foreach ($issuers as $issuer) {
-                    $trimmedIssuer = trim($issuer);
-                    if (empty($trimmedIssuer) || $trimmedIssuer !== $idPEntityId) {
-                        throw new ValidationError(
-                            "Invalid issuer in the Assertion/Response (expected '$idPEntityId', got '$trimmedIssuer')",
-                            ValidationError::WRONG_ISSUER
-                        );
+                    if (isset($issuer)) {
+                        $trimmedIssuer = trim($issuer);
+                        if (empty($trimmedIssuer) || $trimmedIssuer !== $idPEntityId) {
+                            throw new ValidationError(
+                                "Invalid issuer in the Assertion/Response (expected '$idPEntityId', got '$trimmedIssuer')",
+                                ValidationError::WRONG_ISSUER
+                            );
+                        }
                     }
                 }
 
@@ -383,7 +404,7 @@ class Response
                 $encryptedIDNodes = Utils::query($this->decryptedDocument, '/samlp:Response/saml:Assertion/saml:Subject/saml:EncryptedID');
                 if ($encryptedIDNodes->length > 0) {
                     throw new ValidationError(
-                        'Unsigned SAML Response that contains a signed and encrypted Assertion with encrypted nameId is not supported.',
+                        'SAML Response that contains an encrypted Assertion with encrypted nameId is not supported.',
                         ValidationError::NOT_SUPPORTED
                     );
                 }
@@ -448,18 +469,18 @@ class Response
 
     /**
      * @return string|null the ID of the assertion in the Response
+     *
+     * @throws ValidationError
      */
     public function getAssertionId()
     {
         if (!$this->validateNumAssertions()) {
-            throw new InvalidArgumentException("SAML Response must contain 1 Assertion.");
+            throw new ValidationError("SAML Response must contain 1 Assertion.", ValidationError::WRONG_NUMBER_OF_ASSERTIONS);
         }
         $assertionNodes = $this->_queryAssertion("");
         $id = null;
-        if ($assertionNodes->length == 1) {
-            if ($assertionNodes->item(0)->hasAttribute('ID')) {
-                $id = $assertionNodes->item(0)->getAttribute('ID');
-            }
+        if ($assertionNodes->length == 1 && $assertionNodes->item(0)->hasAttribute('ID')) {
+            $id = $assertionNodes->item(0)->getAttribute('ID');
         }
         return $id;
     }
@@ -476,7 +497,7 @@ class Response
     /**
      * Checks if the Status is success
      *
-     * @throws $statusExceptionMsg If status is not success
+     * @throws ValidationError If status is not success
      */
     public function checkStatus()
     {
@@ -538,7 +559,10 @@ class Response
 
         $entries = $this->_queryAssertion('/saml:Conditions/saml:AudienceRestriction/saml:Audience');
         foreach ($entries as $entry) {
-            $value = trim($entry->textContent);
+            $value = $entry->textContent;
+            if (isset($value)) {
+                $value = trim($value);
+            }
             if (!empty($value)) {
                 $audiences[] = $value;
             }
@@ -551,6 +575,7 @@ class Response
      * Gets the Issuers (from Response and Assertion).
      *
      * @return array @issuers The issuers of the assertion/response
+     *
      * @throws ValidationError
      */
     public function getIssuers()
@@ -586,6 +611,8 @@ class Response
      * Gets the NameID Data provided by the SAML response from the IdP.
      *
      * @return array Name ID Data (Value, Format, NameQualifier, SPNameQualifier)
+     *
+     * @throws ValidationError
      */
     public function getNameIdData()
     {
@@ -650,6 +677,8 @@ class Response
      * Gets the NameID provided by the SAML response from the IdP.
      *
      * @return string|null Name ID Value
+     *
+     * @throws ValidationError
      */
     public function getNameId()
     {
@@ -665,6 +694,8 @@ class Response
      * Gets the NameID Format provided by the SAML response from the IdP.
      *
      * @return string|null Name ID Format
+     *
+     * @throws ValidationError
      */
     public function getNameIdFormat()
     {
@@ -680,6 +711,8 @@ class Response
      * Gets the NameID NameQualifier provided by the SAML response from the IdP.
      *
      * @return string|null Name ID NameQualifier
+     *
+     * @throws ValidationError
      */
     public function getNameIdNameQualifier()
     {
@@ -692,10 +725,29 @@ class Response
     }
 
     /**
+     * Gets the NameID SP NameQualifier provided by the SAML response from the IdP.
+     *
+     * @return string|null NameID SP NameQualifier
+     *
+     * @throws ValidationError
+     */
+    public function getNameIdSPNameQualifier()
+    {
+        $nameIdSPNameQualifier = null;
+        $nameIdData = $this->getNameIdData();
+        if (!empty($nameIdData) && isset($nameIdData['SPNameQualifier'])) {
+            $nameIdSPNameQualifier = $nameIdData['SPNameQualifier'];
+        }
+        return $nameIdSPNameQualifier;
+    }
+
+    /**
      * Gets the SessionNotOnOrAfter from the AuthnStatement.
      * Could be used to set the local session expiration
      *
      * @return int|null The SessionNotOnOrAfter value
+     *
+     * @throws Exception
      */
     public function getSessionNotOnOrAfter()
     {
@@ -729,6 +781,8 @@ class Response
      * Gets the Attributes from the AttributeStatement element.
      *
      * @return array The attributes of the SAML Assertion
+     *
+     * @throws ValidationError
      */
     public function getAttributes()
     {
@@ -739,16 +793,28 @@ class Response
      * Gets the Attributes from the AttributeStatement element using their FriendlyName.
      *
      * @return array The attributes of the SAML Assertion
+     *
+     * @throws ValidationError
      */
     public function getAttributesWithFriendlyName()
     {
         return $this->_getAttributesByKeyName('FriendlyName');
     }
 
+    /**
+     * @param string $keyName
+     *
+     * @return array
+     *
+     * @throws ValidationError
+     */
     private function _getAttributesByKeyName($keyName = "Name")
     {
         $attributes = array();
         $entries = $this->_queryAssertion('/saml:AttributeStatement/saml:Attribute');
+
+        $security = $this->_settings->getSecurityData();
+        $allowRepeatAttributeName = $security['allowRepeatAttributeName'];
         /** @var $entry DOMNode */
         foreach ($entries as $entry) {
             $attributeKeyNode = $entry->attributes->getNamedItem($keyName);
@@ -756,11 +822,13 @@ class Response
                 continue;
             }
             $attributeKeyName = $attributeKeyNode->nodeValue;
-            if (in_array($attributeKeyName, array_keys($attributes))) {
-                throw new ValidationError(
-                    "Found an Attribute element with duplicated ".$keyName,
-                    ValidationError::DUPLICATED_ATTRIBUTE_NAME_FOUND
-                );
+            if (in_array($attributeKeyName, array_keys($attributes), true)) {
+                if (!$allowRepeatAttributeName) {
+                    throw new ValidationError(
+                        "Found an Attribute element with duplicated ".$keyName,
+                        ValidationError::DUPLICATED_ATTRIBUTE_NAME_FOUND
+                    );
+                }
             }
             $attributeValues = array();
             foreach ($entry->childNodes as $childNode) {
@@ -769,7 +837,12 @@ class Response
                     $attributeValues[] = $childNode->nodeValue;
                 }
             }
-            $attributes[$attributeKeyName] = $attributeValues;
+
+            if (in_array($attributeKeyName, array_keys($attributes), true)) {
+                $attributes[$attributeKeyName] = array_merge($attributes[$attributeKeyName], $attributeValues);
+            } else {
+                $attributes[$attributeKeyName] = $attributeValues;
+            }
         }
         return $attributes;
     }
@@ -800,6 +873,8 @@ class Response
      *   - Check that IDs and reference URI are unique and consistent.
      *
      * @return array Signed element tags
+     *
+     * @throws ValidationError
      */
     public function processSignedElements()
     {
@@ -873,14 +948,12 @@ class Response
             $signedElements[] = $signedElement;
         }
 
-        if (!empty($signedElements)) {
-            // Check SignedElements
-            if (!$this->validateSignedElements($signedElements)) {
-                throw new ValidationError(
-                    'Found an unexpected Signature Element. SAML Response rejected',
-                    ValidationError::UNEXPECTED_SIGNED_ELEMENTS
-                );
-            }
+        // Check SignedElements
+        if (!empty($signedElements) && !$this->validateSignedElements($signedElements)) {
+            throw new ValidationError(
+                'Found an unexpected Signature Element. SAML Response rejected',
+                ValidationError::UNEXPECTED_SIGNED_ELEMENTS
+            );
         }
         return $signedElements;
     }
@@ -889,6 +962,9 @@ class Response
      * Verifies that the document is still valid according Conditions Element.
      *
      * @return bool
+     *
+     * @throws Exception
+     * @throws ValidationError
      */
     public function validateTimestamps()
     {
@@ -924,6 +1000,8 @@ class Response
      * @param array $signedElements Signed elements
      *
      * @return bool
+     *
+     * @throws ValidationError
      */
     public function validateSignedElements($signedElements)
     {
@@ -970,11 +1048,9 @@ class Response
     /**
      * Extracts a node from the DOMDocument (Assertion).
      *
-     * @param string $assertionXpath Xpath Expresion
+     * @param string $assertionXpath Xpath Expression
      *
      * @return DOMNodeList The queried node
-     *
-     * @throws Exception
      */
     protected function _queryAssertion($assertionXpath)
     {
@@ -1044,6 +1120,7 @@ class Response
      * @return DOMDocument Decrypted Assertion
      *
      * @throws Exception
+     * @throws ValidationError
      */
     protected function decryptAssertion(\DomNode $dom)
     {
