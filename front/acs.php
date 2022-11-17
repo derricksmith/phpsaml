@@ -1,18 +1,19 @@
 <?php
-if (!defined('GLPI_ROOT')) {
-    define('GLPI_ROOT', '../../..');
+if (defined('GLPI_ROOT')) {
+    $glpi_root = GLPI_ROOT;
+} else {
+    $glpi_root = '../../..';
 }
-
 
 
 $post = $_POST;
 unset($_POST);
 
-include (GLPI_ROOT.'/inc/includes.php');
+include ($glpi_root.'/inc/includes.php');
 
-require_once GLPI_ROOT.'/plugins/phpsaml/lib/xmlseclibs/xmlseclibs.php';
-$libDir = GLPI_ROOT.'/plugins/phpsaml/lib/php-saml/src/Saml2/';
-		
+require_once $glpi_root.'/plugins/phpsaml/lib/xmlseclibs/xmlseclibs.php';
+$libDir = $glpi_root.'/plugins/phpsaml/lib/php-saml/src/Saml2/';
+
 $folderInfo = scandir($libDir);
 
 foreach ($folderInfo as $element) {
@@ -26,7 +27,7 @@ use OneLogin\Saml2\Response;
 
 $error = null;
 $phpsaml = new PluginPhpsamlPhpsaml();
-		
+
 try {
     if (isset($post['SAMLResponse'])) {
 		$settings = $phpsaml::$phpsamlsettings;
