@@ -19,7 +19,8 @@ class PluginPhpsamlUpdate {
 		$query = "SELECT * FROM `glpi_plugin_phpsaml_configs` WHERE id = '1'";
 		$result = $DB->query($query);
 		$array = $result->fetch_array();
-		if (array_key_exists('version', $array)) {
+		// Fixed for PHP8
+		if (is_array($array) && array_key_exists('version', $array)) {
 			$query = "SELECT * FROM `glpi_plugin_phpsaml_configs` WHERE id = '1'";
 			$result = $DB->query($query);
 			$array = $result->fetch_array();
@@ -50,6 +51,8 @@ class PluginPhpsamlUpdate {
 		self::do_113();
 		
 		self::do_120();
+		
+		self::do_121();
 		
 	}
 	
@@ -199,6 +202,63 @@ class PluginPhpsamlUpdate {
 		if(self::$installed_version < '1.2.0'){
 			self::set_installed_version("1.2.0");
 			Toolbox::logInFile("phpsaml", "INFO -- PHPSAML upgraded to 1.2.0" . "\n", true);
+		}
+	}
+	
+	public static function do_121(){
+		global $DB;
+		
+		Toolbox::logInFile("phpsaml", "INFO -- Checking Settings and Upgrading to 1.2.1 if necessary"  . "\n", true);
+
+		if(self::$installed_version < '1.2.1'){
+			//Check for saml_security_nameidencrypted column
+			$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'saml_security_nameidencrypted'";
+			$result = $DB->query($query);
+			//Alter table if 'saml_security_nameidencrypted' column is missing
+			if (!$result || $DB->numrows($result) == 0){
+				$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD saml_security_nameidencrypted int(2) after requested_authn_context_comparison";
+				$DB->query($query);
+				if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
+				if (!$DB->error()) Toolbox::logInFile("phpsaml", "INFO -- Column 'saml_security_nameidencrypted' added to 'glpi_plugin_phpsaml_configs'" . "\n", true);
+			}
+			
+			//Check for saml_security_authnrequestssigned column
+			$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'saml_security_authnrequestssigned'";
+			$result = $DB->query($query);
+			//Alter table if 'saml_security_authnrequestssigned' column is missing
+			if (!$result || $DB->numrows($result) == 0){
+				$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD saml_security_authnrequestssigned int(2) after saml_security_nameidencrypted";
+				$DB->query($query);
+				if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
+				if (!$DB->error()) Toolbox::logInFile("phpsaml", "INFO -- Column 'saml_security_authnrequestssigned' added to 'glpi_plugin_phpsaml_configs'" . "\n", true);
+			}
+			
+			//Check for saml_security_logoutrequestsigned column
+			$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'saml_security_logoutrequestsigned'";
+			$result = $DB->query($query);
+			//Alter table if 'saml_security_logoutrequestsigned' column is missing
+			if (!$result || $DB->numrows($result) == 0){
+				$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD saml_security_logoutrequestsigned int(2) after saml_security_authnrequestssigned";
+				$DB->query($query);
+				if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
+				if (!$DB->error()) Toolbox::logInFile("phpsaml", "INFO -- Column 'saml_security_logoutrequestsigned' added to 'glpi_plugin_phpsaml_configs'" . "\n", true);
+			}
+			
+			//Check for saml_security_logoutresponsesigned column
+			$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'saml_security_logoutresponsesigned'";
+			$result = $DB->query($query);
+			//Alter table if 'saml_security_logoutresponsesigned' column is missing
+			if (!$result || $DB->numrows($result) == 0){
+				$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD saml_security_logoutresponsesigned int(2) after saml_security_logoutrequestsigned";
+				$DB->query($query);
+				if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
+				if (!$DB->error()) Toolbox::logInFile("phpsaml", "INFO -- Column 'saml_security_logoutresponsesigned' added to 'glpi_plugin_phpsaml_configs'" . "\n", true);
+			}
+			
+			
+			
+			self::set_installed_version("1.2.1");
+			Toolbox::logInFile("phpsaml", "INFO -- PHPSAML upgraded to 1.2.1" . "\n", true);
 		}
 	}
 }
