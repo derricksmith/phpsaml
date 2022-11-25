@@ -149,7 +149,7 @@ Derrick Smith - [@derrick_a_smith](https://twitter.com/derrick_a_smith) - derric
 
   
 
-Project Link: [https://github.com/derricksmith/HaloApi](https://github.com/derricksmith/HaloApi)
+Project Link: [https://github.com/derricksmith/phpsaml](https://github.com/derricksmith/HaloApi)
 
   
 
