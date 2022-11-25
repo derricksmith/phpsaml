@@ -175,10 +175,6 @@ function plugin_post_init_phpsaml(){
 			return;
 		}
 		
-		if (strpos($_SERVER['REQUEST_URI'], 'front/inventory.php') !== false || strpos($_SERVER['REQUEST_URI'], 'front\inventory.php') !== false){
-			return;
-		}
-		
 		if (strpos($_SERVER['REQUEST_URI'], 'ldap_mass_sync.php') !== false){
 			return;
 		}
