@@ -42,6 +42,7 @@ define("PLUGIN_PHPSAML_MAX_GLPI", "10.0.99");
 define('PLUGIN_PHPSAML_DIR', __DIR__);
 define('PLUGIN_PHPSAML_BASEURL', GLPI_ROOT .'/plugins/phpsaml/');
 
+
 /**
  * Definition of the plugin version and its compatibility with the version of core
  *
@@ -130,6 +131,8 @@ function plugin_init_phpsaml()
 				$PLUGIN_HOOKS['config_page']['phpsaml'] = 'front/config.php';
 				//Redirect code
 				$PLUGIN_HOOKS['redirect_page']['phpsaml'] = 'phpsaml.form.php';
+				Plugin::registerClass('PluginPhpsamlRuleRight');
+				Plugin::registerClass('PluginPhpsamlRuleRightCollection', ['rulecollections_types' => true]);
 			}
 		}
 	}
