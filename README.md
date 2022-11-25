@@ -24,7 +24,7 @@
 
 <div  align="center">
 
-<h3  align="center">HaloAPI</h3>
+<h3  align="center">PHPSAML</h3>
   
 PHPSAML is a GLPI plugin that provides SAML single sign authentication for the GLPI ITSM system. 
 
