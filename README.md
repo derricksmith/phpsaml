@@ -51,9 +51,8 @@ GLPI is a powerful ITIL aligned IT Service Management tool.  GLPI does not provi
 
 ### Prerequisites
 
-* onelogin/php-saml
-* robrichards/xmlseclibs
 * GLPI > 9.4
+* PHP > 7.0
 
 
 <!-- USAGE EXAMPLES -->
