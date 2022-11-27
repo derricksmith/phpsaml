@@ -3,48 +3,61 @@
 class PluginPhpsamlPhpsaml
 {
 
-    const SESSION_GLPI_NAME_ACCESSOR = 'glpiname';
+    const SESSION_GLPI_NAME_ACCESSOR= 'glpiname';
     const SESSION_VALID_ID_ACCESSOR = 'valid_id';
 	
-	static private $init = false; 
-	static private $docsPath = GLPI_PLUGIN_DOC_DIR.'/phpsaml/';
-	static public $auth;
-	static public $phpsamlsettings;
-	static public $nameid;
-	static public $userdata;
-	static public $nameidformat;
-	static public $sessionindex;
-	static public $rightname = 'plugin_phpsaml_phpsaml';
+	// Created constants to keep within required 120 chars php line lengths.
+	// https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md
+	const SCHEMA_NAME 				= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
+	const SCHEMA_SURNAME 			= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';
+	const SCHEMA_FIRSTNAME 			= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname';
+	const SCHEMA_EMAILADDRESS 		= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';
 	
 
+	// Reversed keyword order to comply with PSR-2.
+	public static  $auth;
+	public static  $phpsamlsettings;
+	public static  $nameid;
+	public static  $userdata;
+	public static  $nameidformat;
+	public static  $sessionindex;
+	public static  $rightname = 'plugin_phpsaml_phpsaml';
+	private static  $init = false;
+	
 
 	/**
      * Constructor
     **/
-	function __construct() {
+	public function __construct()
+	{
 		self::init();
 	}
 	
-	public static function init() 
+
+	/**
+     * @return bool
+     */
+	public static function init()
 	{
+
 		if (!self::$init) {
 			require_once('libs.php');
-			//require_once(GLPI_ROOT .'/plugins/phpsaml/lib/php-saml/settings.php');
-		
+
 			self::$phpsamlsettings = self::getSettings();
-			
-			if(!empty($_SESSION['plugin_phpsaml_nameid'])) self::$nameid = $_SESSION['plugin_phpsaml_nameid'];
-			if(!empty($_SESSION['plugin_phpsaml_nameidformat'])) self::$nameidformat = $_SESSION['plugin_phpsaml_nameidformat'];
-			if(!empty($_SESSION['plugin_phpsaml_sessionindex'])) self::$sessionindex = $_SESSION['plugin_phpsaml_sessionindex'];
-			
-			self::$init = true; 
-			
-			
+			self::$nameid 		= (!empty($_SESSION['plugin_phpsaml_nameid'])) 		 ? $_SESSION['plugin_phpsaml_nameid'] 		: null;
+			self::$nameidformat = (!empty($_SESSION['plugin_phpsaml_nameidformat'])) ? $_SESSION['plugin_phpsaml_nameidformat'] : null;
+			self::$sessionindex = (!empty($_SESSION['plugin_phpsaml_sessionindex'])) ? $_SESSION['plugin_phpsaml_sessionindex'] : null; 
+			self::$init = true;
 		}
 	}
 	
-	public static function auth(){
-		if (!self::$auth){
+
+	/**
+     * @return bool
+     */
+	public static function auth()
+	{
+		if (!self::$auth) {
 			self::$auth = new OneLogin\Saml2\Auth(self::$phpsamlsettings);
 		}
 	}
@@ -53,8 +66,9 @@ class PluginPhpsamlPhpsaml
     /**
      * @return bool
      */
-    static public function isUserAuthenticated()
+    public static function isUserAuthenticated()
     {
+
         if (version_compare(GLPI_VERSION, '0.85', 'lt') && version_compare(GLPI_VERSION, '0.84', 'gt')) {
             return isset($_SESSION[self::SESSION_GLPI_NAME_ACCESSOR]);
         } else {
@@ -64,100 +78,139 @@ class PluginPhpsamlPhpsaml
         }
     }
 	
-	static public function glpiLogin($relayState = null)
+
+	/**
+     * @return bool
+     */
+	public static function glpiLogin($relayState = null)
     {
+
+		$phpsamlconf 	= new PluginPhpsamlConfig();
+        $auth 			= new PluginPhpsamlAuth();
+		$config 		= $phpsamlconf->getConfig();
 		
-		$phpsamlconf = new PluginPhpsamlConfig();
-		$config = $phpsamlconf->getConfig();
-        $auth = new PluginPhpsamlAuth();
-		
-		if($auth->loadUserData(self::$nameid) && $auth->checkUserData()){
+		// Perform login
+		if ($auth->loadUserData(self::$nameid) && $auth->checkUserData()) {
+			
 			Session::init($auth);
 			self::redirectToMainPage($relayState);
 			return;
-		}
+
+		} else {
 		
-		// JIT Provisioning added version 1.1.3
-		if (isset($config['jit']) && $config['jit'] == 1){
-			$user = new User();
-			if(!$user->getFromDBbyEmail(self::$nameid)){
-				if ((!empty(SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'][0])) && (!empty(SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'][0]))){
-					
-					$password = bin2hex(random_bytes(20));
-					
-					$input = array(
-						"name" => SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'][0],
-						"realname" => SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname'][0],
-						"firstname" => SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname'][0],
-						"_useremails" => array(SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'][0]),
-						"password" => $password,
-						"password2" => $password,
-					);
-					
-					$newuser = new User();
-					
-					$id = $newuser->add($input);
-					
-					if($auth->loadUserData(self::$nameid) && $auth->checkUserData()){
-						Session::init($auth);
-						self::redirectToMainPage($relayState);
-						return;
-					}
-				} else {
-					$error = "JIT Error: Unable to create user because missing claims (emailaddress)";
-					Toolbox::logInFile("php-errors", $error . "\n", true);
-				}	
+			// JIT Provisioning added version 1.1.3
+			if (isset($config['jit']) && $config['jit'] == 1) {
+
+				self::performJit($relayState);
+
 			} else {
-				$error = "JIT Error: Unable to create user because the email address already exists";
+				$error = "User or NameID not found.  Enable JIT Provisioning or manually create the user account";
+				Toolbox::logInFile("php-errors", $error . "\n", true);
+			}
+			
+			throw new Exception($error);
+			//self::sloRequest();					// Unreachable, by design?
+		}
+    }
+
+
+	/**
+     * @return bool
+     */
+	private static function performJit($relayState)
+	{
+		
+		$user = new User();
+		$auth = new PluginPhpsamlAuth();
+
+		if (!$user->getFromDBbyEmail(self::$nameid)){
+			if ((!empty(self::$userdata[self::SCHEMA_NAME][0])) && (!empty(self::$userdata[self::SCHEMA_EMAILADDRESS][0]))){
+				
+				$password = bin2hex(random_bytes(20));
+				
+				$input = array(
+					"name"        => self::$userdata[self::SCHEMA_NAME][0],
+					"realname"    => self::$userdata[self::SCHEMA_SURNAME][0],
+					"firstname"   => self::$userdata[self::SCHEMA_FIRSTNAME][0],
+					"_useremails" => array(self::$userdata[self::SCHEMA_EMAILADDRESS][0]),
+					"password"    => $password,
+					"password2"   => $password,
+				);
+
+				// Load the rulesEngine and required params
+				$phpSamlRuleCollection = new PluginPhpsamlRuleRightCollection();
+				$matchInput = ['_useremails' => $input['_useremails']];
+
+				// Create the new user
+				$newUser = new User();
+				$newUser->add($input);
+
+				// Run the RuleEngine
+				$phpSamlRuleCollection->processAllRules($matchInput, [], ['class'=>$user]);
+
+				// Retry login with newly created user.
+				if ($auth->loadUserData(self::$nameid) && $auth->checkUserData()) {
+					Session::init($auth);
+					self::redirectToMainPage($relayState);
+					return;
+				}
+			} else {
+				$error = "JIT Error: Unable to create user because missing claims (emailaddress)";
 				Toolbox::logInFile("php-errors", $error . "\n", true);
 			}
 		} else {
-			$error = "User or NameID not found.  Enable JIT Provisioning or manually create the user account";
+			$error = "JIT Error: Unable to create user because the email address already exists";
 			Toolbox::logInFile("php-errors", $error . "\n", true);
 		}
-		
-		throw new Exception($error);
-		sloRequest();
-    }
+	}
 	
-	static public function glpiLogout()
+
+	/**
+     * @return bool
+     */
+	public static function glpiLogout()
 	{
-		$valid_id = $_SESSION['valid_id'];
-		$cookie_key = array_search($valid_id, $_COOKIE);
+
+		$validId   = $_SESSION['valid_id'];
+		$cookieKey = array_search($validId, $_COOKIE);
 		
 		Session::destroy();
 		
 		//Remove cookie to allow new login
-		$cookie_path = ini_get('session.cookie_path');
+		$cookiePath = ini_get('session.cookie_path');
 		
-		if (isset($_COOKIE[$cookie_key])) {
-		   setcookie($cookie_key, '', time() - 3600, $cookie_path);
-		   unset($_COOKIE[$cookie_key]);
+		if (isset($_COOKIE[$cookieKey])) {
+		   setcookie($cookieKey, '', time() - 3600, $cookiePath);
+		   unset($_COOKIE[$cookieKey]);
 		}
 	}
 	
-	static public function ssoRequest($redirect)
+
+	/**
+     * @return bool
+     */
+	public static function ssoRequest($redirect)
 	{
 		global $CFG_GLPI;
-		
 		try {
 			self::auth();
-			self::$auth->login($returnTo = $redirect);
+			self::$auth->login($redirect);
 		} catch (Exception $e) {
 			$error = $e->getMessage();
 			Toolbox::logInFile("php-errors", $error . "\n", true);
-			
-			
 			Html::nullHeader("Login", $CFG_GLPI["url_base"] . '/index.php');
 			echo '<div class="center b">'.$error.'<br><br>';
-			// Logout whit noAUto to manage auto_login with errors
+			// Logout with noAuto to manage auto_login with errors
 			echo '<a href="' . $CFG_GLPI["url_base"] .'/index.php">' .__('Log in again') . '</a></div>';
 			Html::nullFooter();
-			
 		}
 	}
 	
-	static public function sloRequest()
+
+	/**
+     * @return bool
+     */
+	public static function sloRequest()
 	{
 		global $CFG_GLPI;
 		
@@ -166,16 +219,9 @@ class PluginPhpsamlPhpsaml
 		$nameId 		= null;
 		$sessionIndex 	= null;
 		$nameIdFormat 	= null;
-		
-		if (isset(self::$nameid)) {
-			$nameId = self::$nameid;
-		}
-		if (isset(self::$sessionindex)) {
-			$sessionIndex = self::$sessionindex;
-		}
-		if (isset(self::$nameidformat)) {
-			$nameIdFormat = self::$nameidformat;
-		}
+		$nameId 	    = (isset(self::$nameid)) 	   ? self::$nameid 		 : null;
+		$sessionIndex   = (isset(self::$sessionindex)) ? self::$sessionindex : null;
+		$nameIdFormat   = (isset(self::$nameidformat)) ? self::$nameidformat : null;
 
 		self::glpiLogout();
 
@@ -191,57 +237,53 @@ class PluginPhpsamlPhpsaml
 				echo '<div class="center b">'.$error.'<br><br>';
 				// Logout whit noAUto to manage auto_login with errors
 				echo '<a href="' . $CFG_GLPI["url_base"] .'/index.php">' .__('Log in again') . '</a></div>';
-				Html::nullFooter();
-				
+				Html::nullFooter();	
 			}
 		}
-		
 	}
 	
-    static public function redirectToMainPage($relayState = null)
+
+	/**
+     * @return bool
+     */
+    public static function redirectToMainPage($relayState = null)
     {
         global $CFG_GLPI;
-        $REDIRECT = "";
         $destinationUrl = $CFG_GLPI['url_base'];
-
-        if ($relayState) {
-            $REDIRECT = "?redirect=" . rawurlencode($relayState);
-        }
+		$redirect 		= ($relayState) ? '?redirect=' . rawurlencode($relayState) : null;
 
         if (isset($_SESSION["glpiactiveprofile"])) {
             if ($_SESSION["glpiactiveprofile"]["interface"] == "helpdesk") {
                 if ($_SESSION['glpiactiveprofile']['create_ticket_on_login']
-                    && empty($REDIRECT)
+                    && empty($redirect)
                 ) {
                     $destinationUrl .= "/front/helpdesk.public.php?create_ticket=1";
                 } else {
-                    $destinationUrl .= "/front/helpdesk.public.php$REDIRECT";
+                    $destinationUrl .= "/front/helpdesk.public.php$redirect";
                 }
-
             } else {
                 if ($_SESSION['glpiactiveprofile']['create_ticket_on_login']
-                    && empty($REDIRECT)
+                    && empty($redirect)
                 ) {
                     $destinationUrl .= "/front/ticket.form.php";
                 } else {
-                    $destinationUrl .= "/front/central.php$REDIRECT";
+                    $destinationUrl .= "/front/central.php$redirect";
                 }
             }
         }
-
         header("Location: " . $destinationUrl);
     }
 	
-	static public function getSettings(){
+	public static function getSettings()
+	{
 		global $CFG_GLPI;
 		$glpiUrl = $CFG_GLPI['url_base'];
 
 		$phpsamlconf = new PluginPhpsamlConfig();
 		$config = $phpsamlconf->getConfig();
 		
-		
-
-		$phpsamlsettings = array (
+		// This array is messy and very hard to read.
+		return array (
 			// If 'strict' is True, then the PHP Toolkit will reject unsigned
 			// or unencrypted messages if it expects them signed or encrypted
 			// Also will reject the messages if not strictly follow the SAML
@@ -303,7 +345,7 @@ class PluginPhpsamlPhpsaml
 				'x509cert' => (isset($config['saml_idp_certificate']) ? $config['saml_idp_certificate'] : ''),
 				
 			),
-			// Compression settings 
+			// Compression settings
 			// Handle if the getRequest/getResponse methods will return the Request/Response deflated.
 			// But if we provide a $deflate boolean parameter to the getRequest or getResponse
 			// method it will have priority over the compression settings.
@@ -405,17 +447,15 @@ class PluginPhpsamlPhpsaml
 				'lowercaseUrlencoding' => true,
 			),
 		);
-		return $phpsamlsettings;
 	}
 	
-	static public function getAuthn($value){
-		if(preg_match('/^none,.+/i', $value)){
-			$array = explode(',', $value);
+	public static function getAuthn($value)
+	{
+		if (preg_match('/^none,.+/i', $value)) {
+			$array  = explode(',', $value);
 			$output = array();
-			// TODO: Current configuration input field allows multiple Items, logic below will select the first found then break. 
-			// Because of this the end result might not be what the user expects based on the config screen.
-			foreach ($array as $item){
-				switch($item){
+			foreach ($array as $item) {
+				switch ($item) {
 					case 'PasswordProtectedTransport':
 						$output[] = 'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport';
 						break;
@@ -425,10 +465,13 @@ class PluginPhpsamlPhpsaml
 					case 'X509':
 						$output[] = 'urn:oasis:names:tc:SAML:2.0:ac:classes:X509';
 						break;
+					default:
+						$output[] = '';
+						break;
 				}
 			}
 			return $output;
-		}else{
+		} else {
 			return false;
 		}
 	}
