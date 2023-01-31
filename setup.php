@@ -241,6 +241,7 @@ function plugin_display_login(){
 	// lets check for the redirect parameter, if it doesn't exist we will redirect back to front page
 	$redirect = (isset($_GET['redirect']) ? '&redirect='.urlencode($_GET['redirect']) : null);
 	?>
-	<input class="submit btn btn-primary w-100" value="Sign In with SSO" onclick="window.location.href='?SSO=1<?php echo $redirect; ?>'" />
+	<!-- Don't delete, for archive purpose (Rihan Y. | 23-01-2023) -->
+	<!-- <input class="submit btn btn-primary w-100" value="Sign In with SSO" onclick="window.location.href='?SSO=1<?php //echo $redirect; ?>'" /> -->
 	<?php
 }
