@@ -148,11 +148,7 @@ class PluginPhpsamlPhpsaml
 			Toolbox::logInFile("php-errors", $error . "\n", true);
 			
 			
-			Html::nullHeader("Login", $CFG_GLPI["url_base"] . '/index.php');
-			echo '<div class="center b">'.$error.'<br><br>';
-			// Logout whit noAUto to manage auto_login with errors
-			echo '<a href="' . $CFG_GLPI["url_base"] .'/index.php">' .__('Log in again') . '</a></div>';
-			Html::nullFooter();
+			echo '<div class="card text-white bg-danger text-sm-center sticky-top row justify-content-md-center"><b>Kesalahan terjadi:</b> <i>'. $error.'</i></div>';
 			
 		}
 	}
@@ -187,11 +183,7 @@ class PluginPhpsamlPhpsaml
 				$error = $e->getMessage();
 				Toolbox::logInFile("php-errors", $error . "\n", true);
 				
-				Html::nullHeader("Login", $CFG_GLPI["url_base"] . '/index.php');
-				echo '<div class="center b">'.$error.'<br><br>';
-				// Logout whit noAUto to manage auto_login with errors
-				echo '<a href="' . $CFG_GLPI["url_base"] .'/index.php">' .__('Log in again') . '</a></div>';
-				Html::nullFooter();
+				echo '<div class="card text-white bg-danger text-sm-center sticky-top row justify-content-md-center"><b>Kesalahan terjadi:</b> <i>'. $error.'</i></div>';
 				
 			}
 		}

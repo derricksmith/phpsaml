@@ -211,7 +211,7 @@ function plugin_post_init_phpsaml(){
 				Html::nullHeader("Login", $CFG_GLPI['url_base'] . '/index.php');
 				echo '<div class="center b">'.$error.'<br><br>';
 				// Logout whit noAUto to manage auto_login with errors
-				echo '<a href="' . $CFG_GLPI['url_base'] .'/index.php">' .__('Log in again') . '</a></div>';
+				echo '<a href="' . $CFG_GLPI['url_base'] .'/index.php">' .__('Masuk Ulang') . '</a></div>';
 				Html::nullFooter();
 				exit();
 			} else {
@@ -240,6 +240,7 @@ function plugin_init_session_phpsaml() {
 function plugin_display_login(){
 	// lets check for the redirect parameter, if it doesn't exist we will redirect back to front page
 	$redirect = (isset($_GET['redirect']) ? '&redirect='.urlencode($_GET['redirect']) : null);
+	$_GET['redirect_login_sso_bps'] = $redirect;
 	?>
 	<!-- Don't delete, for archive purpose (Rihan Y. | 23-01-2023) -->
 	<!-- <input class="submit btn btn-primary w-100" value="Sign In with SSO" onclick="window.location.href='?SSO=1<?php //echo $redirect; ?>'" /> -->
