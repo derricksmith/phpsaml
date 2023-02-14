@@ -1,0 +1,320 @@
+<script>
+    $(function() {
+
+        $('#keep-order').multiSelect({
+            keepOrder: true,
+            selectableHeader: '<b>[[A]]</b>',
+            selectionHeader: '<b>[[B]]</b>',
+            cssClass: 'multiselect',
+            afterSelect: function(value, text){
+                var get_val = $("#requested-authn-context").val();
+                var array = [];
+                if (get_val) var array = get_val.split(',');
+                if(!array.includes(value)){
+                    array.push(value);
+                }
+                var string = array.toString();
+                $("#requested-authn-context").val(string);
+                
+            },
+            afterDeselect: function(value, text){
+                var get_val = $("#requested-authn-context").val();
+                var array = [];
+                if (get_val){
+                    var array = get_val.split(',');
+                }
+                
+                var index = array.indexOf(value.toString());
+                if (index !== -1) {
+                  array.splice(index, 1);
+                }
+                var string = array.toString();
+                $("#requested-authn-context").val(string);
+                
+                
+            }
+        });
+    });
+</script>
+<style>
+    form#phpsaml_config label,
+    form#phpsaml_config input,
+    form#phpsaml_config textbox,
+    form#phpsaml_config textarea,
+    form#phpsaml_config select {
+        font-size: 14px;
+    }
+    
+    form#phpsaml_config input,
+    form#phpsaml_config textbox,
+    form#phpsaml_config textarea,
+    form#phpsaml_config select {
+        margin-bottom:5px;
+    }
+    
+    .multiselect {
+        width: 100%;
+    }
+    
+    /*
+    .phpsaml_config_wrapper {
+    }
+    */
+
+    .phpsaml_config_wrapper h1 {
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 4px;
+        padding: 5px;
+        border-radius: 0;
+        margin: 0;
+        padding: 10px 5px;
+        background-color: #F1F1F1;
+    }
+    
+    .phpsaml_config_wrapper h2 {
+        font-size: 16px;
+        font-weight: bold;
+        padding: 5px;
+        margin-bottom: 10px;
+        border-bottom:1px solid #000;
+    }
+    
+    .phpsaml_config_wrapper form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-gap: 5px;
+    }
+    
+    .phpsaml_config_wrapper form label {
+      font-weight: bold;
+      display: block;
+      margin-bottom:5px;
+    }
+    .phpsaml_config_wrapper form p {
+      margin: 0;
+      padding: 5px;
+    }
+    
+    .phpsaml_config_wrapper form input,
+    .phpsaml_config_wrapper form textarea {
+        display: block;
+        width: 100%;
+        -webkit-box-sizing: border-box;
+           -moz-box-sizing: border-box;
+                box-sizing: border-box;
+    }
+    
+    .phpsaml_config_wrapper form input {
+        height:30px;
+    }
+    
+    .phpsaml_config_wrapper form textarea {
+        min-height:250px;
+    }
+    
+    .phpsaml_config_wrapper form input:focus,
+    .phpsaml_config_wrapper form textarea:focus,
+    .phpsaml_config_wrapper form select:focus {
+        border-color: rgba(82, 168, 236, 0.8);
+          -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+          -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+          box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+          outline: 0;
+          outline: thin dotted \9;
+    }
+
+    .full-width {
+      grid-column: span 2;
+    }
+</style>
+
+<div class="phpsaml_config_wrapper tab_cadre_fixe">
+    <form name="form" method="post" action="[[GLPI_ROOTDOC]]/plugins/phpsaml/front/config.form.php" id="phpsaml_config">
+        
+        <input type="hidden" name="id" value="1">
+        <h1 class="full-width">[[SAML_TITLE]]</h1>
+
+        <h3 style='color:red;'>[[SAML_ERRORS]]</h3>
+        
+        <h2 class="full-width">[[SAML_HEADER_GENERAL]]</h2>
+
+        <p class="full-width">
+            <label for="enforced">
+                [[SAML_ENFORCED_LABEL]]
+                <i class="pointer fa fa-info" title="[[SAML_ENFORCED_TITLE]]"></i>
+            </label>
+            <select name="enforced">
+                [[SAML_ENFORCED_SELECT]]
+            </select>
+        </p>
+        <p>
+            <label for="strict">
+                [[STRICT_LABEL]]
+                <i class="pointer fa fa-info" title="[[STRICT_TITLE]]"></i>
+            </label>
+            <select name="strict">
+                [[STRICT_SELECT]]
+            </select>
+        </p>
+        <p>
+            <label for="debug">
+                [[DEBUG_LABEL]]
+                <i class="pointer fa fa-info" title="[[DEBUG_TITLE]]"></i>
+            </label>
+            <select name="debug">
+                [[DEBUG_SELECT]]
+            </select>
+        </p>
+        <p class="full-width">
+            <label for="jit">
+                [[JIT_LABEL]]
+                <i class="pointer fa fa-info" title="[[JIT_TITLE]]"></i>
+            </label>
+            <select name="jit">
+                [[JIT_SELECT]]
+            </select>
+        </p>
+        
+        <h2 class="full-width">[[HEADER_PROVIDER]]</h2>
+        
+        <p class="full-width">
+            <label for="saml_sp_certificate">
+                [[SP_CERT_LABEL]]
+                <i class="pointer fa fa-info" title="[[SP_CERT_TITLE]]"></i>
+            </label> 
+           [[SP_CERT_ERROR]]
+            <textarea name="saml_sp_certificate">[[SP_CERT_VALUE]]</textarea>
+        </p>
+
+        <p class="full-width">
+            <label for="saml_sp_certificate_key">
+                [[SP_KEY_LABEL]]
+                <i class="pointer fa fa-info" title="[[SP_KEY_TITLE]]"></i>
+            </label>
+           [[SP_KEY_ERROR]]
+            <textarea name="saml_sp_certificate_key" rows=15 cols=75>[[SP_KEY_VALUE]]</textarea>
+        </p>
+
+        <p class="full-width">
+            <label for="saml_idp_nameid_format">
+                [[SP_ID_LABEL]]
+                <i class="pointer fa fa-info" title="[[SP_ID_TITLE]]"></i>
+            </label>
+            [[SP_ID_ERROR]]
+            <select name="saml_sp_nameid_format">
+                [[SP_ID_SELECT]]
+            </select>
+        </p>
+        
+        <h2 class="full-width">[[HEADER_PROVIDER_CONFIG]]</h2>
+        
+        <p class="full-width">
+            <label for="saml_idp_entity_id">
+                [[IP_ID_LABEL]]
+                <i class="pointer fa fa-info" title="[[IP_ID_TITLE]]"></i>
+            </label>
+            [[IP_ID_ERROR]]
+            <input type="text" size="90" name="saml_idp_entity_id" value="[[IP_ID_VALUE]]">
+        </p>
+
+        <p class="full-width">
+            <label for="saml_idp_single_sign_on_service">
+                [[IP_SSO_URL_LABEL]]
+                <i class="pointer fa fa-info" title="[[IP_SSO_URL_TITLE]]"></i>
+            </label>
+            [[IP_SSO_URL_ERROR]]
+            <input type="text" size="90" name="saml_idp_single_sign_on_service" value="[[IP_SSO_URL_VALUE]]">
+        </p>
+
+        <p class="full-width">
+            <label for="saml_idp_single_logout_service">
+                [[IP_SLS_URL_LABEL]] 
+                <i class="pointer fa fa-info" title="[[IP_SLS_URL_TITLE]]</i>
+            </label>
+            [[IP_SLS_URL_ERROR]]
+            <input type="text" size="90" name="saml_idp_single_logout_service" value="[[IP_SLS_URL_VALUE]]">
+        </p>
+
+        <p class="full-width">
+            <label for="saml_idp_certificate">
+                [[IP_CERT_LABEL]]
+                <i class="pointer fa fa-info" title="[[IP_CERT_TITLE]]"></i>
+            </label>
+            [[IP_CERT_ERROR]]
+            <textarea name="saml_idp_certificate" rows="15" cols="75">[[IP_CERT_VALUE]]</textarea>
+        </p>
+        
+        <h2 class="full-width">[[HEADER_SECURITY]]</h2>
+
+        <p class="full-width">
+            <label for="requested_authn_context">
+                [[AUTHN_LABEL]]
+                <i class="pointer fa fa-info" title="[[AUTHN_TITLE]]"></i>
+            </label>
+        
+            <select id="keep-order" multiple="multiple">
+                [[AUTHN_SELECT]]
+            </select>	
+            <input id="requested-authn-context" type="hidden" name="requested_authn_context" value="[[AUTHN_CONTEXT]]" />
+        </p>
+
+        <p class="full-width">
+            <label for="requested_authn_context_comparison">
+                [[AUTHN_COMPARE_LABEL]]
+                <i class="pointer fa fa-info" title="[[AUTHN_COMPARE_TITLE]]"></i>
+            </label>
+            <select name="requested_authn_context_comparison">
+               [[AUTHN_COMPARE_SELECT]]
+            </select>	
+        </p>
+
+        <p>
+            <label for="saml_security_nameidencrypted">
+                [[ENCR_NAMEID_LABEL]]
+                <i class="pointer fa fa-info" title="[[ENCR_NAMEID_TITLE]]"></i>
+            </label>
+            [[ENCR_NAMEID_ERROR]]
+            <select name="saml_security_nameidencrypted">
+                [[ENCR_NAMEID_SELECT]]
+            </select>
+        </p>
+
+        <p>
+            <label for="saml_security_authnrequestssigned">
+                [[SIGN_AUTHN_REQ_LABEL]]
+                <i class="pointer fa fa-info" title="[[SIGN_AUTHN_REQ_TITLE]]"></i>
+            </label>
+           [[SIGN_AUTHN_REQ_ERROR]]
+            <select name="saml_security_authnrequestssigned">
+                [[SIGN_AUTHN_REQ_SELECT]]
+            </select>
+        </p>
+
+        <p>
+            <label for="saml_security_logoutrequestsigned">
+                [[SIGN_LOGOUT_REQ_LABEL]]  
+                <i class="pointer fa fa-info" title="[[SIGN_LOGOUT_REQ_TITLE]]"></i>
+            </label>
+                [[SIGN_LOGOUT_REQ_ERROR]]
+            <select name="saml_security_logoutrequestsigned">
+                [[SIGN_LOGOUT_REQ_SELECT]]
+            </select>
+        </p>
+
+        <p>
+            <label for="saml_security_logoutresponsesigned">
+                [[SIGN_LOGOUT_RES_LABEL]]
+                <i class="pointer fa fa-info" title="[[SIGN_LOGOUT_RES_TITLE]]"></i>
+            </label>
+            [[SIGN_LOGOUT_RES_ERROR]]
+            <select name="saml_security_logoutresponsesigned">
+                [[SIGN_LOGOUT_RES_SELECT]]
+            </select>
+        </p>
+        
+        <p class="full-width">
+            <input type="submit" name="update" value="<?php echo __("Update", "phpsaml"); ?>" class="submit" >
+        </p>
+    [[CLOSE_FORM]]
+</div>

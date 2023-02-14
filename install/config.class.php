@@ -36,6 +36,9 @@
    @link      https://forge.indepnet.net/projects/barscode
    @since     2009
 
+   @Changes
+    - 11-2022 Code cleanup - Chris Gralike
+
    ------------------------------------------------------------------------
  */
  
@@ -50,10 +53,11 @@ class PluginPhpsamlConfig extends CommonDBTM {
    static $rightname = "plugin_phpsaml_config";
 
 
-   function showForm(){
+   function showForm()
+   {
 		global $DB, $CFG_GLPI;
 		$config = PluginPhpsamlConfig::getConfig();
-		if (isset($_SESSION["phpsaml_messages"])){
+		if (isset($_SESSION["phpsaml_messages"])) {
 			$messages = $_SESSION["phpsaml_messages"];
 		} else {
 			$messages = self::validate($config);
@@ -62,11 +66,12 @@ class PluginPhpsamlConfig extends CommonDBTM {
 		$query = "SELECT * FROM `glpi_plugin_phpsaml_configs`";
 		$result = $DB->query($query) or die("error  ". $DB->error());
 		$data = $result->fetch_array();
+
 		?>
 		<script>
 			$(function() {
 
-				$('#keep-order').multiSelect({ 
+				$('#keep-order').multiSelect({
 					keepOrder: true,
 					selectableHeader: '<b><?php echo __('Available', 'phpsaml'); ?></b>',
 					selectionHeader: '<b><?php echo __('Selected', 'phpsaml'); ?></b>',
@@ -75,7 +80,7 @@ class PluginPhpsamlConfig extends CommonDBTM {
 						var get_val = $("#requested-authn-context").val();
 						var array = [];
 						if (get_val) var array = get_val.split(',');
-						if(!array.includes(value)){ 
+						if(!array.includes(value)){
 							array.push(value);
 						}
 						var string = array.toString();
@@ -85,7 +90,7 @@ class PluginPhpsamlConfig extends CommonDBTM {
 					afterDeselect: function(value, text){
 						var get_val = $("#requested-authn-context").val();
 						var array = [];
-						if (get_val){ 
+						if (get_val){
 							var array = get_val.split(',');
 						}
 						
@@ -98,7 +103,7 @@ class PluginPhpsamlConfig extends CommonDBTM {
 						
 						
 					}
-				});  
+				});
 				
 			});
 		</script>
@@ -349,15 +354,21 @@ class PluginPhpsamlConfig extends CommonDBTM {
 		<?php
 		unset($_SESSION["phpsaml_messages"]);
 	}
-   
-	function inArraySelected($string, $array=array(), $type='string' ){
-		if ($type == 'string'){
+
+	/**
+     * inArraySelected;
+	 * @param string $string
+	 * @param mixed $array 
+     * @return icon to use in rules list
+     **/
+	function inArraySelected($string, $array=array(), $type='string')  
+	{
+		if ($type == 'string') {
 			$array = explode(',', $array);
 		}
-		if(isset($array) && !empty($array)){
-			if(in_array($string, $array)){
-				return "Selected";
-			}
+
+		if (isset($array) && !empty($array) && in_array($string, $array)) {
+			return "Selected";
 		}
 	}
    

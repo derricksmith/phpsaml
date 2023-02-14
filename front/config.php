@@ -54,7 +54,7 @@ Html::header(__('PHP SAML', 'phpsaml'), $_SERVER['PHP_SELF'], "config", "plugins
 $phpSamlConfig = new PluginPhpsamlConfig();
 
 if (isset($_POST["update"])) {
-	$messages = $phpSamlConfig->validate($_POST);
+	$messages = $phpSamlConfig->ValidateInput($_POST);
 	if(empty($messages['errors'])){
 		$phpSamlConfig->update($_POST);
 	} 

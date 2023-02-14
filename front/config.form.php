@@ -44,7 +44,7 @@ include ('../../../inc/includes.php');
 $phpsamlconf = new PluginPhpsamlConfig();
 
 if (isset($_POST["update"])) {
-	$messages = $phpsamlconf->validate($_POST);
+	$messages = $phpsamlconf->ValidateInput($_POST);
 	if(empty($messages['errors'])){
 		$phpsamlconf->update($_POST);
 	} 

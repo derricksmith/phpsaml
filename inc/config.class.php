@@ -2,515 +2,571 @@
 
 /*
    ------------------------------------------------------------------------
-   Barcode
-   Copyright (C) 2009-2016 by the Barcode plugin Development Team.
-
-   https://forge.indepnet.net/projects/barscode
+   Derrick Smith - PHP SAML Plugin
+   Copyright (C) 2014 by Derrick Smith
    ------------------------------------------------------------------------
 
    LICENSE
 
-   This file is part of barcode plugin project.
+   This file is part of phpsaml project.
 
-   Plugin Barcode is free software: you can redistribute it and/or modify
+   PHP SAML Plugin is free software: you can redistribute it and/or modify
    it under the terms of the GNU Affero General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
-   Plugin Barcode is distributed in the hope that it will be useful,
+   phpsaml is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU Affero General Public License for more details.
 
    You should have received a copy of the GNU Affero General Public License
-   along with Plugin Barcode. If not, see <http://www.gnu.org/licenses/>.
+   along with phpsaml. If not, see <http://www.gnu.org/licenses/>.
 
    ------------------------------------------------------------------------
 
-   @package   Plugin Barcode
-   @author    David Durieux
+   @package   phpsamlconfig
+   @author    Chris Gralike
    @co-author
-   @copyright Copyright (c) 2009-2016 Barcode plugin Development team
+   @copyright Copyright (c) 2018 by Derrick Smith
    @license   AGPL License 3.0 or (at your option) any later version
               http://www.gnu.org/licenses/agpl-3.0-standalone.html
-   @link      https://forge.indepnet.net/projects/barscode
-   @since     2009
+   @since     2018
+
+   @changelog rewrite and restructure removing context switches and improving readability and maintainability
+   @changelog breaking config up into methods for maintainability and unit testing purposes.
 
    ------------------------------------------------------------------------
  */
- 
-use OneLogin\Saml2\Utils;
 
+// Header guard
 if (!defined("GLPI_ROOT")) {
     die("Sorry. You can't access directly to this file");
 }
 
-class PluginPhpsamlConfig extends CommonDBTM {
+class PluginPhpsamlConfig extends CommonDBTM
+{
+    /**
+     * defines the rights a user must posses to be able to access this menu option in the rules section
+     * @var string
+     **/
+	public static   $rightname = "plugin_phpsaml_config";
 
-   static $rightname = "plugin_phpsaml_config";
+
+    /**
+     * Defines where the setup HTML template is located
+     * @var string
+     **/
+    private $tpl = '../tpl/configForm.html';
 
 
-	function showForm($ID, array $options = []) {
-		global $DB, $CFG_GLPI;
-		$config = PluginPhpsamlConfig::getConfig();
-		if (isset($_SESSION["phpsaml_messages"])){
-			$messages = $_SESSION["phpsaml_messages"];
-		} else {
-			$messages = self::validate($config);
-		}
-		
-		$query = "SELECT * FROM `glpi_plugin_phpsaml_configs`";
-		$result = $DB->query($query) or die("error  ". $DB->error());
-		$data = $result->fetch_array();
-		?>
-		<script>
-			$(function() {
+    /**
+     * Stores a copy of the HTML template in memory for processing
+     * @var string
+     **/
+    private $htmlForm = null;
 
-				$('#keep-order').multiSelect({ 
-					keepOrder: true,
-					selectableHeader: '<b><?php echo __('Available', 'phpsaml'); ?></b>',
-					selectionHeader: '<b><?php echo __('Selected', 'phpsaml'); ?></b>',
-					cssClass: 'multiselect',
-					afterSelect: function(value, text){
-						var get_val = $("#requested-authn-context").val();
-						var array = [];
-						if (get_val) var array = get_val.split(',');
-						if(!array.includes(value)){ 
-							array.push(value);
-						}
-						var string = array.toString();
-						$("#requested-authn-context").val(string);
-						
-					},
-					afterDeselect: function(value, text){
-						var get_val = $("#requested-authn-context").val();
-						var array = [];
-						if (get_val){ 
-							var array = get_val.split(',');
-						}
-						
-						var index = array.indexOf(value.toString());
-						if (index !== -1) {
-						  array.splice(index, 1);
-						}
-						var string = array.toString();
-						$("#requested-authn-context").val(string);
-						
-						
-					}
-				});  
-				
-			});
-		</script>
-		<style>
-			form#phpsaml_config label, form#phpsaml_config input, form#phpsaml_config textbox, form#phpsaml_config textarea, form#phpsaml_config select {
-				font-size: 14px;
-			}
-			
-			form#phpsaml_config input, form#phpsaml_config textbox, form#phpsaml_config textarea, form#phpsaml_config select {
-				margin-bottom:5px;
-			}
-			
-			.multiselect {
-				width: 100%;
-			}
-			
-			.phpsaml_config_wrapper {
-			}
 
-			.phpsaml_config_wrapper h1 {
-				font-size: 18px;
-				font-weight: bold;
-				border-radius: 4px;
-				padding: 5px;
-				border-radius: 0;
-				margin: 0;
-				padding: 10px 5px;
-				background-color: #F1F1F1;
-			}
-			
-			.phpsaml_config_wrapper h2 {
-				font-size: 16px;
-				font-weight: bold;
-				padding: 5px;
-				margin-bottom: 10px;
-				border-bottom:1px solid #000;
-			}
-			
-			.phpsaml_config_wrapper form {
-				display: grid;
-				grid-template-columns: 1fr 1fr;
-				grid-gap: 5px;
-			}
-			
-			.phpsaml_config_wrapper form label {
-			  font-weight: bold;
-			  display: block;
-			  margin-bottom:5px;
-			}
-			.phpsaml_config_wrapper form p {
-			  margin: 0;
-			  padding: 5px;
-			}
-			
-			.phpsaml_config_wrapper form input, .phpsaml_config_wrapper form textarea {
-				display: block;
-				width: 100%;
-				-webkit-box-sizing: border-box;
-				   -moz-box-sizing: border-box;
-						box-sizing: border-box;
-			}
-			
-			.phpsaml_config_wrapper form input {
-				height:30px;
-			}
-			
-			.phpsaml_config_wrapper form textarea {
-				min-height:250px;
-			}
-			
-			.phpsaml_config_wrapper form input:focus, .phpsaml_config_wrapper form textarea:focus, .phpsaml_config_wrapper form select:focus {
-				border-color: rgba(82, 168, 236, 0.8);
-				  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
-				  -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
-				  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
-				  outline: 0;
-				  outline: thin dotted \9;
-			}
+    /**
+     * Stores a copy of the form values to be injected into the final HTML form
+     * @var array
+     **/
+    private $formValues = [];
 
-			.full-width {
-			  grid-column: span 2;
-			}
-			
-			
-		</style>
-		
-		<div class="phpsaml_config_wrapper tab_cadre_fixe">
-			<form name="form" method="post" action="<?php echo $CFG_GLPI["root_doc"]; ?>"/plugins/phpsaml/front/config.form.php" id="phpsaml_config">
-				<input type="hidden" name="id" value="1">
-				
-				<h1 class="full-width"><?php echo __("PHP SAML Configuration", "phpsaml"); ?></h1>
-				
-				<?php echo ((isset($messages["errors"]) && count($messages["errors"]) > 0) ? "<h3 style='color:red;'>". __('Error updating settings. Review field values.', 'phpsaml'). "</h3>" : ""); ?>
-				
-				<h2 class="full-width"><?php echo __("General", "phpsaml"); ?></h2>
-				<p class="full-width">
-					<label for="enforced">
-						<?php echo __("Plugin Enforced", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("Toggle 'yes' to enforce Single Sign On for all sessions.  Toggle 'no' to allow visitors the option to login with Single Sign On from the login page.", "phpsaml"); ?>"></i>
-					</label>
-					<select name="enforced">
-						<option value="1" <?php echo ((isset($config["enforced"]) && $config["enforced"] == 1) ? "selected" : ""); ?>>Yes</option>
-						<option value="0" <?php echo ((isset($config["enforced"]) && $config["enforced"] == 0) || !isset($config["enforced"]) ? "selected" : ""); ?>>No</option>
-					</select>
-				</p>
-				<p>
-					<label for="strict">
-						<?php echo __("Strict", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("If 'strict' is True, then the PHP Toolkit will reject unsigned or unencrypted messages if it expects them to be signed or encrypted. Also it will reject the messages if the SAML standard is not strictly followed: Destination, NameId, Conditions ... are validated too.", "phpsaml"); ?>"></i>
-					</label>
-					<select name="strict">
-						<option value="1" <?php echo ((isset($config["strict"]) && $config["strict"] == 1) ? "selected" : ""); ?>>Yes</option>
-						<option value="0" <?php echo ((isset($config["strict"]) && $config["strict"] == 0) || !isset($config["strict"])  ? "selected" : ""); ?>>No</option>
-					</select>
-				</p>
-				<p>
-					<label for="debug">
-						<?php echo __("Debug", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("Toggle yes to print errors.", "phpsaml"); ?>"></i>
-					</label>
-					<select name="debug">
-						<option value="1" <?php echo ((isset($config["debug"]) && $config["debug"] == 1) ? "selected" : ""); ?>>Yes</option>
-						<option value="0" <?php echo ((isset($config["debug"]) && $config["debug"] == 0) || !isset($config["debug"]) ? "selected" : ""); ?>>No</option>
-					</select>
-				</p>
-				<p class="full-width">
-					<label for="jit">
-						<?php echo __("Just In Time (JIT) Provisioning", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("Toggle 'yes' to create new users if they do not already exist.  Toggle 'no' will cause an error if the user does not already exist in GLPI.", "phpsaml"); ?>"></i>
-					</label>
-					<select name="jit">
-						<option value="1" <?php echo ((isset($config["jit"]) && $config["jit"] == 1) ? "selected" : ""); ?>>Yes</option>
-						<option value="0" <?php echo ((isset($config["jit"]) && $config["jit"] == 0) || !isset($config["jit"]) ? "selected" : ""); ?>>No</option>
-					</select>
-				</p>
-				
-				<h2 class="full-width"><?php echo __("Service Provider Configuration", "phpsaml"); ?></h2>
-				
-				<p class="full-width">
-					<label for="saml_sp_certificate">
-						<?php echo __("Service Provider Certificate", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("Certificate GLPI should use when communicating with the Identity Provider.", "phpsaml"); ?>"></i>
-					</label> 
-					<?php
-						echo (isset($messages["errors"]["saml_sp_certificate"]) ? "<br /><small style='color:red; width:300px'>".__('Error: ', 'phpsaml').$messages["errors"]["saml_sp_certificate"]."</small>" : "");
-						echo (isset($messages["warnings"]["saml_sp_certificate"]) ? "<br /><small style='color:orange; width:300px'>".__('Warning: ', 'phpsaml').$messages["warnings"]["saml_sp_certificate"]."</small>" : "");
-					?>
-					<textarea name="saml_sp_certificate"><?php echo (isset($config["saml_sp_certificate"]) ? $config["saml_sp_certificate"] : ""); ?></textarea>
-				</p>
-				<p class="full-width">
-					<label for="saml_sp_certificate_key">
-						<?php echo __("Service Provider Certificate Key", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("Certificate private key GLPI should use when communicating with the Identity Provider.", "phpsaml"); ?>"></i>
-					</label>
-					<?php
-						echo (isset($messages["errors"]["saml_sp_certificate_key"]) ? "<br /><small style='color:red; width:300px'>".__('Error: ', 'phpsaml').$messages["errors"]["saml_sp_certificate_key"]."</small>" : ""); 
-						echo (isset($messages["warnings"]["saml_sp_certificate_key"]) ? "<br /><small style='color:orange; width:300px'>".__('Warning: ', 'phpsaml').$messages["warnings"]["saml_sp_certificate_key"]."</small>" : ""); 	
-					?>
-					<textarea name="saml_sp_certificate_key" rows=15 cols=75><?php echo (isset($config["saml_sp_certificate_key"]) ? $config["saml_sp_certificate_key"] : ""); ?></textarea>
-				</p>
-				<p class="full-width">
-					<label for="saml_idp_nameid_format">
-						<?php echo __("Name ID Format", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("The name id format that is sent to the iDP.", "phpsaml"); ?>"></i>
-					</label>
-					<?php 
-						echo (isset($messages["errors"]["saml_sp_nameid_format"]) ? "<br /><small style='color:red; max-width:400px'>".__('Error: ', 'phpsaml').$messages["errors"]["saml_sp_nameid_format"]."</small>" : "");
-						echo (isset($messages["warnings"]["saml_sp_nameid_format"]) ? "<br /><small style='color:orange; max-width:400px'>".__('Warning: ', 'phpsaml').$messages["warnings"]["saml_sp_nameid_format"]."</small>" : "");
-					?>
-					<select name="saml_sp_nameid_format">
-						<option value="unspecified" <?php echo (!isset($config["saml_sp_nameid_format"]) || $config["saml_sp_nameid_format"] == 'unspecified' ? "selected" : ""); ?>>Unspecified</option>
-						<option value="emailAddress" <?php echo (isset($config["saml_sp_nameid_format"]) && $config["saml_sp_nameid_format"] == 'emailAddress' ? "selected" : ""); ?>>Email Address</option>
-						<option value="transient" <?php echo (isset($config["saml_sp_nameid_format"]) && $config["saml_sp_nameid_format"] == 'transient' ? "selected" : ""); ?>>Transient</option>
-						<option value="persistent" <?php echo (isset($config["saml_sp_nameid_format"]) && $config["saml_sp_nameid_format"] == 'persistent' ? "selected" : ""); ?>>Persistent</option>
-					</select>
-				</p>
-				
-				<h2 class="full-width"><?php echo __("Identity Provider Configuration", "phpsaml"); ?></h2>
-				
-				<p class="full-width">
-					<label for="saml_idp_entity_id">
-						<?php echo __("Identity Provider Entity ID", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("Identifier of the IdP entity  (must be a URI).", "phpsaml"); ?>"></i>
-					</label>
-					<?php
-						echo (isset($messages["errors"]["saml_idp_entity_id"]) ? "<br /><small style='color:red; max-width:400px'>".__('Error: ', 'phpsaml').$messages["errors"]["saml_idp_entity_id"]."</small>" : "");
-						echo (isset($messages["warnings"]["saml_idp_entity_id"]) ? "<br /><small style='color:orange; max-width:400px'>".__('Warning: ', 'phpsaml').$messages["warnings"]["saml_idp_entity_id"]."</small>" : "");
-					?>
-					<input type="text" size="90" name="saml_idp_entity_id" value="<?php echo (isset($config["saml_idp_entity_id"]) ? $config["saml_idp_entity_id"] : ""); ?>">
-				</p>
-				<p class="full-width">
-					<label for="saml_idp_single_sign_on_service">
-						<?php echo __("Identity Provider Single Sign On Service URL", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("URL Target of the Identity Provider where GLPI will send the Authentication Request Message.", "phpsaml"); ?>"></i>
-					</label>
-					<?php
-						echo (isset($messages["errors"]["saml_idp_single_sign_on_service"]) ? "<br /><small style='color:red; max-width:400px'>".__('Error: ', 'phpsaml').$messages["errors"]["saml_idp_single_sign_on_service"]."</small>" : "");
-						echo (isset($messages["warnings"]["saml_idp_single_sign_on_service"]) ? "<br /><small style='color:orange; max-width:400px'>".__('Warning: ', 'phpsaml').$messages["warnings"]["saml_idp_single_sign_on_service"]."</small>" : "");
-					?>
-					<input type="text" size="90" name="saml_idp_single_sign_on_service" value="<?php echo (isset($config["saml_idp_single_sign_on_service"]) ? $config["saml_idp_single_sign_on_service"] : ""); ?>">
-				</p>
-				<p class="full-width">
-					<label for="saml_idp_single_logout_service">
-						<?php echo __("Identity Provider Single Logout Service URL", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("URL Location of the Identity Provider where GLPI will send the Single Logout Request.", "phpsaml"); ?>"></i>
-					</label>
-					<?php 
-						echo (isset($messages["errors"]["saml_idp_single_logout_service"]) ? "<br /><small style='color:red; max-width:400px'>".__('Error: ', 'phpsaml').$messages["errors"]["saml_idp_single_logout_service"]."</small>" : "");
-						echo (isset($messages["warnings"]["saml_idp_single_logout_service"]) ? "<br /><small style='color:orange; max-width:400px'>".__('Warning: ', 'phpsaml').$messages["warnings"]["saml_idp_single_logout_service"]."</small>" : "");
-					?>
-					<input type="text" size="90" name="saml_idp_single_logout_service" value="<?php echo (isset($config["saml_idp_single_logout_service"]) ? $config["saml_idp_single_logout_service"] : ""); ?>">
-				</p>
-				<p class="full-width">
-					<label for="saml_idp_certificate">
-						<?php echo __("Identity Provider Public X509 Certificate", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("Public x509 certificate of the Identity Provider.", "phpsaml"); ?>"></i>
-					</label>
-					<?php
-						echo (isset($messages["errors"]["saml_idp_certificate"]) ? "<br /><small style='color:red; max-width:400px'>".__('Error: ', 'phpsaml').$messages["errors"]["saml_idp_certificate"]."</small>" : "");
-						echo (isset($messages["warnings"]["saml_idp_certificate"]) ? "<br /><small style='color:orange; max-width:400px'>".__('Warning: ', 'phpsaml').$messages["warnings"]["saml_idp_certificate"]."</small>" : "");
-					?>
-					<textarea name="saml_idp_certificate" rows="15" cols="75"><?php echo (isset($config["saml_idp_certificate"]) ? $config["saml_idp_certificate"] : ""); ?></textarea>
-				</p>
-				
-				<h2 class="full-width"><?php echo __("Security", "phpsaml"); ?></h2>
-				<p class="full-width">
-					<label for="requested_authn_context">
-						<?php echo __("Requested Authn Context", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("Set to None and no AuthContext will be sent in the AuthnRequest, oth", "phpsaml"); ?>"></i>
-					</label>
-				
-					<select id="keep-order" multiple="multiple">
-						<option value='PasswordProtectedTransport' <?php echo self::inArraySelected('PasswordProtectedTransport', $config["requested_authn_context"], 'string' ); ?>>PasswordProtectedTransport</option>
-						<option value='Password' <?php echo self::inArraySelected('Password', $config["requested_authn_context"], 'string' ); ?>>Password</option>
-						<option value='X509' <?php echo self::inArraySelected('X509', $config["requested_authn_context"], 'string' ); ?>>X509</option>
-					</select>	
-					<input id="requested-authn-context" type="hidden" name="requested_authn_context" value="<?php echo (isset($config["requested_authn_context"])) ? $config["requested_authn_context"] : '' ?>" />
-				</p>
-				<p class="full-width">
-					<label for="requested_authn_context_comparison">
-						<?php echo __("Requested Authn Comparison", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("How should the library compare the requested Authn Context?  The value defaults to 'Exact'.", "phpsaml"); ?>"></i>
-					</label>
-					<select name="requested_authn_context_comparison">
-						<option value="exact" <?php echo (!isset($config["requested_authn_context_comparison"]) || (isset($config["requested_authn_context_comparison"]) && $config["requested_authn_context_comparison"] == 'exact') ? "selected" : ""); ?>>Exact</option>
-						<option value="minimum" <?php echo ((isset($config["requested_authn_context_comparison"]) && $config["requested_authn_context_comparison"] == 'minimum') || !isset($config["requested_authn_context_comparison"]) ? "selected" : ""); ?>>Minimum</option>
-						<option value="maximum" <?php echo ((isset($config["requested_authn_context_comparison"]) && $config["requested_authn_context_comparison"] == 'maximum') || !isset($config["requested_authn_context_comparison"]) ? "selected" : ""); ?>>Maximum</option>
-						<option value="better" <?php echo ((isset($config["requested_authn_context_comparison"]) && $config["requested_authn_context_comparison"] == 'better') || !isset($config["requested_authn_context_comparison"]) ? "selected" : ""); ?>>Better</option>
-					</select>	
-				</p>
-				<p>
-					<label for="saml_security_nameidencrypted">
-						<?php echo __("Encrypt NameID", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("Toggle yes to encrypt NameID.  Requires service provider certificate and key", "phpsaml"); ?>"></i>
-					</label>
-					<?php
-						echo (isset($messages["errors"]["saml_security_nameidencrypted"]) ? "<br /><small style='color:red; max-width:400px'>".__('Error: ', 'phpsaml').$messages["errors"]["saml_security_nameidencrypted"]."<br /></small>" : "");
-						echo (isset($messages["warnings"]["saml_security_nameidencrypted"]) ? "<br /><small style='color:orange; max-width:400px'>".__('Warning: ', 'phpsaml').$messages["warnings"]["saml_security_nameidencrypted"]."<br /></small>" : "");
-					?>
-					<select name="saml_security_nameidencrypted">
-						<option value="1" <?php echo ((isset($config["saml_security_nameidencrypted"]) && $config["saml_security_nameidencrypted"] == 1) ? "selected" : ""); ?>>Yes</option>
-						<option value="0" <?php echo ((isset($config["saml_security_nameidencrypted"]) && $config["saml_security_nameidencrypted"] == 0) || !isset($config["saml_security_nameidencrypted"]) ? "selected" : ""); ?>>No</option>
-					</select>
-				</p>
-				<p>
-					<label for="saml_security_authnrequestssigned">
-						<?php echo __("Sign Authn Requests", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("Toggle yes to sign Authn Requests.  Requires service provider certificate and key", "phpsaml"); ?>"></i>
-					</label>
-					<?php
-						echo (isset($messages["errors"]["saml_security_authnrequestssigned"]) ? "<br /><small style='color:red; max-width:400px'>".__('Error: ', 'phpsaml').$messages["errors"]["saml_security_authnrequestssigned"]."<br /></small>" : "");
-						echo (isset($messages["warnings"]["saml_security_authnrequestssigned"]) ? "<br /><small style='color:orange; max-width:400px'>".__('Warning: ', 'phpsaml').$messages["warnings"]["saml_security_authnrequestssigned"]."<br /></small>" : "");
-					?>
-					<select name="saml_security_authnrequestssigned">
-						<option value="1" <?php echo ((isset($config["saml_security_authnrequestssigned"]) && $config["saml_security_authnrequestssigned"] == 1) ? "selected" : ""); ?>>Yes</option>
-						<option value="0" <?php echo ((isset($config["saml_security_authnrequestssigned"]) && $config["saml_security_authnrequestssigned"] == 0) || !isset($config["saml_security_authnrequestssigned"]) ? "selected" : ""); ?>>No</option>
-					</select>
-				</p>
-				<p>
-					<label for="saml_security_logoutrequestsigned">
-						<?php echo __("Sign Logout Requests", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("Toggle yes to sign Logout Requests.  Requires service provider certificate and key", "phpsaml"); ?>"></i>
-					</label>
-					<?php
-						echo (isset($messages["errors"]["saml_security_logoutrequestsigned"]) ? "<br /><small style='color:red; max-width:400px'>".__('Error: ', 'phpsaml').$messages["errors"]["saml_security_logoutrequestsigned"]."<br /></small>" : "");
-						echo (isset($messages["warnings"]["saml_security_logoutrequestsigned"]) ? "<br /><small style='color:orange; max-width:400px'>".__('Warning: ', 'phpsaml').$messages["warnings"]["saml_security_logoutrequestsigned"]."<br /></small>" : "");
-					?>
-					<select name="saml_security_logoutrequestsigned">
-						<option value="1" <?php echo ((isset($config["saml_security_logoutrequestsigned"]) && $config["saml_security_logoutrequestsigned"] == 1) ? "selected" : ""); ?>>Yes</option>
-						<option value="0" <?php echo ((isset($config["saml_security_logoutrequestsigned"]) && $config["saml_security_logoutrequestsigned"] == 0) || !isset($config["saml_security_logoutrequestsigned"]) ? "selected" : ""); ?>>No</option>
-					</select>
-				</p>
-				<p>
-					<label for="saml_security_logoutresponsesigned">
-						<?php echo __("Sign Logout Response", "phpsaml"); ?>
-						<i class="pointer fa fa-info" title="<?php echo __("Toggle yes to sign Logout Response.  Requires service provider certificate and key", "phpsaml"); ?>"></i>
-					</label>
-					<?php
-						echo (isset($messages["errors"]["saml_security_logoutresponsesigned"]) ? "<br /><small style='color:red; max-width:400px'>".__('Error: ', 'phpsaml').$messages["errors"]["saml_security_logoutresponsesigned"]."<br /></small>" : "");
-						echo (isset($messages["warnings"]["saml_security_logoutresponsesigned"]) ? "<br /><small style='color:orange; max-width:400px'>".__('Warning: ', 'phpsaml').$messages["warnings"]["saml_security_logoutresponsesigned"]."<br /></small>" : "");
-					?>
-					<select name="saml_security_logoutresponsesigned">
-						<option value="1" <?php echo ((isset($config["saml_security_logoutresponsesigned"]) && $config["saml_security_logoutresponsesigned"] == 1) ? "selected" : ""); ?>>Yes</option>
-						<option value="0" <?php echo ((isset($config["saml_security_logoutresponsesigned"]) && $config["saml_security_logoutresponsesigned"] == 0) || !isset($config["saml_security_logoutresponsesigned"]) ? "selected" : ""); ?>>No</option>
-					</select>
-				</p>
-				
-				<p class="full-width">
-					<input type="submit" name="update" value="<?php echo __("Update", "phpsaml"); ?>" class="submit" >
-				</p>
-			<?php
-			Html::closeForm();
-			?>
-		</div>
-				
-		<?php
-		unset($_SESSION["phpsaml_messages"]);
+
+    /**
+     * The amount of fields we expect from the database
+     * Change value for unit testing
+     * @var int
+     **/
+    private $expectedItems = 18;
+
+
+    /**
+     * Expected version
+     * Change value for unit testing
+     * @var string
+     **/
+    private $expectedVersion = '1.2.1';
+
+    /**
+     * Stores a copy of the phpSaml Database Configuration
+     * @var array
+     **/
+    private $config = [];
+
+
+    /**
+     * Show the form and handle potential inputs.
+     * @param void
+     * @return boolean
+     */
+    public function showForm($ID, array $options = [])
+    {
+        // Populate current configuration
+        $this->config = $this->getConfig($ID);
+
+        // process the configuration items
+        // using the database array.
+        if (is_array($this->config)) {
+            foreach ($this->config as $method => $current) {
+                if (method_exists($this, $method)) {
+                    // Handle property
+                    $this->$method($current);
+                } else {
+                    // TODO: Make this a nice error in HTML template.
+                    if ($method != 'valid') {
+                        echo "Warning: No property handled found for $method in ".__class__;
+                    }
+                }
+            }
+        } else {
+            // TODO: Make this a nice error in HTML template.
+            echo "Error: could not populate PhpSaml database configuration<br>";
+        }
+        echo "<pre>";
+        var_dump($this->formValues);
+
+        // Generate and show form
+        $this->generateForm();
+
+        echo "done!";
+    }
+
+
+    /**
+     * Get the current configuration from the database or present a default value.
+     * @param int $id
+     * @return array $config
+     */
+    public function getConfig(int $id = 1)
+	{
+        global $DB;
+
+		$sql = 'SHOW COLUMNS FROM '.$this->getTable();
+		if ($result = $DB->query($sql)) {
+            if ($this->getFromDB($id)) {
+                while ($data = $result->fetch_assoc()) {
+                    $config[$data['Field']] = $this->fields[$data['Field']];
+                }
+            } else {
+                echo "Error: could not retrieve configuration data from database";
+            }
+        } else {
+            echo "Error: could not retrieve column data from database";
+        }
+
+        if (count($config) <= $this->expectedItems) {
+            echo "Warning: Phpsaml did not receive the expected ammount of configuration items from the database!";
+            echo debug_backtrace()[1]['function'];
+            $config['valid'] = false;
+            return $config;
+        } else {
+            $config['valid'] = true;
+            return $config;
+        }
 	}
-   
-	function inArraySelected($string, $array=array(), $type='string' ){
-		if ($type == 'string'){
-			$array = explode(',', $array);
-		}
-		if(isset($array) && !empty($array)){
-			if(in_array($string, $array)){
-				return "Selected";
-			}
-		}
-	}
-   
-	function validate($post){
-		$messages = array();
-		if (empty($post["saml_sp_certificate"])){
-			$messages["warnings"]["saml_sp_certificate"] = "You should provide a certificate as best practice.";
-		}
-		
-		if (empty($post["saml_sp_certificate_key"])){
-			$messages["warnings"]["saml_sp_certificate_key"] = "You should provide a certificate key as best practice.";
-		}
-		
-		if (empty($post["saml_idp_entity_id"])){
-			$messages["errors"]["saml_idp_entity_id"] = "Field cannot be empty";
-		}
-		
-		if (empty($post["saml_idp_single_sign_on_service"])){
-			$messages["errors"]["saml_idp_single_sign_on_service"] = "Field cannot be empty";
-		}
-		
-		if (empty($post["saml_idp_single_logout_service"])){
-			
-		}
-		
-		if (empty($post["saml_idp_certificate"])){
-			$messages["errors"]["saml_idp_certificate"] = "Field cannot be empty";
-		}
-		
-		if ($post["saml_security_nameidencrypted"] == 1){
-			if (empty($post["saml_sp_certificate"]) || empty($post["saml_sp_certificate_key"])){
-				$messages["errors"]["saml_security_nameidencrypted"] = "SP Certificate and Key required";
-			}
-		}
-		
-		if ($post["saml_security_authnrequestssigned"] == 1){
-			if (empty($post["saml_sp_certificate"]) || empty($post["saml_sp_certificate_key"])){
-				$messages["errors"]["saml_security_authnrequestssigned"] = "SP Certificate and Key required";
-			}
-		}
-		
-		if ($post["saml_security_logoutrequestsigned"] == 1){
-			if (empty($post["saml_sp_certificate"]) || empty($post["saml_sp_certificate_key"])){
-				$messages["errors"]["saml_security_logoutrequestsigned"] = "SP Certificate and Key required";
-			}
-		}
-		
-		if ($post["saml_security_logoutresponsesigned"] == 1){
-			if (empty($post["saml_sp_certificate"]) || empty($post["saml_sp_certificate_key"])){
-				$messages["errors"]["saml_security_logoutresponsesigned"] = "SP Certificate and Key required";
-			}
-		}
-		
-		return $messages;
-	}
-	
-	
-	
 
 
-	function getConfig() {
-		$phpsamlconf = new PluginPhpsamlConfig();
-		if ($phpsamlconf->getFromDB(1)) {
-			$config = array(
-				"enforced"									=> $phpsamlconf->fields["enforced"],
-				"strict"									=> $phpsamlconf->fields["strict"],
-				"debug"										=> $phpsamlconf->fields["debug"],
-				"jit"										=> $phpsamlconf->fields["jit"],
-				"saml_sp_certificate" 						=> $phpsamlconf->fields["saml_sp_certificate"],
-				"saml_sp_certificate_key" 					=> $phpsamlconf->fields["saml_sp_certificate_key"],
-				"saml_sp_nameid_format" 					=> $phpsamlconf->fields["saml_sp_nameid_format"],
-				"saml_idp_entity_id" 						=> $phpsamlconf->fields["saml_idp_entity_id"],
-				"saml_idp_single_sign_on_service" 			=> $phpsamlconf->fields["saml_idp_single_sign_on_service"],
-				"saml_idp_single_logout_service" 			=> $phpsamlconf->fields["saml_idp_single_logout_service"],
-				"saml_idp_certificate" 						=> $phpsamlconf->fields["saml_idp_certificate"],
-				"requested_authn_context" 					=> $phpsamlconf->fields["requested_authn_context"],
-				"requested_authn_context_comparison" 		=> $phpsamlconf->fields["requested_authn_context_comparison"],
-				"saml_security_nameidencrypted" 		=> $phpsamlconf->fields["saml_security_nameidencrypted"],
-				"saml_security_authnrequestssigned" 		=> $phpsamlconf->fields["saml_security_authnrequestssigned"],
-				"saml_security_logoutrequestsigned" 		=> $phpsamlconf->fields["saml_security_logoutrequestsigned"],
-				"saml_security_logoutresponsesigned" 		=> $phpsamlconf->fields["saml_security_logoutresponsesigned"]
-			);
-		} else {
-			$config = array();
-		}
-		return $config;
-	}
+    /**
+     * Handle the enforced default value and changes.
+     *
+     * @param int $dbConf
+     * @return boolean
+     */
+    private function enforced(int $dbConf)
+    {
+        // Do lable translations
+        $formValues = [
+            'ENFORCED_LABEL' =>  __("Plugin Enforced", "phpsaml"),
+            'ENFORCED_TITLE' =>  __("Toggle 'yes' to enforce Single Sign On for all login sessions", "phpsaml"),
+            'ENFORCED_SELECT'=> '',
+            'ENFORCED_ERROR' => false
+        ];
+
+        // Generate select options
+        $options = [ 1 => __('Yes', 'phpsaml'),
+                     0 => __('No', 'phpsaml')];
+
+        foreach ($options as $value => $label) {
+            $selected = ($value == $dbConf) ? 'selected' : '';
+            $formValues['ENFORCED_SELECT'] .= "<option value='$value' $selected>$label</option>";
+        }
+
+        // Merge outcomes in formValues
+        $this->formValues = array_merge($this->formValues, $formValues);
+
+    }
+
+
+    /**
+     * Handle the strict default value and changes
+     *
+     * @param int $dbConf
+     * @return boolean
+     */
+    private function strict(int $dbConf)
+    {
+        // Declare template labels
+        $formValues = [
+            'STRICT_LABEL' =>  __("Strict", "phpsaml"),
+            'STRICT_TITLE' =>  __("If 'strict' is True, then PhpSaml will reject unencrypted messages", "phpsaml"),
+            'STRICT_SELECT'=> '',
+            'STRICT_ERROR' => false
+        ];
+
+        // Generate select options
+        $options = [ 1 => __('Yes', 'phpsaml'),
+                     0 => __('No', 'phpsaml')];
+
+        foreach ($options as $value => $label) {
+            $selected = ($value == $dbConf) ? 'selected' : '';
+            $formValues['STRICT_SELECT'] .= "<option value='$value' $selected>$label</option>";
+        }
+
+        // Merge outcomes in formValues
+        $this->formValues = array_merge($this->formValues, $formValues);
+    }
+
+
+    /**
+     * Handle the debug default value and changes
+     *
+     * @param int $dbConf
+     * @return boolean
+     */
+    private function debug(int $dbConf)
+    {
+        // Declare template labels
+        $formValues = [
+            'DEBUG_LABEL' =>  __("Debug", "phpsaml"),
+            'DEBUG_TITLE' =>  __("Toggle yes to print errors", "phpsaml"),
+            'DEBUG_SELECT'=> '',
+            'DEBUG_ERROR' => false
+        ];
+
+        // Generate options
+        $options = [ 1 => __('Yes', 'phpsaml'),
+                     0 => __('No', 'phpsaml')];
+
+        foreach ($options as $value => $label) {
+            $selected = ($value == $dbConf) ? 'selected' : '';
+            $formValues['DEBUG_SELECT'] .= "<option value='$value' $selected>$label</option>";
+        }
+
+        // Merge outcomes in formValues
+        $this->formValues = array_merge($this->formValues, $formValues);
+    }
+
+
+    /**
+     * Handle the jit default value and changes
+     *
+     * @param int $dbConf
+     * @return boolean
+     */
+    private function jit(int $dbConf)
+    {
+        // Declare template labels
+        $formValues = [
+            'JIT_LABEL' =>  __("Strict", "phpsaml"),
+            'JIT_TITLE' =>  __("If 'strict' is True, then PhpSaml will reject unencrypted messages", "phpsaml"),
+            'JIT_SELECT'=> '',
+            'JIT_ERROR' => false
+        ];
+
+        // Generate options
+        $options = [ 1 => __('Yes', 'phpsaml'),
+                     0 => __('No', 'phpsaml')];
+
+        foreach ($options as $value => $label) {
+            $selected = ($value == $dbConf) ? 'selected' : '';
+            $formValues['JIT_SELECT'] .= "<option value='$value' $selected>$label</option>";
+        }
+
+        // Merge outcomes in formValues
+        $this->formValues = array_merge($this->formValues, $formValues);
+    }
+
+
+    /**
+     * Handle the saml sp certificate default value and changes
+     *
+     * @param string $dbConf
+     * @return boolean
+     */
+    private function saml_sp_certificate(string $dbConf)
+    {
+        // Declare template labels
+        $formValues = [
+            'SP_CERT_LABEL' =>  __("Service Provider Certificate", "phpsaml"),
+            'SP_CERT_TITLE' =>  __("Certificate we should use when communicating with the Identity Provider.", "phpsaml"),
+            'SP_CERT_VALUE' => $dbConf,
+            'SP_CERT_ERROR' => false
+        ];
+
+        if (!strstr($dbConf, '-BEGIN CERTIFICATAE-') && !strstr($dbConf, '-END CERTIFICATAE-')) {
+            echo "Warning: Value does not look like a valid certificate, include the certificate BEGIN and END tags";
+        }
+        
+        // Merge outcomes in formValues
+        $this->formValues = array_merge($this->formValues, $formValues);
+    }
+
+    /**
+     * Handle the saml sp certificate key default value and changes
+     *
+     * @param string $dbConf
+     * @return boolean
+     */
+    private function saml_sp_certificate_key(string $dbConf)
+    {
+        // Declare template labels
+        $formValues = [
+            'SP_KEY_LABEL' =>  __("Service Provider Certificate Key", "phpsaml"),
+            'SP_KEY_TITLE' =>  __("Certificate private key we should use when communicating with the Identity Provider", "phpsaml"),
+            'SP_KEY_VALUE' => $dbConf,
+            'SP_KEY_ERROR' => false
+        ];
+
+        if (!strstr($dbConf, '-BEGIN CERTIFICATAE-') &&
+            !strstr($dbConf, '-END CERTIFICATAE-')) {
+            echo "Warning: Value does not look like a valid certificate, include the certificate BEGIN and END tags";
+        }
+        
+        // Merge outcomes in formValues
+        $this->formValues = array_merge($this->formValues, $formValues);
+    }
+
+
+    /**
+     * Handle the Saml SP NameId formating default value and changes
+     *
+     * @param string $dbConf
+     * @return boolean
+     */
+    private function saml_sp_nameid_format(string $dbConf)
+    {
+         // Declare template labels
+         $formValues = [
+            'SP_ID_LABEL' =>  __("Name ID Format", "phpsaml"),
+            'SP_ID_TITLE' =>  __("The name id format that is sent to the iDP.", "phpsaml"),
+            'SP_ID_SELECT' => '',
+            'SP_ID_ERROR' => false
+        ];
+
+        // Generate the options array
+        $options = ['unspecified'  => __('Unspecified', 'phpsaml'),
+                    'emailAddress' => __('Email Address', 'phpsaml'),
+                    'transient'    => __('Transient', 'phpsaml'),
+                    'persistent'   => __('Persistent', 'phpsaml')];
+
+        foreach ($options as $value => $label) {
+            $selected = ($value == $dbConf) ? 'selected' : '';
+            $formValues['SP_ID_SELECT'] .= "<option value='$value' $selected>$label</option>";
+        }
+
+        // Merge outcomes in formValues
+        $this->formValues = array_merge($this->formValues, $formValues);
+    }
+
+
+    /**
+     * Control of the configuration
+     *
+     * @param string $dbConf
+     * @return boolean
+     */
+    private function saml_idp_entity_id(string $dbConf)
+    {
+        // Declare template labels
+        $formValues = [
+            'IP_ID_LABEL' =>  __("Identity Provider Entity ID", "phpsaml"),
+            'IP_ID_TITLE' =>  __("Identifier of the IdP entity  (must be a URI).", "phpsaml"),
+            'IP_ID_VALUE' => $dbConf,
+            'IP_ID_ERROR' => false
+        ];
+
+        //Validate URL?
+        
+        // Merge outcomes in formValues
+        $this->formValues = array_merge($this->formValues, $formValues);
+    }
+
+
+    /**
+     * Description
+     *
+     * @param string $dbConf
+     * @return boolean
+     */
+    private function saml_idp_single_sign_on_service(string $dbConf)
+    {
+        // Declare template labels
+        $formValues = [
+            'IP_SSO_URL_LABEL' =>  __("Identity Provider Single Sign On Service URL", "phpsaml"),
+            'IP_SSO_URL_TITLE' =>  __("URL Target of the Identity Provider where we will send the Authentication Request Message.", "phpsaml"),
+            'IP_SSO_URL_VALUE' => $dbConf,
+            'IP_SSO_URL_ERROR' => false
+        ];
+
+        //Validate URL?
+        
+        // Merge outcomes in formValues
+        $this->formValues = array_merge($this->formValues, $formValues);
+    }
+
+    /**
+     * Description
+     *
+     * @param string $dbConf
+     * @return boolean
+     */
+    private function saml_idp_single_logout_service(string $dbConf)
+    {
+         // Declare template labels
+         $formValues = [
+            'IP_SLS_URL_LABEL' =>  __("Identity Provider Single Logout Service URL", "phpsaml"),
+            'IP_SLS_URL_TITLE' =>  __("URL Location of the Identity Provider where GLPI will send the Single Logout Request.", "phpsaml"),
+            'IP_SLS_URL_VALUE' => $dbConf,
+            'IP_SLS_URL_ERROR' => false
+        ];
+
+        //Validate URL?
+        
+        // Merge outcomes in formValues
+        $this->formValues = array_merge($this->formValues, $formValues);
+    }
+
+    /**
+     * Description
+     *
+     * @param string $dbConf
+     * @return boolean
+     */
+    private function saml_idp_certificate(string $dbConf)
+    {
+        // Declare template labels
+        $formValues = [
+            'IP_CERT_LABEL' =>  __("Identity Provider Public X509 Certificate", "phpsaml"),
+            'IP_CERT_TITLE' =>  __("Public x509 certificate of the Identity Provider.", "phpsaml"),
+            'IP_CERT_VALUE' => $dbConf,
+            'IP_CERT_ERROR' => false
+        ];
+
+        if (!strstr($dbConf, '-BEGIN CERTIFICATAE-') &&
+            !strstr($dbConf, '-END CERTIFICATAE-')) {
+            echo "Warning: Value does not look like a valid certificate, include the certificate BEGIN and END tags";
+        }
+        
+        // Merge outcomes in formValues
+        $this->formValues = array_merge($this->formValues, $formValues);
+    }
+
+    /**
+     * Control of the configuration
+     *
+     * @param void
+     * @return boolean
+     */
+    private function requested_authn_context()
+    {
+
+    }
+
+    /**
+     * Control of the configuration
+     *
+     * @param void
+     * @return boolean
+     */
+    private function requested_authn_context_comparison()
+    {
+
+    }
+
+    /**
+     * Control of the configuration
+     *
+     * @param void
+     * @return boolean
+     */
+    private function saml_security_nameidencrypted()
+    {
+
+    }
+
+    /**
+     * Control of the configuration
+     *
+     * @param void
+     * @return boolean
+     */
+    private function saml_security_authnrequestssigned()
+    {
+
+    }
+
+    /**
+     * Control of the configuration
+     *
+     * @param void
+     * @return boolean
+     */
+    private function saml_security_logoutrequestsigned()
+    {
+
+    }
+
+    /**
+     * Control of the configuration
+     *
+     * @param void
+     * @return boolean
+     */
+    private function saml_security_logoutresponsesigned()
+    {
+
+    }
+
+
+    /**
+     * Control of the configuration
+     *
+     * @param void
+     * @return boolean
+     */
+    private function id()
+    {
+        // For future use
+    }
+
+
+    /**
+     * Control of the configuration
+     *
+     * @param void
+     * @return boolean
+     */
+    private function version(string $current)
+    {
+        if($current != $this->expectedVersion){
+            echo "Warning: Version mismatch detected,
+                  database reported $current, we expected {$this->expectedVersion} ";
+        }
+        // For future use
+        // Validate actual PHP Saml version else generate notification;
+    }
+
+
+
+
+    private function generateForm()
+    {
+        // Read the template file containing the HTML template;
+       
+        if (file_exists($this->tpl)) {
+            $this->htmlForm = file_get_contents($this->tpl);
+        }
+    }
 }
