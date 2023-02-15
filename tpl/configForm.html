@@ -1,10 +1,10 @@
+
 <script>
     $(function() {
-
         $('#keep-order').multiSelect({
             keepOrder: true,
-            selectableHeader: '<b>[[A]]</b>',
-            selectionHeader: '<b>[[B]]</b>',
+            selectableHeader: '<b>[[SCRIPT_A]]</b>',
+            selectionHeader: '<b>[[SCRIPT_B]]</b>',
             cssClass: 'multiselect',
             afterSelect: function(value, text){
                 var get_val = $("#requested-authn-context").val();
@@ -141,11 +141,11 @@
 
         <p class="full-width">
             <label for="enforced">
-                [[SAML_ENFORCED_LABEL]]
+                [[ENFORCED_LABEL]]
                 <i class="pointer fa fa-info" title="[[SAML_ENFORCED_TITLE]]"></i>
             </label>
-            <select name="enforced">
-                [[SAML_ENFORCED_SELECT]]
+            <select [[DISABLED]] name="enforced">
+                [[ENFORCED_SELECT]]
             </select>
         </p>
         <p>
@@ -230,7 +230,7 @@
         <p class="full-width">
             <label for="saml_idp_single_logout_service">
                 [[IP_SLS_URL_LABEL]] 
-                <i class="pointer fa fa-info" title="[[IP_SLS_URL_TITLE]]</i>
+                <i class="pointer fa fa-info" title="[[IP_SLS_URL_TITLE]]"></i>
             </label>
             [[IP_SLS_URL_ERROR]]
             <input type="text" size="90" name="saml_idp_single_logout_service" value="[[IP_SLS_URL_VALUE]]">
@@ -314,7 +314,7 @@
         </p>
         
         <p class="full-width">
-            <input type="submit" name="update" value="<?php echo __("Update", "phpsaml"); ?>" class="submit" >
+            <input type="submit" name="update" value="[[SUBMIT]]" class="submit" >
         </p>
     [[CLOSE_FORM]]
 </div>

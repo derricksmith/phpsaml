@@ -52,7 +52,9 @@ Plugin::load('phpsaml');
 Html::header(__('PHP SAML', 'phpsaml'), $_SERVER['PHP_SELF'], "config", "plugins");
 
 $phpSamlConfig = new PluginPhpsamlConfig();
+$phpSamlConfig->showForm((isset($_POST["id"]) ? $_POST["id"] : ''));
 
+/*
 if (isset($_POST["update"])) {
 	$messages = $phpSamlConfig->ValidateInput($_POST);
 	if(empty($messages['errors'])){
@@ -70,3 +72,4 @@ if (isset($_POST["update"])) {
    Html::footer();
 
 }
+*/
