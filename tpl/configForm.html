@@ -133,11 +133,11 @@
     <form name="form" method="post" action="[[GLPI_ROOTDOC]]/plugins/phpsaml/front/config.form.php" id="phpsaml_config">
         
         <input type="hidden" name="id" value="1">
-        <h1 class="full-width">[[SAML_TITLE]]</h1>
+        <h1 class="full-width">[[TITLE]]</h1>
 
-        <h3 style='color:red;'>[[SAML_ERRORS]]</h3>
+        <h3 style='color:red;'>[[ERRORS]]</h3>
         
-        <h2 class="full-width">[[SAML_HEADER_GENERAL]]</h2>
+        <h2 class="full-width">[[HEADER_GENERAL]]</h2>
 
         <p class="full-width">
             <label for="enforced">
@@ -153,7 +153,7 @@
                 [[STRICT_LABEL]]
                 <i class="pointer fa fa-info" title="[[STRICT_TITLE]]"></i>
             </label>
-            <select name="strict">
+            <select [[DISABLED]] name="strict">
                 [[STRICT_SELECT]]
             </select>
         </p>
@@ -162,7 +162,7 @@
                 [[DEBUG_LABEL]]
                 <i class="pointer fa fa-info" title="[[DEBUG_TITLE]]"></i>
             </label>
-            <select name="debug">
+            <select [[DISABLED]] name="debug">
                 [[DEBUG_SELECT]]
             </select>
         </p>
@@ -171,7 +171,7 @@
                 [[JIT_LABEL]]
                 <i class="pointer fa fa-info" title="[[JIT_TITLE]]"></i>
             </label>
-            <select name="jit">
+            <select [[DISABLED]] name="jit">
                 [[JIT_SELECT]]
             </select>
         </p>
@@ -184,7 +184,7 @@
                 <i class="pointer fa fa-info" title="[[SP_CERT_TITLE]]"></i>
             </label> 
            [[SP_CERT_ERROR]]
-            <textarea name="saml_sp_certificate">[[SP_CERT_VALUE]]</textarea>
+            <textarea [[DISABLED]] name="saml_sp_certificate">[[SP_CERT_VALUE]]</textarea>
         </p>
 
         <p class="full-width">
@@ -193,7 +193,7 @@
                 <i class="pointer fa fa-info" title="[[SP_KEY_TITLE]]"></i>
             </label>
            [[SP_KEY_ERROR]]
-            <textarea name="saml_sp_certificate_key" rows=15 cols=75>[[SP_KEY_VALUE]]</textarea>
+            <textarea [[DISABLED]] name="saml_sp_certificate_key" rows=15 cols=75>[[SP_KEY_VALUE]]</textarea>
         </p>
 
         <p class="full-width">
@@ -202,7 +202,7 @@
                 <i class="pointer fa fa-info" title="[[SP_ID_TITLE]]"></i>
             </label>
             [[SP_ID_ERROR]]
-            <select name="saml_sp_nameid_format">
+            <select [[DISABLED]] name="saml_sp_nameid_format">
                 [[SP_ID_SELECT]]
             </select>
         </p>
@@ -215,7 +215,7 @@
                 <i class="pointer fa fa-info" title="[[IP_ID_TITLE]]"></i>
             </label>
             [[IP_ID_ERROR]]
-            <input type="text" size="90" name="saml_idp_entity_id" value="[[IP_ID_VALUE]]">
+            <input [[DISABLED]] type="text" size="90" name="saml_idp_entity_id" value="[[IP_ID_VALUE]]">
         </p>
 
         <p class="full-width">
@@ -224,7 +224,7 @@
                 <i class="pointer fa fa-info" title="[[IP_SSO_URL_TITLE]]"></i>
             </label>
             [[IP_SSO_URL_ERROR]]
-            <input type="text" size="90" name="saml_idp_single_sign_on_service" value="[[IP_SSO_URL_VALUE]]">
+            <input [[DISABLED]] type="text" size="90" name="saml_idp_single_sign_on_service" value="[[IP_SSO_URL_VALUE]]">
         </p>
 
         <p class="full-width">
@@ -233,7 +233,7 @@
                 <i class="pointer fa fa-info" title="[[IP_SLS_URL_TITLE]]"></i>
             </label>
             [[IP_SLS_URL_ERROR]]
-            <input type="text" size="90" name="saml_idp_single_logout_service" value="[[IP_SLS_URL_VALUE]]">
+            <input [[DISABLED]] type="text" size="90" name="saml_idp_single_logout_service" value="[[IP_SLS_URL_VALUE]]">
         </p>
 
         <p class="full-width">
@@ -242,7 +242,7 @@
                 <i class="pointer fa fa-info" title="[[IP_CERT_TITLE]]"></i>
             </label>
             [[IP_CERT_ERROR]]
-            <textarea name="saml_idp_certificate" rows="15" cols="75">[[IP_CERT_VALUE]]</textarea>
+            <textarea [[DISABLED]] name="saml_idp_certificate" rows="15" cols="75">[[IP_CERT_VALUE]]</textarea>
         </p>
         
         <h2 class="full-width">[[HEADER_SECURITY]]</h2>
@@ -253,10 +253,10 @@
                 <i class="pointer fa fa-info" title="[[AUTHN_TITLE]]"></i>
             </label>
         
-            <select id="keep-order" multiple="multiple">
+            <select [[DISABLED]] id="keep-order" multiple="multiple">
                 [[AUTHN_SELECT]]
             </select>	
-            <input id="requested-authn-context" type="hidden" name="requested_authn_context" value="[[AUTHN_CONTEXT]]" />
+            <input [[DISABLED]] id="requested-authn-context" type="hidden" name="requested_authn_context" value="[[AUTHN_CONTEXT]]" />
         </p>
 
         <p class="full-width">
@@ -264,7 +264,7 @@
                 [[AUTHN_COMPARE_LABEL]]
                 <i class="pointer fa fa-info" title="[[AUTHN_COMPARE_TITLE]]"></i>
             </label>
-            <select name="requested_authn_context_comparison">
+            <select [[DISABLED]] name="requested_authn_context_comparison">
                [[AUTHN_COMPARE_SELECT]]
             </select>	
         </p>
@@ -275,7 +275,7 @@
                 <i class="pointer fa fa-info" title="[[ENCR_NAMEID_TITLE]]"></i>
             </label>
             [[ENCR_NAMEID_ERROR]]
-            <select name="saml_security_nameidencrypted">
+            <select [[DISABLED]] name="saml_security_nameidencrypted">
                 [[ENCR_NAMEID_SELECT]]
             </select>
         </p>
@@ -286,7 +286,7 @@
                 <i class="pointer fa fa-info" title="[[SIGN_AUTHN_REQ_TITLE]]"></i>
             </label>
            [[SIGN_AUTHN_REQ_ERROR]]
-            <select name="saml_security_authnrequestssigned">
+            <select [[DISABLED]] name="saml_security_authnrequestssigned">
                 [[SIGN_AUTHN_REQ_SELECT]]
             </select>
         </p>
@@ -297,7 +297,7 @@
                 <i class="pointer fa fa-info" title="[[SIGN_LOGOUT_REQ_TITLE]]"></i>
             </label>
                 [[SIGN_LOGOUT_REQ_ERROR]]
-            <select name="saml_security_logoutrequestsigned">
+            <select [[DISABLED]] name="saml_security_logoutrequestsigned">
                 [[SIGN_LOGOUT_REQ_SELECT]]
             </select>
         </p>
@@ -308,13 +308,13 @@
                 <i class="pointer fa fa-info" title="[[SIGN_LOGOUT_RES_TITLE]]"></i>
             </label>
             [[SIGN_LOGOUT_RES_ERROR]]
-            <select name="saml_security_logoutresponsesigned">
+            <select [[DISABLED]] name="saml_security_logoutresponsesigned">
                 [[SIGN_LOGOUT_RES_SELECT]]
             </select>
         </p>
         
         <p class="full-width">
-            <input type="submit" name="update" value="[[SUBMIT]]" class="submit" >
+            <input [[DISABLED]] type="submit" name="update" value="[[SUBMIT]]" class="submit" >
         </p>
     [[CLOSE_FORM]]
 </div>

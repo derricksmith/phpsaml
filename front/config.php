@@ -52,24 +52,4 @@ Plugin::load('phpsaml');
 Html::header(__('PHP SAML', 'phpsaml'), $_SERVER['PHP_SELF'], "config", "plugins");
 
 $phpSamlConfig = new PluginPhpsamlConfig();
-$phpSamlConfig->showForm((isset($_POST["id"]) ? $_POST["id"] : ''));
-
-/*
-if (isset($_POST["update"])) {
-	$messages = $phpSamlConfig->ValidateInput($_POST);
-	if(empty($messages['errors'])){
-		$phpSamlConfig->update($_POST);
-	} 
-	$_SESSION['phpsaml_messages'] = $messages;
-	
-	Html::back();
-} else {
-   Html::header(__('PHP SAML', 'phpsaml'), $_SERVER['PHP_SELF'], "config", "plugins");
-   
-   Session::checkRight("config", UPDATE);
-   $phpSamlConfig->showForm((isset($_POST["id"]) ? $_POST["id"] : ''));
-	
-   Html::footer();
-
-}
-*/
+$phpSamlConfig->showForm((isset($_POST["id"]) ? $_POST["id"] : '1'));

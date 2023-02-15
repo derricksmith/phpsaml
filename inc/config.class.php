@@ -103,39 +103,40 @@ class PluginPhpsamlConfig extends CommonDBTM
      */
     public function showForm($id, array $options = [])
     {
-        // Populate current configuration
-        $this->config = $this->getConfig($id);
 
-        // Call the form field handlers
-        // using the database array.
-        if (is_array($this->config)) {
-            foreach ($this->config as $method => $current) {
-                if (method_exists($this, $method)) {
-                    // Handle property
-                    $this->$method($current);
-                } else {
-                    // TODO: Make this a nice error in HTML template.
-                    if ($method != 'valid') {
-                        echo "Warning: No property handler found for $method in ".__class__;
+        // Populate current configuration
+        if ($this->config = $this->getConfig($id)) {
+            // Call the form field handlers
+            // using the database array.
+            if (is_array($this->config)) {
+                foreach ($this->config as $method => $current) {
+                    if (method_exists($this, $method)) {
+                        // Handle property
+                        $this->$method($current);
+                    } else {
+                        // TODO: Make this a nice error in HTML template.
+                        if ($method != 'valid') {
+                            $this->minorError("Warning: No handler found for configuration item: $method in ".__class__." db corrupted?");
+                        }
                     }
                 }
+            } else {
+                $this->fatalError("Error: db config did not return required config array!");
+                return false;
             }
-        } else {
-            // TODO: Make this a nice error in HTML template.
-            echo "Error: could not populate PhpSaml database configuration<br>";
-        }
 
-        // Generate and show form
-        $this->generateForm();
+            // Generate and show form
+            $this->generateForm();
+        }
     }
 
 
     /**
      * Get the current configuration from the database or present a default value.
-     * @param int $id
+     * @param string $id                        // Should be INT but is called using STRING datatype :(
      * @return array $config
      */
-    public function getConfig(int $id = 1)
+    public function getConfig(string $id = '1')
 	{
         global $DB;
 
@@ -143,21 +144,21 @@ class PluginPhpsamlConfig extends CommonDBTM
 		if ($result = $DB->query($sql)) {
             if ($this->getFromDB($id)) {
                 while ($data = $result->fetch_assoc()) {
-                    $config[$data['Field']] = $this->fields[$data['Field']];
+                    $config[$data['Field']] =  $this->fields[$data['Field']];
                 }
             } else {
-                echo "Error: could not retrieve configuration data from database";
+                $this->fatalError("Fatal error: could not retrieve configuration data from database.");
+                return false;
             }
         } else {
-            echo "Error: could not retrieve column data from database";
+            $this->fatalError("Fatal error: could not retrieve column data from database");
+            return false;
         }
 
-        if (count($config) <= $this->expectedItems) {
-            echo "Warning: Phpsaml did not receive the expected ammount of configuration items from the database!";
-            $config['valid'] = false;
+        if (isset($config) && (count($config) <= $this->expectedItems)) {
+            $this->minorError("Notice: Phpsaml did not receive the expected ammount of configuration items from the db!");
             return $config;
         } else {
-            $config['valid'] = true;
             return $config;
         }
 	}
@@ -662,32 +663,39 @@ class PluginPhpsamlConfig extends CommonDBTM
     private function version(string  $dbConf)
     {
         if($dbConf != $this->expectedVersion){
-            echo "Warning: Version mismatch detected,
-                  database reported $dbConf, we expected {$this->expectedVersion} ";
+            $this->minorError("Notice: Version mismatch detected! Found $dbConf, expected {$this->expectedVersion}");
         }
         // For future use
-        // Validate actual PHP Saml version else generate notification;
+        // Validate actual PHP Saml GIT version and generate update notification;
     }
 
-    private function generateForm()
+    private function generateForm($disabled = false)
     {
         global $CFG_GLPI;
 
         // Declare general form values
         $formValues = [
-            '[[SCRIPT_A]]'                      => __('Available', 'phpsaml'),
-            '[[SCRIPT_B]]'                      => __('Selected', 'phpsaml'),
+            '[[SCRIPT_A]]'               => __('Available', 'phpsaml'),
+            '[[SCRIPT_B]]'               => __('Selected', 'phpsaml'),
             '[[GLPI_ROOTDOC]]'           => $CFG_GLPI["root_doc"],
-            '[[SUBMIT]]'                 => __("Update", "phpsaml"),
-         //   '[[ERRORS]]'                 => '',
+            '[[TITLE]]'                  => __("PHP SAML Configuration", "phpsaml"),
             '[[HEADER_GENERAL]]'         => __("General", "phpsaml"),
             '[[HEADER_PROVIDER]]'        => __("Service Provider Configuration", "phpsaml"),
             '[[HEADER_PROVIDER_CONFIG]]' => __("Identity Provider Configuration", "phpsaml"),
             '[[HEADER_SECURITY]]'        => __("Security", "phpsaml"),
+            '[[SUBMIT]]'                 => __("Update", "phpsaml"),
             '[[CLOSE_FORM]]'             => Html::closeForm()
         ];
+
+        // Do we have any errors else define none.
+        if (!isset($this->formValues['[[ERRORS]]'])) {
+            $formValues['[[ERRORS]]'] = '';
+        }
+
         // Merge the values in the central array.
         $this->formValues = array_merge($this->formValues, $formValues);
+
+        
 
         // Read the template file containing the HTML template;
         if (file_exists($this->tpl)) {
@@ -696,9 +704,42 @@ class PluginPhpsamlConfig extends CommonDBTM
 
         // Insert values into the form.
         if ($html = str_replace(array_keys($this->formValues), array_values($this->formValues), $this->htmlForm)) {
+            if ($disabled) {
+                // Disable all the form fields;
+                $html = str_replace('[[DISABLED]]','DISABLED',$html);
+                // Clean the remaining placeholders from the template;
+                $html = preg_replace('/\[\[.+\]\]/', '', $html);
+            } else {
+                $html = str_replace('[[DISABLED]]','',$html);
+            }
             echo $html;
-        } else {
-            echo "Error: Could not properly generate htmlForm";
         }
+    }
+
+    private function fatalError($errorMsg)
+    {
+        $formValues=[
+            '[[ERRORS]]' => $errorMsg
+        ];
+
+        $this->formValues = array_merge($this->formValues, $formValues);
+
+        $this->generateForm(true);
+        return false;
+    }
+
+    private function minorError($errorMsg)
+    {
+
+        if (!empty($this->formValues['[[ERRORS]]'])) {
+            $errorMsg = $this->formValues['[[ERRORS]]'];
+            $errorMsg .= "<br>$errorMsg";
+        }
+
+        $formValues=[
+            '[[ERRORS]]' => $errorMsg
+        ];
+
+        $this->formValues = array_merge($this->formValues, $formValues);
     }
 }
