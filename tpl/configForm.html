@@ -127,15 +127,28 @@
     .full-width {
       grid-column: span 2;
     }
+
+    .errors {
+        display: block;
+        min-height: 50px;
+        width: 100%;
+        background-color:rgb(219, 57, 45);
+        border: 1px gray solid;
+        border-radius: 5px;
+        color:antiquewhite;
+        padding: 2px 10px 2px 10px;
+        font-size: 12px;
+    }
 </style>
 
 <div class="phpsaml_config_wrapper tab_cadre_fixe">
-    <form name="form" method="post" action="[[GLPI_ROOTDOC]]/plugins/phpsaml/front/config.form.php" id="phpsaml_config">
+    <form name="form" method="post" action="[[GLPI_ROOTDOC]]/plugins/phpsaml/front/config.php" id="phpsaml_config">
         
-        <input type="hidden" name="id" value="1">
+        <input type="hidden" name="id" value="[[ID]]">
         <h1 class="full-width">[[TITLE]]</h1>
 
-        <h3 style='color:red;'>[[ERRORS]]</h3>
+       [[ERRORS]]
+       [[VERSION]]
         
         <h2 class="full-width">[[HEADER_GENERAL]]</h2>
 
@@ -144,15 +157,18 @@
                 [[ENFORCED_LABEL]]
                 <i class="pointer fa fa-info" title="[[SAML_ENFORCED_TITLE]]"></i>
             </label>
+            <label style="color:red">[[ENFORCED_ERROR]]</label>
             <select [[DISABLED]] name="enforced">
                 [[ENFORCED_SELECT]]
             </select>
+            
         </p>
         <p>
             <label for="strict">
                 [[STRICT_LABEL]]
                 <i class="pointer fa fa-info" title="[[STRICT_TITLE]]"></i>
             </label>
+            <label style="color:red">[[STRICT_ERROR]]</label>
             <select [[DISABLED]] name="strict">
                 [[STRICT_SELECT]]
             </select>
@@ -162,6 +178,7 @@
                 [[DEBUG_LABEL]]
                 <i class="pointer fa fa-info" title="[[DEBUG_TITLE]]"></i>
             </label>
+            <label style="color:red">[[DEBUG_ERROR]]</label>
             <select [[DISABLED]] name="debug">
                 [[DEBUG_SELECT]]
             </select>
@@ -171,6 +188,7 @@
                 [[JIT_LABEL]]
                 <i class="pointer fa fa-info" title="[[JIT_TITLE]]"></i>
             </label>
+            <label style="color:red">[[JIT_ERROR]]</label>
             <select [[DISABLED]] name="jit">
                 [[JIT_SELECT]]
             </select>
@@ -182,8 +200,8 @@
             <label for="saml_sp_certificate">
                 [[SP_CERT_LABEL]]
                 <i class="pointer fa fa-info" title="[[SP_CERT_TITLE]]"></i>
-            </label> 
-           [[SP_CERT_ERROR]]
+            </label>
+            <label style="color:red">[[SP_CERT_ERROR]]</label>
             <textarea [[DISABLED]] name="saml_sp_certificate">[[SP_CERT_VALUE]]</textarea>
         </p>
 
@@ -192,7 +210,7 @@
                 [[SP_KEY_LABEL]]
                 <i class="pointer fa fa-info" title="[[SP_KEY_TITLE]]"></i>
             </label>
-           [[SP_KEY_ERROR]]
+            <label style="color:red">[[SP_KEY_ERROR]]</label>
             <textarea [[DISABLED]] name="saml_sp_certificate_key" rows=15 cols=75>[[SP_KEY_VALUE]]</textarea>
         </p>
 
@@ -201,7 +219,7 @@
                 [[SP_ID_LABEL]]
                 <i class="pointer fa fa-info" title="[[SP_ID_TITLE]]"></i>
             </label>
-            [[SP_ID_ERROR]]
+            <label style="color:red">[[SP_ID_ERROR]]</label>
             <select [[DISABLED]] name="saml_sp_nameid_format">
                 [[SP_ID_SELECT]]
             </select>
@@ -214,7 +232,7 @@
                 [[IP_ID_LABEL]]
                 <i class="pointer fa fa-info" title="[[IP_ID_TITLE]]"></i>
             </label>
-            [[IP_ID_ERROR]]
+            <label style="color:red">[[IP_ID_ERROR]]</label>
             <input [[DISABLED]] type="text" size="90" name="saml_idp_entity_id" value="[[IP_ID_VALUE]]">
         </p>
 
@@ -223,7 +241,7 @@
                 [[IP_SSO_URL_LABEL]]
                 <i class="pointer fa fa-info" title="[[IP_SSO_URL_TITLE]]"></i>
             </label>
-            [[IP_SSO_URL_ERROR]]
+            <label style="color:red">[[IP_SSO_URL_ERROR]]</label>
             <input [[DISABLED]] type="text" size="90" name="saml_idp_single_sign_on_service" value="[[IP_SSO_URL_VALUE]]">
         </p>
 
@@ -232,7 +250,7 @@
                 [[IP_SLS_URL_LABEL]] 
                 <i class="pointer fa fa-info" title="[[IP_SLS_URL_TITLE]]"></i>
             </label>
-            [[IP_SLS_URL_ERROR]]
+            <label style="color:red">[[IP_SLS_URL_ERROR]]</label>
             <input [[DISABLED]] type="text" size="90" name="saml_idp_single_logout_service" value="[[IP_SLS_URL_VALUE]]">
         </p>
 
@@ -241,7 +259,7 @@
                 [[IP_CERT_LABEL]]
                 <i class="pointer fa fa-info" title="[[IP_CERT_TITLE]]"></i>
             </label>
-            [[IP_CERT_ERROR]]
+            <label style="color:red">[[IP_CERT_ERROR]]</label>
             <textarea [[DISABLED]] name="saml_idp_certificate" rows="15" cols="75">[[IP_CERT_VALUE]]</textarea>
         </p>
         
@@ -252,7 +270,7 @@
                 [[AUTHN_LABEL]]
                 <i class="pointer fa fa-info" title="[[AUTHN_TITLE]]"></i>
             </label>
-        
+            <label style="color:red">[[AUTHN_ERROR]]</label>
             <select [[DISABLED]] id="keep-order" multiple="multiple">
                 [[AUTHN_SELECT]]
             </select>	
@@ -264,6 +282,7 @@
                 [[AUTHN_COMPARE_LABEL]]
                 <i class="pointer fa fa-info" title="[[AUTHN_COMPARE_TITLE]]"></i>
             </label>
+            <label style="color:red">[[AUTHN_COMPARE_ERROR]]</label>
             <select [[DISABLED]] name="requested_authn_context_comparison">
                [[AUTHN_COMPARE_SELECT]]
             </select>	
@@ -274,7 +293,7 @@
                 [[ENCR_NAMEID_LABEL]]
                 <i class="pointer fa fa-info" title="[[ENCR_NAMEID_TITLE]]"></i>
             </label>
-            [[ENCR_NAMEID_ERROR]]
+            <label style="color:red">[[ENCR_NAMEID_ERROR]]</label>
             <select [[DISABLED]] name="saml_security_nameidencrypted">
                 [[ENCR_NAMEID_SELECT]]
             </select>
@@ -285,7 +304,7 @@
                 [[SIGN_AUTHN_REQ_LABEL]]
                 <i class="pointer fa fa-info" title="[[SIGN_AUTHN_REQ_TITLE]]"></i>
             </label>
-           [[SIGN_AUTHN_REQ_ERROR]]
+            <label style="color:red">[[SIGN_AUTHN_REQ_ERROR]]</label>
             <select [[DISABLED]] name="saml_security_authnrequestssigned">
                 [[SIGN_AUTHN_REQ_SELECT]]
             </select>
@@ -296,7 +315,7 @@
                 [[SIGN_LOGOUT_REQ_LABEL]]  
                 <i class="pointer fa fa-info" title="[[SIGN_LOGOUT_REQ_TITLE]]"></i>
             </label>
-                [[SIGN_LOGOUT_REQ_ERROR]]
+            <label style="color:red">[[SIGN_LOGOUT_REQ_ERROR]]</label>
             <select [[DISABLED]] name="saml_security_logoutrequestsigned">
                 [[SIGN_LOGOUT_REQ_SELECT]]
             </select>
@@ -307,7 +326,7 @@
                 [[SIGN_LOGOUT_RES_LABEL]]
                 <i class="pointer fa fa-info" title="[[SIGN_LOGOUT_RES_TITLE]]"></i>
             </label>
-            [[SIGN_LOGOUT_RES_ERROR]]
+            <label style="color:red">[[SIGN_LOGOUT_RES_ERROR]]</label>
             <select [[DISABLED]] name="saml_security_logoutresponsesigned">
                 [[SIGN_LOGOUT_RES_SELECT]]
             </select>

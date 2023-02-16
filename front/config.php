@@ -1,55 +1,57 @@
 <?php
-
 /*
    ------------------------------------------------------------------------
-   Barcode
-   Copyright (C) 2009-2016 by the Barcode plugin Development Team.
-
-   https://forge.indepnet.net/projects/barscode
+   Derrick Smith - PHP SAML Plugin
+   Copyright (C) 2014 by Derrick Smith
    ------------------------------------------------------------------------
 
    LICENSE
 
-   This file is part of barcode plugin project.
+   This file is part of phpsaml project.
 
-   Plugin Barcode is free software: you can redistribute it and/or modify
+   PHP SAML Plugin is free software: you can redistribute it and/or modify
    it under the terms of the GNU Affero General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
 
-   Plugin Barcode is distributed in the hope that it will be useful,
+   phpsaml is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
    GNU Affero General Public License for more details.
 
    You should have received a copy of the GNU Affero General Public License
-   along with Plugin Barcode. If not, see <http://www.gnu.org/licenses/>.
+   along with phpsaml. If not, see <http://www.gnu.org/licenses/>.
 
    ------------------------------------------------------------------------
 
-   @package   Plugin Barcode
-   @author    David Durieux
+   @package   phpsamlconfig
+   @author    Chris Gralike
    @co-author
-   @copyright Copyright (c) 2009-2016 Barcode plugin Development team
+   @copyright Copyright (c) 2018 by Derrick Smith
    @license   AGPL License 3.0 or (at your option) any later version
               http://www.gnu.org/licenses/agpl-3.0-standalone.html
-   @link      https://forge.indepnet.net/projects/barscode
-   @since     2009
+   @since     2018
+
+   @changelog rewrite and restructure removing context switches and improving readability and maintainability
+   @changelog breaking config up into methods for maintainability and unit testing purposes.
 
    ------------------------------------------------------------------------
  */
-
-// Non menu entry case
-//header("Location:../../central.php");
 
 include ('../../../inc/includes.php');
 
 Session::checkRight("config", UPDATE);
 
-// To be available when plugin is not activated
-Plugin::load('phpsaml');
-
 Html::header(__('PHP SAML', 'phpsaml'), $_SERVER['PHP_SELF'], "config", "plugins");
 
 $phpSamlConfig = new PluginPhpsamlConfig();
-$phpSamlConfig->showForm((isset($_POST["id"]) ? $_POST["id"] : '1'));
+
+// Handle any changes made.
+if (isset($_POST['update'])) {
+  $phpSamlConfig->processChanges($_POST);
+}
+
+// Id to be used for multiple providers
+echo $phpSamlConfig->showForm('1');
+
+

@@ -79,15 +79,15 @@ class PluginPhpsamlConfig extends CommonDBTM
      * Change value for unit testing
      * @var int
      **/
-    private $expectedItems = 18;
+    private $expectedItems = 20;
 
 
     /**
-     * Expected version
+     * Where to get the current version
      * Change value for unit testing
      * @var string
      **/
-    private $expectedVersion = '1.2.1';
+    private $PhpsamlGitAtomUrl = 'https://github.com/derricksmith/phpsaml/releases.atom';
 
     /**
      * Stores a copy of the phpSaml Database Configuration
@@ -97,13 +97,28 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     * Show the form and handle potential inputs.
+     * Registers if a fatal error occured during execution;
+     * @var array
+     **/
+    private $fatalError = false;
+
+
+    /**
+     * Registers errors that occured in a friendly format;
+     * @var array
+     **/
+    private $errorMsgs = null;
+
+
+    /**
+     * 
+     * Generate the configuration htmlForm and return it.
+     * 
      * @param void
      * @return boolean
      */
     public function showForm($id, array $options = [])
     {
-
         // Populate current configuration
         if ($this->config = $this->getConfig($id)) {
             // Call the form field handlers
@@ -114,31 +129,37 @@ class PluginPhpsamlConfig extends CommonDBTM
                         // Handle property
                         $this->$method($current);
                     } else {
-                        // TODO: Make this a nice error in HTML template.
                         if ($method != 'valid') {
-                            $this->minorError("Warning: No handler found for configuration item: $method in ".__class__." db corrupted?");
+                            $this->registerError("Warning: No handler found for configuration item: $method in ".__class__." db corrupted?");
                         }
                     }
                 }
             } else {
-                $this->fatalError("Error: db config did not return required config array!");
-                return false;
+                $this->registerError("Error: db config did not return required config array!", true);
             }
 
             // Generate and show form
-            $this->generateForm();
+            return $this->generateForm(true);
         }
     }
 
 
+
+
     /**
-     * Get the current configuration from the database or present a default value.
-     * @param string $id                        // Should be INT but is called using STRING datatype :(
+     *
+     * Gets the current configuration from the database. It will first query the columns of the configuration
+     * table. It will then use these columns to fetch all the related database configuration values and place them
+     * in a structured array. Finally this structured array is returned. The caller should evaluate the 'valid' array
+     * key to validate the configuration array is usable.
+     *
+     * @param string $id        // Change to int, it is still called using strings.
      * @return array $config
      */
     public function getConfig(string $id = '1')
 	{
         global $DB;
+        $config['valid'] = true;
 
 		$sql = 'SHOW COLUMNS FROM '.$this->getTable();
 		if ($result = $DB->query($sql)) {
@@ -147,25 +168,123 @@ class PluginPhpsamlConfig extends CommonDBTM
                     $config[$data['Field']] =  $this->fields[$data['Field']];
                 }
             } else {
-                $this->fatalError("Fatal error: could not retrieve configuration data from database.");
-                return false;
+                $this->registerError('Phpsaml could not retrieve configuration values from database.', true);
+                $config['valid'] = false;
             }
         } else {
-            $this->fatalError("Fatal error: could not retrieve column data from database");
-            return false;
+            $this->registerError('Phpsaml was not able to retrieve configuration columns from database', true);
+            $config['valid'] = false;
+        }
+        // Test if config exists;
+        if (count($config) <> $this->expectedItems) {
+            $this->registerError('Phpsaml expected '.$this->expectedItems.' configuration items but got '.count($config).' items instead');
+            $config['valid'] = false;
         }
 
-        if (isset($config) && (count($config) <= $this->expectedItems)) {
-            $this->minorError("Notice: Phpsaml did not receive the expected ammount of configuration items from the db!");
-            return $config;
-        } else {
-            return $config;
-        }
+        return $config;
 	}
 
 
+
+
     /**
-     * Handle the enforced default value and changes.
+     *
+     * The generateForm method is called by the showForm method. It should only be called after all
+     * configuration handlers are executed. It will populate all generic form properties, load the
+     * configuration template file and replace all template placeholders with the populated fields.
+     * It will disable all form fields if a fatal error was reported using the fatalError class property.
+     * Finally it will echo the generated htmlForm.
+     *
+     * @param bool $return   // return the generated htmlform as string
+     * @return string|bool
+     */
+    private function generateForm(bool $return=false)
+    {
+        global $CFG_GLPI;
+
+        // Read the template file containing the HTML template;
+        if (file_exists($this->tpl)) {
+            $this->htmlForm = file_get_contents($this->tpl);
+        }
+
+        // Declare general form values
+        $formValues = [
+            '[[SCRIPT_A]]'               => __('Available', 'phpsaml'),
+            '[[SCRIPT_B]]'               => __('Selected', 'phpsaml'),
+            '[[GLPI_ROOTDOC]]'           => $CFG_GLPI["root_doc"],
+            '[[TITLE]]'                  => __("PHP SAML Configuration", "phpsaml"),
+            '[[HEADER_GENERAL]]'         => __("General", "phpsaml"),
+            '[[HEADER_PROVIDER]]'        => __("Service Provider Configuration", "phpsaml"),
+            '[[HEADER_PROVIDER_CONFIG]]' => __("Identity Provider Configuration", "phpsaml"),
+            '[[HEADER_SECURITY]]'        => __("Security", "phpsaml"),
+            '[[SUBMIT]]'                 => __("Update", "phpsaml"),
+            '[[CLOSE_FORM]]'             => Html::closeForm()
+        ];
+        // Merge the values in the central array.
+        $this->formValues = array_merge($this->formValues, $formValues);
+
+        // Process the errors if any
+        if (is_array($this->errorMsgs)) {
+            // If a fatal occured the form is not dependable anymore so disable all elements;
+            $this->htmlForm = ($this->fatalError) ? str_replace('[[DISABLED]]','DISABLED',$this->htmlForm) : str_replace('[[DISABLED]]','',$this->htmlForm);
+
+            // Process the error messages;
+            $nice = '';
+            foreach ($this->errorMsgs as $k => $errmsg) {
+                $nice .= $errmsg.'<br>';
+            }
+
+            $this->formValues['[[ERRORS]]'] = '<p class="full-width errors">'.$nice.'</p>';
+        } else {
+            $this->formValues['[[ERRORS]]'] = '';
+        }
+
+        // Insert values into the form.
+        if ($html = str_replace(array_keys($this->formValues), array_values($this->formValues), $this->htmlForm)) {
+            return $html;
+        } else {
+            return false;
+        }
+    }
+
+
+    public function processChanges($post)
+    {
+        echo "<pre> Dit is al gelukt, maar nu...";
+        print_r($post);
+    }
+
+
+    /**
+     *
+     * Adds an error message to the errorMsgs class property. The errorMsgs class property is iterated by the generateForm
+     * method to inject all errors into the top header of the htmlForm. If fatal is set to true the generateForm method will
+     * disable all form elements and make sure an insert/update can no longer be performed.
+     *
+     * @param string $errorMsg
+     * @param bool $fatal
+     * @return void
+     */
+    private function registerError(string $errorMsg, bool $fatal=false)
+    {
+        if($fatal){
+            $this->fatalError = true;
+        }
+
+        $this->errorMsgs[] = $errorMsg;
+    }
+
+
+
+
+// #######################
+// Configuration handlers
+// #######################
+
+    /**
+     *
+     * Evaluates the enforced property
+     * and populates the form template
      *
      * @param int $dbConf
      * @return boolean
@@ -177,7 +296,7 @@ class PluginPhpsamlConfig extends CommonDBTM
             '[[ENFORCED_LABEL]]' =>  __("Plugin Enforced", "phpsaml"),
             '[[ENFORCED_TITLE]]' =>  __("Toggle 'yes' to enforce Single Sign On for all login sessions", "phpsaml"),
             '[[ENFORCED_SELECT]]'=> '',
-            '[[ENFORCED_ERROR]]' => false
+            '[[ENFORCED_ERROR]]' => ''
         ];
 
         // Generate select options
@@ -195,11 +314,15 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-    /**
-     * Handle the strict default value and changes
+
+
+     /**
+     *
+     * Evaluates the strict property
+     * and populates the form template
      *
      * @param int $dbConf
-     * @return boolean
+     * @return void
      */
     private function strict(int $dbConf)
     {
@@ -225,11 +348,15 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
+
+
     /**
-     * Handle the debug default value and changes
+     *
+     * Evaluates the debug property
+     * and populates the form template
      *
      * @param int $dbConf
-     * @return boolean
+     * @return void
      */
     private function debug(int $dbConf)
     {
@@ -255,8 +382,12 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
+
+
     /**
-     * Handle the jit default value and changes
+     *
+     * Evaluates the sp certificate property
+     * and populates the form template
      *
      * @param int $dbConf
      * @return boolean
@@ -265,8 +396,8 @@ class PluginPhpsamlConfig extends CommonDBTM
     {
         // Declare template labels
         $formValues = [
-            '[[JIT_LABEL]]' =>  __("Strict", "phpsaml"),
-            '[[JIT_TITLE]]' =>  __("If 'strict' is True, then PhpSaml will reject unencrypted messages", "phpsaml"),
+            '[[JIT_LABEL]]' =>  __("Just In Time (JIT) Provisioning", "phpsaml"),
+            '[[JIT_TITLE]]' =>  __("Toggle 'yes' to create new users if they do not already exist.  Toggle 'no' will cause an error if the user does not already exist in GLPI.", "phpsaml"),
             '[[JIT_SELECT]]'=> '',
             '[[JIT_ERROR]]' => false
         ];
@@ -285,12 +416,17 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
+
+
     /**
-     * Handle the saml sp certificate default value and changes
+     *
+     * Evaluates the sp certificate property
+     * and populates the form template
      *
      * @param string $dbConf
-     * @return boolean
+     * @return void
      */
+
     private function saml_sp_certificate(string $dbConf)
     {
         // Declare template labels
@@ -298,11 +434,11 @@ class PluginPhpsamlConfig extends CommonDBTM
             '[[SP_CERT_LABEL]]' =>  __("Service Provider Certificate", "phpsaml"),
             '[[SP_CERT_TITLE]]' =>  __("Certificate we should use when communicating with the Identity Provider.", "phpsaml"),
             '[[SP_CERT_VALUE]]' => $dbConf,
-            '[[SP_CERT_ERROR]]' => false
+            '[[SP_CERT_ERROR]]' => ''
         ];
 
-        if (!strstr($dbConf, '-BEGIN CERTIFICATE-') && !strstr($dbConf, '-END CERTIFICATE-')) {
-            echo "Warning: This does not look like a valid certificate, include the certificate BEGIN and END tags";
+        if (!strstr($dbConf, '-BEGIN CERTIFICATE-') || !strstr($dbConf, '-END CERTIFICATE-')) {
+            $formValues['[[SP_CERT_ERROR]]'] = __("This does not look like a valid certificate, include the certificate BEGIN and END tags", "phpsaml");
         }
         
         // Merge outcomes in formValues
@@ -310,11 +446,15 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
+
+
     /**
-     * Handle the saml sp certificate key default value and changes
+     *
+     * Evaluates the sp certificate key property
+     * and populates the form template
      *
      * @param string $dbConf
-     * @return boolean
+     * @return void
      */
     private function saml_sp_certificate_key(string $dbConf)
     {
@@ -327,8 +467,8 @@ class PluginPhpsamlConfig extends CommonDBTM
         ];
 
         // Do some basic validations
-        if (!strstr($dbConf, '-BEGIN PRIVATE KEY-') && !strstr($dbConf, '-END PRIVATE KEY-')) {
-            echo "Warning: This does not look like a valid private key, include the private key BEGIN and END tags";
+        if (!strstr($dbConf, '-BEGIN PRIVATE KEY-') || !strstr($dbConf, '-END PRIVATE KEY-')) {
+            $formValues['[[SP_KEY_ERROR]]'] =  __("This does not look like a valid private key, please make sure to include the private key BEGIN and END tags", "phpsaml");
         }
         
         // Merge outcomes in formValues
@@ -336,11 +476,15 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
+
+
     /**
-     * Handle the Saml SP NameId formating default value and changes
+     *
+     * Evaluates the saml sp nameid format property
+     * and populates the form template
      *
      * @param string $dbConf
-     * @return boolean
+     * @return void
      */
     private function saml_sp_nameid_format(string $dbConf)
     {
@@ -368,11 +512,15 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
+
+
     /**
-     * Control of the configuration
+     *
+     * Evaluates the idp entity id property
+     * and populates the form template
      *
      * @param string $dbConf
-     * @return boolean
+     * @return void
      */
     private function saml_idp_entity_id(string $dbConf)
     {
@@ -391,11 +539,15 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
+
+
     /**
-     * Description
+     *
+     * Evaluates the idp single sign on service property
+     * and populates the form template
      *
      * @param string $dbConf
-     * @return boolean
+     * @return void
      */
     private function saml_idp_single_sign_on_service(string $dbConf)
     {
@@ -414,11 +566,15 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
+
+
     /**
-     * Description
+     *
+     * Evaluates the idp single logout service property for changes
+     * and populates the form template
      *
      * @param string $dbConf
-     * @return boolean
+     * @return void
      */
     private function saml_idp_single_logout_service(string $dbConf)
     {
@@ -437,11 +593,15 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
+
+
     /**
-     * Description
+     *
+     * Evaluates the idp certificate property for changes
+     * and populates the form template
      *
      * @param string $dbConf
-     * @return boolean
+     * @return void
      */
     private function saml_idp_certificate(string $dbConf)
     {
@@ -450,12 +610,11 @@ class PluginPhpsamlConfig extends CommonDBTM
             '[[IP_CERT_LABEL]]' =>  __("Identity Provider Public X509 Certificate", "phpsaml"),
             '[[IP_CERT_TITLE]]' =>  __("Public x509 certificate of the Identity Provider.", "phpsaml"),
             '[[IP_CERT_VALUE]]' => $dbConf,
-            '[[IP_CERT_ERROR]]' => false
+            '[[IP_CERT_ERROR]]' => ''
         ];
 
-        if (!strstr($dbConf, '-BEGIN CERTIFICATE-') &&
-            !strstr($dbConf, '-END CERTIFICATE-')) {
-            echo "Warning: This does not look like a valid certificate, include the certificate BEGIN and END tags";
+        if (!strstr($dbConf, '-BEGIN CERTIFICATE-') || !strstr($dbConf, '-END CERTIFICATE-')) {
+            $formValues['[[IP_CERT_ERROR]]'] = "This does not look like a valid certificate, please make sure to include the certificate BEGIN and END tags";
         }
         
         // Merge outcomes in formValues
@@ -463,8 +622,12 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
+
+
     /**
-     * Description
+     *
+     * Evaluates the authn context property for changes
+     * and populates the form template
      *
      * @param string $dbConf
      * @return boolean
@@ -494,11 +657,16 @@ class PluginPhpsamlConfig extends CommonDBTM
         $this->formValues = array_merge($this->formValues, $formValues);
     }
 
-    /**
-     * Control of the configuration
+
+
+
+   /**
+     *
+     * Evaluates the requested authn context comparison property for changes
+     * and populates the form template
      *
      * @param string $dbConf
-     * @return boolean
+     * @return void
      */
     private function requested_authn_context_comparison(string $dbConf)
     {
@@ -525,11 +693,16 @@ class PluginPhpsamlConfig extends CommonDBTM
         $this->formValues = array_merge($this->formValues, $formValues);
     }
 
+
+
+
     /**
-     * Control of the configuration
+     *
+     * Evaluates the nameid encrypted property for changes
+     * and populates the form template
      *
      * @param int $dbConf
-     * @return boolean
+     * @return void
      */
     private function saml_security_nameidencrypted(int $dbConf)
     {
@@ -554,11 +727,16 @@ class PluginPhpsamlConfig extends CommonDBTM
         $this->formValues = array_merge($this->formValues, $formValues);
     }
 
+
+
+
     /**
-     * Control of the configuration
+     *
+     * Evaluates the authn requests signed property for changes
+     * and populates the form template
      *
      * @param int $dbConf
-     * @return boolean
+     * @return void
      */
     private function saml_security_authnrequestssigned(int $dbConf)
     {
@@ -583,8 +761,13 @@ class PluginPhpsamlConfig extends CommonDBTM
         $this->formValues = array_merge($this->formValues, $formValues);
     }
 
+
+
+
     /**
-     * Control of the configuration
+     *
+     * Evaluates the Logout Request Signed property 
+     * and populates the form template
      *
      * @param int $dbConf
      * @return boolean
@@ -612,11 +795,16 @@ class PluginPhpsamlConfig extends CommonDBTM
         $this->formValues = array_merge($this->formValues, $formValues);
     }
 
+
+
+
     /**
-     * Control of the configuration
+     *
+     * Evaluates the Logout Response Signed property 
+     * and populates the form template
      *
      * @param int $dbConf
-     * @return boolean
+     * @return void
      */
     private function saml_security_logoutresponsesigned(int $dbConf)
     {
@@ -642,104 +830,67 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
+
+
     /**
-     * Control of the configuration
+     *
+     * Evaluates the id property for changes
+     * and populates the form template
      *
      * @param int $dbConf
-     * @return boolean
+     * @return void
      */
     private function id(int $dbConf)
     {
-        // For future use
+        $this->formValues['[[ID]]'] = $dbConf;
     }
+
+
 
 
     /**
-     * Control of the configuration
+     * Validates the provided Phpsaml version against the git repository
+     * if $return is true method will return collected information in an array.
      *
-     * @param void
-     * @return boolean
+     * version($dbConf, $return);
+     *
+     * @param string $compare       //version to compare
+     * @param bool $return          //return the outcomes
+     * @return void|array $outcomes //optional return
      */
-    private function version(string  $dbConf)
+    public function version(string $compare, bool $return = false)
     {
-        if($dbConf != $this->expectedVersion){
-            $this->minorError("Notice: Version mismatch detected! Found $dbConf, expected {$this->expectedVersion}");
-        }
-        // For future use
-        // Validate actual PHP Saml GIT version and generate update notification;
-    }
-
-    private function generateForm($disabled = false)
-    {
-        global $CFG_GLPI;
-
-        // Declare general form values
-        $formValues = [
-            '[[SCRIPT_A]]'               => __('Available', 'phpsaml'),
-            '[[SCRIPT_B]]'               => __('Selected', 'phpsaml'),
-            '[[GLPI_ROOTDOC]]'           => $CFG_GLPI["root_doc"],
-            '[[TITLE]]'                  => __("PHP SAML Configuration", "phpsaml"),
-            '[[HEADER_GENERAL]]'         => __("General", "phpsaml"),
-            '[[HEADER_PROVIDER]]'        => __("Service Provider Configuration", "phpsaml"),
-            '[[HEADER_PROVIDER_CONFIG]]' => __("Identity Provider Configuration", "phpsaml"),
-            '[[HEADER_SECURITY]]'        => __("Security", "phpsaml"),
-            '[[SUBMIT]]'                 => __("Update", "phpsaml"),
-            '[[CLOSE_FORM]]'             => Html::closeForm()
-        ];
-
-        // Do we have any errors else define none.
-        if (!isset($this->formValues['[[ERRORS]]'])) {
-            $formValues['[[ERRORS]]'] = '';
-        }
-
-        // Merge the values in the central array.
-        $this->formValues = array_merge($this->formValues, $formValues);
-
-        
-
-        // Read the template file containing the HTML template;
-        if (file_exists($this->tpl)) {
-            $this->htmlForm = file_get_contents($this->tpl);
-        }
-
-        // Insert values into the form.
-        if ($html = str_replace(array_keys($this->formValues), array_values($this->formValues), $this->htmlForm)) {
-            if ($disabled) {
-                // Disable all the form fields;
-                $html = str_replace('[[DISABLED]]','DISABLED',$html);
-                // Clean the remaining placeholders from the template;
-                $html = preg_replace('/\[\[.+\]\]/', '', $html);
+        if ($feed = implode(file($this->PhpsamlGitAtomUrl))) {
+            if ($xmlArray = simplexml_load_string($feed)) {
+                $href = (string) $xmlArray->entry->link['href'];
+                preg_match('/.* (.+)/', (string) $xmlArray->entry->title, $version);
+                if (is_array($version)) {
+                    $v = $version['1'];
+                    if ($v <> $compare) {
+                        if ($return) {
+                            return ['gitVersion' => $v,
+                                    'compare'    => $compare,
+                                    'gitUrl'     => $href,
+                                    'latest'     => true];
+                        }
+                        $this->formValues['[[VERSION]]'] = "<font style='color:green;'><a href='$href' target='_blank'>A new version of Phpsaml is available</a>. Version $v was found in the repository, you are running $compare</font>";
+                    } else {
+                        if ($return) {
+                            return ['gitVersion' => $v,
+                                    'compare'    => $compare,
+                                    'gitUrl'     => $href,
+                                    'latest'     => false];
+                        }
+                        $this->formValues['[[VERSION]]'] = "<font style='color:green;'>You are using version $v which is also the <a href='$href' target='_blank'>latest version</a></font>";
+                    }
+                } else {
+                    $this->registerError("Could not correctly parse xml information from:".$this->PhpsamlGitAtomUrl." is simpleXml available?");
+                }
             } else {
-                $html = str_replace('[[DISABLED]]','',$html);
+                $this->registerError("Could not correctly parse xml information from:".$this->PhpsamlGitAtomUrl." is simpleXml available?");
             }
-            echo $html;
+        } else {
+            $this->registerError("Could not retrieve version information from:".$this->PhpsamlGitAtomUrl." is internet access blocked?");
         }
-    }
-
-    private function fatalError($errorMsg)
-    {
-        $formValues=[
-            '[[ERRORS]]' => $errorMsg
-        ];
-
-        $this->formValues = array_merge($this->formValues, $formValues);
-
-        $this->generateForm(true);
-        return false;
-    }
-
-    private function minorError($errorMsg)
-    {
-
-        if (!empty($this->formValues['[[ERRORS]]'])) {
-            $errorMsg = $this->formValues['[[ERRORS]]'];
-            $errorMsg .= "<br>$errorMsg";
-        }
-
-        $formValues=[
-            '[[ERRORS]]' => $errorMsg
-        ];
-
-        $this->formValues = array_merge($this->formValues, $formValues);
     }
 }
