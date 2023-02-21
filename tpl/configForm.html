@@ -3,8 +3,8 @@
     $(function() {
         $('#keep-order').multiSelect({
             keepOrder: true,
-            selectableHeader: '<b>[[SCRIPT_A]]</b>',
-            selectionHeader: '<b>[[SCRIPT_B]]</b>',
+            selectableHeader: '<b>[[AVAILABLE]]</b>',
+            selectionHeader: '<b>[[SELECTED]]</b>',
             cssClass: 'multiselect',
             afterSelect: function(value, text){
                 var get_val = $("#requested-authn-context").val();
@@ -148,7 +148,7 @@
         <h1 class="full-width">[[TITLE]]</h1>
 
        [[ERRORS]]
-       [[VERSION]]
+       <div class="alert alert-info mb-o rounded-0 border-top-0 border-bottom-0 border-right-0 full-width" role="alert">[[VERSION]]</div>
         
         <h2 class="full-width">[[HEADER_GENERAL]]</h2>
 
@@ -157,39 +157,51 @@
                 [[ENFORCED_LABEL]]
                 <i class="pointer fa fa-info" title="[[SAML_ENFORCED_TITLE]]"></i>
             </label>
-            <label style="color:red">[[ENFORCED_ERROR]]</label>
-            <select [[DISABLED]] name="enforced">
+            <em style="color:red">[[ENFORCED_ERROR]]</em>
+            <select [[DISABLED]] 
+                    name="enforced"
+                    id="enforced"
+                    title="enforced">
                 [[ENFORCED_SELECT]]
             </select>
             
         </p>
         <p>
+            <em for="strict" style="color:red">[[STRICT_ERROR]]</em>
             <label for="strict">
                 [[STRICT_LABEL]]
                 <i class="pointer fa fa-info" title="[[STRICT_TITLE]]"></i>
             </label>
-            <label style="color:red">[[STRICT_ERROR]]</label>
-            <select [[DISABLED]] name="strict">
+            <select [[DISABLED]] 
+                    name="strict"
+                    id="strict"
+                    title="strict">
                 [[STRICT_SELECT]]
             </select>
         </p>
         <p>
+            <em for="debug" style="color:red">[[DEBUG_ERROR]]</em>
             <label for="debug">
                 [[DEBUG_LABEL]]
                 <i class="pointer fa fa-info" title="[[DEBUG_TITLE]]"></i>
             </label>
-            <label style="color:red">[[DEBUG_ERROR]]</label>
-            <select [[DISABLED]] name="debug">
+            <select [[DISABLED]] 
+                    name="debug"
+                    id="debug"
+                    title="debug">
                 [[DEBUG_SELECT]]
             </select>
         </p>
         <p class="full-width">
+            <em style="color:red">[[JIT_ERROR]]</em>
             <label for="jit">
                 [[JIT_LABEL]]
                 <i class="pointer fa fa-info" title="[[JIT_TITLE]]"></i>
             </label>
-            <label style="color:red">[[JIT_ERROR]]</label>
-            <select [[DISABLED]] name="jit">
+            <select [[DISABLED]] 
+                    name="jit"
+                    id="jit"
+                    title="jit">
                 [[JIT_SELECT]]
             </select>
         </p>
@@ -197,30 +209,41 @@
         <h2 class="full-width">[[HEADER_PROVIDER]]</h2>
         
         <p class="full-width">
+            <em style="color:red">[[SP_CERT_ERROR]]</em>
             <label for="saml_sp_certificate">
                 [[SP_CERT_LABEL]]
                 <i class="pointer fa fa-info" title="[[SP_CERT_TITLE]]"></i>
             </label>
-            <label style="color:red">[[SP_CERT_ERROR]]</label>
-            <textarea [[DISABLED]] name="saml_sp_certificate">[[SP_CERT_VALUE]]</textarea>
+            <textarea [[DISABLED]] 
+                      name="saml_sp_certificate"
+                      id="saml_sp_certificate"
+                      spaceholder=""
+                      title="Service provider certificate">[[SP_CERT_VALUE]]</textarea>
         </p>
 
         <p class="full-width">
+            <em style="color:red">[[SP_KEY_ERROR]]</em>
             <label for="saml_sp_certificate_key">
                 [[SP_KEY_LABEL]]
                 <i class="pointer fa fa-info" title="[[SP_KEY_TITLE]]"></i>
             </label>
-            <label style="color:red">[[SP_KEY_ERROR]]</label>
-            <textarea [[DISABLED]] name="saml_sp_certificate_key" rows=15 cols=75>[[SP_KEY_VALUE]]</textarea>
+            <textarea [[DISABLED]] 
+                      name="saml_sp_certificate_key"
+                      id="saml_sp_certificate_key"
+                      spaceholder=""
+                      title="Service provider certificate key">[[SP_KEY_VALUE]]</textarea>
         </p>
 
         <p class="full-width">
+            <em style="color:red">[[SP_ID_ERROR]]</em>
             <label for="saml_idp_nameid_format">
                 [[SP_ID_LABEL]]
                 <i class="pointer fa fa-info" title="[[SP_ID_TITLE]]"></i>
             </label>
-            <label style="color:red">[[SP_ID_ERROR]]</label>
-            <select [[DISABLED]] name="saml_sp_nameid_format">
+            <select [[DISABLED]] 
+                    name="saml_sp_nameid_format"
+                    id="saml_sp_nameid_format"
+                    title="Name id formatting">
                 [[SP_ID_SELECT]]
             </select>
         </p>
@@ -228,106 +251,149 @@
         <h2 class="full-width">[[HEADER_PROVIDER_CONFIG]]</h2>
         
         <p class="full-width">
+            <em style="color:red">[[IP_ID_ERROR]]</em>
             <label for="saml_idp_entity_id">
                 [[IP_ID_LABEL]]
                 <i class="pointer fa fa-info" title="[[IP_ID_TITLE]]"></i>
             </label>
-            <label style="color:red">[[IP_ID_ERROR]]</label>
-            <input [[DISABLED]] type="text" size="90" name="saml_idp_entity_id" value="[[IP_ID_VALUE]]">
+            <input [[DISABLED]] 
+                   type="text" 
+                   size="90" 
+                   name="saml_idp_entity_id"
+                   id="saml_idp_entity_id"
+                   spaceholder=""
+                   title="Idp identifier URI..."
+                   value="[[IP_ID_VALUE]]">
         </p>
 
         <p class="full-width">
+            <em style="color:red">[[IP_SSO_URL_ERROR]]</em>
             <label for="saml_idp_single_sign_on_service">
                 [[IP_SSO_URL_LABEL]]
                 <i class="pointer fa fa-info" title="[[IP_SSO_URL_TITLE]]"></i>
             </label>
-            <label style="color:red">[[IP_SSO_URL_ERROR]]</label>
-            <input [[DISABLED]] type="text" size="90" name="saml_idp_single_sign_on_service" value="[[IP_SSO_URL_VALUE]]">
+            <input [[DISABLED]] 
+                   type="text" 
+                   size="90" 
+                   name="saml_idp_single_sign_on_service"
+                   id="saml_idp_single_sign_on_service"
+                   spaceholder="Ïdp single sign on service URI..."
+                   title="Idp single sign on service URI..."
+                   value="[[IP_SSO_URL_VALUE]]">
         </p>
 
         <p class="full-width">
+            <em style="color:red">[[IP_SLS_URL_ERROR]]</em>
             <label for="saml_idp_single_logout_service">
                 [[IP_SLS_URL_LABEL]] 
                 <i class="pointer fa fa-info" title="[[IP_SLS_URL_TITLE]]"></i>
             </label>
-            <label style="color:red">[[IP_SLS_URL_ERROR]]</label>
-            <input [[DISABLED]] type="text" size="90" name="saml_idp_single_logout_service" value="[[IP_SLS_URL_VALUE]]">
+            <input [[DISABLED]] 
+                   type="text" 
+                   size="90" 
+                   name="saml_idp_single_logout_service"
+                   id="saml_idp_single_logout_service"
+                   spaceholder="Idp logout service URI..."
+                   title="Idp logout service URI..."
+                   value="[[IP_SLS_URL_VALUE]]">
         </p>
 
         <p class="full-width">
+            <em style="color:red">[[IP_CERT_ERROR]]</em>
             <label for="saml_idp_certificate">
                 [[IP_CERT_LABEL]]
                 <i class="pointer fa fa-info" title="[[IP_CERT_TITLE]]"></i>
             </label>
-            <label style="color:red">[[IP_CERT_ERROR]]</label>
-            <textarea [[DISABLED]] name="saml_idp_certificate" rows="15" cols="75">[[IP_CERT_VALUE]]</textarea>
+            <textarea [[DISABLED]] name="saml_idp_certificate" id="saml_idp_certificate" spaceholder="" title="Idp public certificate...">[[IP_CERT_VALUE]]</textarea>
         </p>
         
         <h2 class="full-width">[[HEADER_SECURITY]]</h2>
 
         <p class="full-width">
-            <label for="requested_authn_context">
+            <em style="color:red">[[AUTHN_ERROR]]</em>
+            <label for="requested-authn-context">
                 [[AUTHN_LABEL]]
                 <i class="pointer fa fa-info" title="[[AUTHN_TITLE]]"></i>
             </label>
-            <label style="color:red">[[AUTHN_ERROR]]</label>
-            <select [[DISABLED]] id="keep-order" multiple="multiple">
+            <select [[DISABLED]] 
+                    id="keep-order" 
+                    multiple="multiple">
                 [[AUTHN_SELECT]]
             </select>	
-            <input [[DISABLED]] id="requested-authn-context" type="hidden" name="requested_authn_context" value="[[AUTHN_CONTEXT]]" />
+            <input [[DISABLED]] 
+                   id="requested-authn-context" 
+                   type="hidden" 
+                   name="requested_authn_context"
+                   spaceholder=""
+                   value="[[AUTHN_CONTEXT]]"/>
         </p>
 
         <p class="full-width">
+            <em style="color:red">[[AUTHN_COMPARE_ERROR]]</em>
             <label for="requested_authn_context_comparison">
                 [[AUTHN_COMPARE_LABEL]]
                 <i class="pointer fa fa-info" title="[[AUTHN_COMPARE_TITLE]]"></i>
             </label>
-            <label style="color:red">[[AUTHN_COMPARE_ERROR]]</label>
-            <select [[DISABLED]] name="requested_authn_context_comparison">
+            <select [[DISABLED]] 
+                    name="requested_authn_context_comparison"
+                    id="requested_authn_context_comparison"
+                    title="Authn context comparison">
                [[AUTHN_COMPARE_SELECT]]
             </select>	
         </p>
 
         <p>
+            <em style="color:red">[[ENCR_NAMEID_ERROR]]</em>
             <label for="saml_security_nameidencrypted">
                 [[ENCR_NAMEID_LABEL]]
                 <i class="pointer fa fa-info" title="[[ENCR_NAMEID_TITLE]]"></i>
             </label>
-            <label style="color:red">[[ENCR_NAMEID_ERROR]]</label>
-            <select [[DISABLED]] name="saml_security_nameidencrypted">
+            <select [[DISABLED]] 
+                    name="saml_security_nameidencrypted"
+                    id="saml_security_nameidencrypted"
+                    title="saml_security_nameidencrypted">
                 [[ENCR_NAMEID_SELECT]]
             </select>
         </p>
 
         <p>
+            <em style="color:red">[[SIGN_AUTHN_REQ_ERROR]]</em>
             <label for="saml_security_authnrequestssigned">
                 [[SIGN_AUTHN_REQ_LABEL]]
                 <i class="pointer fa fa-info" title="[[SIGN_AUTHN_REQ_TITLE]]"></i>
             </label>
-            <label style="color:red">[[SIGN_AUTHN_REQ_ERROR]]</label>
-            <select [[DISABLED]] name="saml_security_authnrequestssigned">
+            <select [[DISABLED]] 
+                    name="saml_security_authnrequestssigned"
+                    id="saml_security_authnrequestssigned"
+                    title="Sign authn request package">
                 [[SIGN_AUTHN_REQ_SELECT]]
             </select>
         </p>
 
         <p>
+            <em style="color:red">[[SIGN_LOGOUT_REQ_ERROR]]</em>
             <label for="saml_security_logoutrequestsigned">
                 [[SIGN_LOGOUT_REQ_LABEL]]  
                 <i class="pointer fa fa-info" title="[[SIGN_LOGOUT_REQ_TITLE]]"></i>
             </label>
-            <label style="color:red">[[SIGN_LOGOUT_REQ_ERROR]]</label>
-            <select [[DISABLED]] name="saml_security_logoutrequestsigned">
+            <select [[DISABLED]]
+                    name="saml_security_logoutrequestsigned"
+                    id="saml_security_logoutrequestsigned"
+                    title="Sign authn logout package">
                 [[SIGN_LOGOUT_REQ_SELECT]]
             </select>
         </p>
 
         <p>
+            <em style="color:red">[[SIGN_LOGOUT_RES_ERROR]]</em>
             <label for="saml_security_logoutresponsesigned">
                 [[SIGN_LOGOUT_RES_LABEL]]
                 <i class="pointer fa fa-info" title="[[SIGN_LOGOUT_RES_TITLE]]"></i>
             </label>
-            <label style="color:red">[[SIGN_LOGOUT_RES_ERROR]]</label>
-            <select [[DISABLED]] name="saml_security_logoutresponsesigned">
+            <select [[DISABLED]] 
+                    name="saml_security_logoutresponsesigned"
+                    id="saml_security_logoutresponsesigned"
+                    title="Sign logout request package">
                 [[SIGN_LOGOUT_RES_SELECT]]
             </select>
         </p>

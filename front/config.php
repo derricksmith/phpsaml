@@ -48,10 +48,15 @@ $phpSamlConfig = new PluginPhpsamlConfig();
 
 // Handle any changes made.
 if (isset($_POST['update'])) {
-  $phpSamlConfig->processChanges($_POST);
+  echo $phpSamlConfig->processChanges();
+}else{
+  echo $phpSamlConfig->showForm('1');
 }
 
-// Id to be used for multiple providers
-echo $phpSamlConfig->showForm('1');
+// Id to be used in the future for multiple providers
+
+
+// Adds all required JS libs
+Html::footer();
 
 

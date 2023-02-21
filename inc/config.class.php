@@ -27,11 +27,11 @@
 
    @package   phpsamlconfig
    @author    Chris Gralike
-   @co-author
+   @co-author Derrick Smith
    @copyright Copyright (c) 2018 by Derrick Smith
    @license   AGPL License 3.0 or (at your option) any later version
               http://www.gnu.org/licenses/agpl-3.0-standalone.html
-   @since     2018
+   @since     0.1
 
    @changelog rewrite and restructure removing context switches and improving readability and maintainability
    @changelog breaking config up into methods for maintainability and unit testing purposes.
@@ -107,22 +107,22 @@ class PluginPhpsamlConfig extends CommonDBTM
      * Registers errors that occured in a friendly format;
      * @var array
      **/
-    private $errorMsgs = null;
+    private $errorMsgs = false;
 
 
     /**
-     * 
+     *
      * Generate the configuration htmlForm and return it.
-     * 
+     *
      * @param void
      * @return boolean
+     * @since 1.2.1
      */
     public function showForm($id, array $options = [])
     {
         // Populate current configuration
         if ($this->config = $this->getConfig($id)) {
             // Call the form field handlers
-            // using the database array.
             if (is_array($this->config)) {
                 foreach ($this->config as $method => $current) {
                     if (method_exists($this, $method)) {
@@ -130,12 +130,12 @@ class PluginPhpsamlConfig extends CommonDBTM
                         $this->$method($current);
                     } else {
                         if ($method != 'valid') {
-                            $this->registerError("Warning: No handler found for configuration item: $method in ".__class__." db corrupted?");
+                            $this->registerError(__("Warning: No handler found for configuration item: $method in ".__class__." db corrupted?", 'phpsaml'));
                         }
                     }
                 }
             } else {
-                $this->registerError("Error: db config did not return required config array!", true);
+                $this->registerError("Error: db config did not return required config array", true);
             }
 
             // Generate and show form
@@ -144,6 +144,40 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
+    /**
+     *
+     * process POST values of form update.
+     *
+     * @param void
+     * @return boolean
+     * @since 1.2.1
+     * @todo make method more resiliant against GLPI additions in post field.
+     */
+    public function processChanges()
+    {
+        // populate config
+        $id = (isset($_POST['id']) && is_numeric($_POST['id']) && (strlen($_POST['id']) < 10)) ? (int) $_POST['id'] : '1';
+        $this->config = $this->getConfig($id);
+
+        // Use the POST values to iterate through the
+        // handlers and make them validate the input.
+        foreach ($_POST as $method => $value)
+        {
+            if (array_key_exists($method, $this->config)) {
+                // We can safely call this valid method
+                $this->$method($value);
+            }
+        }
+
+        // If we have errors, then show the form
+        // else process the update.
+        if ($this->errorMsgs || $this->fatalError) {
+            return $this->generateForm();
+        } else {
+            $this->update($_POST);
+            Html::back();
+        }
+    }
 
 
     /**
@@ -153,8 +187,10 @@ class PluginPhpsamlConfig extends CommonDBTM
      * in a structured array. Finally this structured array is returned. The caller should evaluate the 'valid' array
      * key to validate the configuration array is usable.
      *
-     * @param string $id        // Change to int, it is still called using strings.
+     * @param string $id
      * @return array $config
+     * @since 1.2.1
+     * @todo reafactor method property to datatype INT
      */
     public function getConfig(string $id = '1')
 	{
@@ -185,8 +221,6 @@ class PluginPhpsamlConfig extends CommonDBTM
 	}
 
 
-
-
     /**
      *
      * The generateForm method is called by the showForm method. It should only be called after all
@@ -197,8 +231,9 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param bool $return   // return the generated htmlform as string
      * @return string|bool
+     * @since 1.2.1
      */
-    private function generateForm(bool $return=false)
+    private function generateForm()
     {
         global $CFG_GLPI;
 
@@ -209,8 +244,8 @@ class PluginPhpsamlConfig extends CommonDBTM
 
         // Declare general form values
         $formValues = [
-            '[[SCRIPT_A]]'               => __('Available', 'phpsaml'),
-            '[[SCRIPT_B]]'               => __('Selected', 'phpsaml'),
+            '[[AVAILABLE]]'              => __('Available', 'phpsaml'),
+            '[[SELECTED]]'               => __('Selected', 'phpsaml'),
             '[[GLPI_ROOTDOC]]'           => $CFG_GLPI["root_doc"],
             '[[TITLE]]'                  => __("PHP SAML Configuration", "phpsaml"),
             '[[HEADER_GENERAL]]'         => __("General", "phpsaml"),
@@ -218,15 +253,13 @@ class PluginPhpsamlConfig extends CommonDBTM
             '[[HEADER_PROVIDER_CONFIG]]' => __("Identity Provider Configuration", "phpsaml"),
             '[[HEADER_SECURITY]]'        => __("Security", "phpsaml"),
             '[[SUBMIT]]'                 => __("Update", "phpsaml"),
-            '[[CLOSE_FORM]]'             => Html::closeForm()
+            '[[CLOSE_FORM]]'             => Html::closeForm(false)
         ];
         // Merge the values in the central array.
         $this->formValues = array_merge($this->formValues, $formValues);
 
         // Process the errors if any
         if (is_array($this->errorMsgs)) {
-            // If a fatal occured the form is not dependable anymore so disable all elements;
-            $this->htmlForm = ($this->fatalError) ? str_replace('[[DISABLED]]','DISABLED',$this->htmlForm) : str_replace('[[DISABLED]]','',$this->htmlForm);
 
             // Process the error messages;
             $nice = '';
@@ -234,12 +267,14 @@ class PluginPhpsamlConfig extends CommonDBTM
                 $nice .= $errmsg.'<br>';
             }
 
-            $this->formValues['[[ERRORS]]'] = '<p class="full-width errors">'.$nice.'</p>';
+            $this->formValues['[[ERRORS]]'] = ' <div class="alert mb-o rounded-0 border-top-0 border-bottom-0 border-right-0 full-width" role="alert">'.$nice.'</div>';
         } else {
             $this->formValues['[[ERRORS]]'] = '';
         }
 
-        // Insert values into the form.
+        // Disable the form if a fatal was generated.
+        $this->htmlForm = ($this->fatalError) ? str_replace('[[DISABLED]]','DISABLED',$this->htmlForm) : str_replace('[[DISABLED]]','',$this->htmlForm);
+
         if ($html = str_replace(array_keys($this->formValues), array_values($this->formValues), $this->htmlForm)) {
             return $html;
         } else {
@@ -247,14 +282,7 @@ class PluginPhpsamlConfig extends CommonDBTM
         }
     }
 
-
-    public function processChanges($post)
-    {
-        echo "<pre> Dit is al gelukt, maar nu...";
-        print_r($post);
-    }
-
-
+    
     /**
      *
      * Adds an error message to the errorMsgs class property. The errorMsgs class property is iterated by the generateForm
@@ -264,6 +292,7 @@ class PluginPhpsamlConfig extends CommonDBTM
      * @param string $errorMsg
      * @param bool $fatal
      * @return void
+     * @since 1.2.1
      */
     private function registerError(string $errorMsg, bool $fatal=false)
     {
@@ -275,21 +304,17 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
-// #######################
-// Configuration handlers
-// #######################
-
-    /**
+    /**********************************
      *
      * Evaluates the enforced property
      * and populates the form template
      *
      * @param int $dbConf
-     * @return boolean
+     * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function enforced(int $dbConf)
+    protected function enforced(int $dbConf)
     {
         // Do lable translations
         $formValues = [
@@ -314,8 +339,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
      /**
      *
      * Evaluates the strict property
@@ -323,8 +346,10 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $dbConf
      * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function strict(int $dbConf)
+    protected function strict(int $dbConf)
     {
         // Declare template labels
         $formValues = [
@@ -348,8 +373,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
      * Evaluates the debug property
@@ -357,8 +380,10 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $dbConf
      * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function debug(int $dbConf)
+    protected function debug(int $dbConf)
     {
         // Declare template labels
         $formValues = [
@@ -382,17 +407,17 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
      * Evaluates the sp certificate property
      * and populates the form template
      *
      * @param int $dbConf
-     * @return boolean
+     * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function jit(int $dbConf)
+    protected function jit(int $dbConf)
     {
         // Declare template labels
         $formValues = [
@@ -416,8 +441,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
      * Evaluates the sp certificate property
@@ -425,9 +448,11 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $dbConf
      * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
 
-    private function saml_sp_certificate(string $dbConf)
+    protected function saml_sp_certificate(string $dbConf)
     {
         // Declare template labels
         $formValues = [
@@ -446,8 +471,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
      * Evaluates the sp certificate key property
@@ -455,8 +478,10 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $dbConf
      * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function saml_sp_certificate_key(string $dbConf)
+    protected function saml_sp_certificate_key(string $dbConf)
     {
         // Declare template labels
         $formValues = [
@@ -476,8 +501,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
      * Evaluates the saml sp nameid format property
@@ -485,8 +508,10 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $dbConf
      * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function saml_sp_nameid_format(string $dbConf)
+    protected function saml_sp_nameid_format(string $dbConf)
     {
          // Declare template labels
          $formValues = [
@@ -512,8 +537,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
      * Evaluates the idp entity id property
@@ -521,8 +544,10 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $dbConf
      * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function saml_idp_entity_id(string $dbConf)
+    protected function saml_idp_entity_id(string $dbConf)
     {
         // Declare template labels
         $formValues = [
@@ -539,8 +564,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
      * Evaluates the idp single sign on service property
@@ -548,8 +571,10 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $dbConf
      * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function saml_idp_single_sign_on_service(string $dbConf)
+    protected function saml_idp_single_sign_on_service(string $dbConf)
     {
         // Declare template labels
         $formValues = [
@@ -566,8 +591,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
      * Evaluates the idp single logout service property for changes
@@ -575,8 +598,10 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $dbConf
      * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function saml_idp_single_logout_service(string $dbConf)
+    protected function saml_idp_single_logout_service(string $dbConf)
     {
          // Declare template labels
          $formValues = [
@@ -593,8 +618,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
      * Evaluates the idp certificate property for changes
@@ -602,15 +625,16 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $dbConf
      * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function saml_idp_certificate(string $dbConf)
+    protected function saml_idp_certificate(string $dbConf)
     {
         // Declare template labels
         $formValues = [
             '[[IP_CERT_LABEL]]' =>  __("Identity Provider Public X509 Certificate", "phpsaml"),
             '[[IP_CERT_TITLE]]' =>  __("Public x509 certificate of the Identity Provider.", "phpsaml"),
-            '[[IP_CERT_VALUE]]' => $dbConf,
-            '[[IP_CERT_ERROR]]' => ''
+            '[[IP_CERT_VALUE]]' => $dbConf
         ];
 
         if (!strstr($dbConf, '-BEGIN CERTIFICATE-') || !strstr($dbConf, '-END CERTIFICATE-')) {
@@ -622,8 +646,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
      * Evaluates the authn context property for changes
@@ -631,22 +653,28 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $dbConf
      * @return boolean
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function requested_authn_context(string $dbConf)
+    protected function requested_authn_context(string $dbConf)
     {
+        /*This value uses a multi select that generates a comma separated value. This value
+          is processed by JS code in the HTML template to create the multiselect.*/
+         
+        $dbConf = (empty($dbConf)) ? 'none' : $dbConf;
+
         // Declare template labels
         $formValues = [
             '[[AUTHN_LABEL]]' =>  __("Requested Authn Context", "phpsaml"),
             '[[AUTHN_TITLE]]' =>  __("Set to None and no AuthContext will be sent in the AuthnRequest, oth", "phpsaml"),
             '[[AUTHN_SELECT]]' => '',
-            '[[AUTHN_ERROR]]' => false
+            '[[AUTHN_CONTEXT]]' => $dbConf
         ];
 
         // Generate the options array
         $options = ['PasswordProtectedTransport'  => __('PasswordProtectedTransport', 'phpsaml'),
                     'Password'                    => __('Password', 'phpsaml'),
-                    'X509'                        => __('X509', 'phpsaml'),
-                    'None'                        => __('None', 'phpsaml')];
+                    'X509'                        => __('X509', 'phpsaml')];
 
         foreach ($options as $value => $label) {
             $selected = ($value == $dbConf) ? 'selected' : '';
@@ -658,8 +686,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
    /**
      *
      * Evaluates the requested authn context comparison property for changes
@@ -667,15 +693,16 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $dbConf
      * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function requested_authn_context_comparison(string $dbConf)
+    protected function requested_authn_context_comparison(string $dbConf)
     {
         // Declare template labels
         $formValues = [
             '[[AUTHN_COMPARE_LABEL]]' =>  __("Requested Authn Comparison", "phpsaml"),
             '[[AUTHN_COMPARE_TITLE]]' =>  __("How should the library compare the requested Authn Context?  The value defaults to 'Exact'.", "phpsaml"),
-            '[[AUTHN_COMPARE_SELECT]]'=> '',
-            '[[AUTHN_COMPARE_ERROR]]' => false
+            '[[AUTHN_COMPARE_SELECT]]'=> ''
         ];
 
         // Generate the options array
@@ -694,8 +721,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
      * Evaluates the nameid encrypted property for changes
@@ -703,15 +728,16 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $dbConf
      * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function saml_security_nameidencrypted(int $dbConf)
+    protected function saml_security_nameidencrypted(int $dbConf)
     {
         // Declare template labels
         $formValues = [
             '[[ENCR_NAMEID_LABEL]]' =>  __("Encrypt NameID", "phpsaml"),
             '[[ENCR_NAMEID_TITLE]]' =>  __("Toggle yes to encrypt NameID.  Requires service provider certificate and key", "phpsaml"),
-            '[[ENCR_NAMEID_SELECT]]'=> '',
-            '[[ENCR_NAMEID_ERROR]]' => false
+            '[[ENCR_NAMEID_SELECT]]'=> ''
         ];
 
         // Generate options
@@ -728,8 +754,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
      * Evaluates the authn requests signed property for changes
@@ -737,15 +761,16 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $dbConf
      * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function saml_security_authnrequestssigned(int $dbConf)
+    protected function saml_security_authnrequestssigned(int $dbConf)
     {
         // Declare template labels
         $formValues = [
             '[[SIGN_AUTHN_REQ_LABEL]]' =>  __("Sign Authn Requests", "phpsaml"),
             '[[SIGN_AUTHN_REQ_TITLE]]' =>  __("Toggle yes to sign Authn Requests.  Requires service provider certificate and key", "phpsaml"),
-            '[[SIGN_AUTHN_REQ_SELECT]]'=> '',
-            '[[SIGN_AUTHN_REQ_ERROR]]' => false
+            '[[SIGN_AUTHN_REQ_SELECT]]'=> ''
         ];
 
         // Generate options
@@ -762,24 +787,23 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
-     * Evaluates the Logout Request Signed property 
+     * Evaluates the Logout Request Signed property
      * and populates the form template
      *
      * @param int $dbConf
-     * @return boolean
+     * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function saml_security_logoutrequestsigned(int $dbConf)
+    protected function saml_security_logoutrequestsigned(int $dbConf)
     {
         // Declare template labels
         $formValues = [
             '[[SIGN_LOGOUT_REQ_LABEL]]' =>  __("Sign Logout Requests", "phpsaml"),
             '[[SIGN_LOGOUT_REQ_TITLE]]' =>  __("Toggle yes to sign Logout Requests.  Requires service provider certificate and key", "phpsaml"),
-            '[[SIGN_LOGOUT_REQ_SELECT]]'=> '',
-            '[[SIGN_LOGOUT_REQ_ERROR]]' => false
+            '[[SIGN_LOGOUT_REQ_SELECT]]'=> ''
         ];
 
         // Generate options
@@ -796,24 +820,23 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
-     * Evaluates the Logout Response Signed property 
+     * Evaluates the Logout Response Signed property
      * and populates the form template
      *
      * @param int $dbConf
      * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function saml_security_logoutresponsesigned(int $dbConf)
+    protected function saml_security_logoutresponsesigned(int $dbConf)
     {
          // Declare template labels
          $formValues = [
             '[[SIGN_LOGOUT_RES_LABEL]]' => __("Sign Logout Requests", "phpsaml"),
             '[[SIGN_LOGOUT_RES_TITLE]]' => __("Toggle yes to sign Logout Requests.  Requires service provider certificate and key", "phpsaml"),
-            '[[SIGN_LOGOUT_RES_SELECT]]'=> '',
-            '[[SIGN_LOGOUT_RES_ERROR]]' => false
+            '[[SIGN_LOGOUT_RES_SELECT]]'=> ''
         ];
 
         // Generate options
@@ -830,8 +853,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
 
-
-
     /**
      *
      * Evaluates the id property for changes
@@ -839,13 +860,13 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $dbConf
      * @return void
+     * @since 1.2.1
+     * @todo write unit test
      */
-    private function id(int $dbConf)
+    protected function id(int $dbConf)
     {
         $this->formValues['[[ID]]'] = $dbConf;
     }
-
-
 
 
     /**
@@ -857,6 +878,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      * @param string $compare       //version to compare
      * @param bool $return          //return the outcomes
      * @return void|array $outcomes //optional return
+     * @since 1.2.1
+     * @todo write unit test
      */
     public function version(string $compare, bool $return = false)
     {
