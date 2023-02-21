@@ -39,12 +39,40 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-include_once('../../../inc/includes.php');
-include_once('../inc/config.class.php');
+echo "result!?";
+var_dump(function_exists('open_ssl_x509_parse'));
 
-if (class_exists('PluginPhpsamlConfig')) {
-  $config = new PluginPhpsamlConfig();
-  $config->showForm('1');
-} else {
-  echo "Class not found";
+$cert = '-----BEGIN CERTIFICATE-----
+MIIFGTCCBAGgAwIBAgISBG5NM+VgEAAF5LQwOQMtDbZl
+MA0GCSqGSIb3DQEBCwUAMDIxCzAJBgNVBAYTAlVTMRYw
+FAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJS
+MzAeFw0yMTA1MTAyMzU0NDhaFw0yMTA4MDgyMzU0NDha
+MBUxEzARBgNVBAMTCm1jLmdvaXgubmwwggEiMA0GCSqG
+SIb3DQEBcDovL3IzLm8ubGVu
+Y3Iub3JnMCIGCCsGAQUFBzAChhZodHRwOi8vcjMuaS5s
+ZW5jci5vcmcvMBUGA1UdEQQOMAyCCm1jLmdvaXgubmww
+TAYDVR0gBEUwQzAIBgZngQwBAgEwNwYLKwYBBAGC3xMB
+AQEwKDAmBggrBgEFBQcCARYaaHR0cDovL2Nwcy5sZXRz
+ZW5jcnlwdC5vcmcwggEDBgorBgEEAdZ5AgQCBIH0BIHx
+AO8AdgBc3EOS/uarRUSxXprUVuYQN/vV+kfcoXOUsl7m
+9scOygAAAXlY61RmAAAEAwBHMEUCIET16FsoGzJj14gy
+9QjZsR33v7cShtp8JEuAJ7A0tXQ5AiEAyVRchX8hno8n
+0pAvLWB
+-----END CERTIFICATE-----';
+
+$cert = preg_replace('/\r\n|\r|\n/','',$cert);
+preg_match('/(-+BEGIN CERTIFICATE-+)(.+?)(-+END CERTIFICATE-+)/', $cert, $m);
+// There should be exactly 4 matches!
+if (count($m) == 4) {
+  $cert = $m['1']."\n".$m['2']."\n".$m['3'];
 }
+// Test the outcome!
+echo "<pre>";
+var_dump(openssl_x509_parse($cert, false));
+
+
+
+//print_r($matches);
+
+
+//v
