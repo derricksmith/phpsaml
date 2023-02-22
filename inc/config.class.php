@@ -35,6 +35,7 @@
 
    @changelog rewrite and restructure removing context switches and improving readability and maintainability
    @changelog breaking config up into methods for maintainability and unit testing purposes.
+   @todo      All handlers enforce their datatypes. This might cause problems with null values in the database after inproper updates.
 
    ------------------------------------------------------------------------
  */
@@ -79,7 +80,7 @@ class PluginPhpsamlConfig extends CommonDBTM
      * Change value for unit testing
      * @var int
      **/
-    private $expectedItems = 20;
+    private $expectedItems = 21;
 
 
     /**
@@ -113,7 +114,7 @@ class PluginPhpsamlConfig extends CommonDBTM
      * Registers errors that occured in a friendly format;
      * @var array
      **/
-    private $errorMsgs = false;
+    private $errorMsgs = [];
 
 
     /**
@@ -193,12 +194,13 @@ class PluginPhpsamlConfig extends CommonDBTM
      * in a structured array. Finally this structured array is returned. The caller should evaluate the 'valid' array
      * key to validate the configuration array is usable.
      *
-     * @param string $id
-     * @return array $config
+     * @param string $id         what configuration to query
+     * @param string $property   return 1 specific configuration property if it exists
+     * @return array $config     returns array of properties
      * @since 1.2.1
-     * @todo reafactor method property to datatype INT
+     * @todo reafactor method string $ID property to datatype INT
      */
-    public function getConfig(string $id = '1')
+    public function getConfig(string $id = '1', string $property = '')
 	{
         global $DB;
         $config['valid'] = true;
@@ -210,17 +212,22 @@ class PluginPhpsamlConfig extends CommonDBTM
                     $config[$data['Field']] =  $this->fields[$data['Field']];
                 }
             } else {
-                $this->registerError('Phpsaml could not retrieve configuration values from database.', true);
+                $this->registerError('Phpsaml could not retrieve configuration values from database.', 'general', true, false);
                 $config['valid'] = false;
             }
         } else {
-            $this->registerError('Phpsaml was not able to retrieve configuration columns from database', true);
+            $this->registerError('Phpsaml was not able to retrieve configuration columns from database', 'general', true, false);
             $config['valid'] = false;
         }
         // Test if config exists;
         if (count($config) <> $this->expectedItems) {
-            $this->registerError('Phpsaml expected '.$this->expectedItems.' configuration items but got '.count($config).' items instead');
+            $this->registerError('Phpsaml expected '.$this->expectedItems.' configuration items but got '.count($config).' items instead', '', false, false);
             $config['valid'] = false;
+        }
+
+        // Just return 1 item if requested
+        if(!empty($property) && array_key_exists($property, $config)) {
+            return $config[$property];
         }
 
         return $config;
@@ -297,7 +304,7 @@ class PluginPhpsamlConfig extends CommonDBTM
      * method to inject all errors into the top header of the htmlForm. If fatal is set to true the generateForm method will
      * disable all form elements and make sure an insert/update can no longer be performed.
      *
-     * @param string $errorMsg  the error message 
+     * @param string $errorMsg  the error message
      * @param string $field     generate field specific error.
      * @param bool $fatal       is it fatal?
      * @param bool $warning     is it a warning?
@@ -306,18 +313,20 @@ class PluginPhpsamlConfig extends CommonDBTM
      */
     private function registerError(string $errorMsg, string $field='', bool $fatal=false, bool $warning=true)
     {
-        // Warning will prevent update from being executed allowing form changes;
-        $this->warningError = ($warning) ? true : $this->warningError;
+        if (!empty($errorMsg)) {
+            // Warning will prevent update from being executed allowing form changes;
+            $this->warningError = ($warning) ? true : $this->warningError;
 
-        //Fatal will prevent update from being executed disabling forms.
-        $this->fatalError = ($fatal) ? true : $this->fatalError;
+            //Fatal will prevent update from being executed disabling forms.
+            $this->fatalError = ($fatal) ? true : $this->fatalError;
 
-        // Create field specific error else generate generic error
-        if (!empty($field)) {
-            $spaceholder = '[['.strtoupper($field).']]';
-            $this->formValues[$spaceholder] = __($errorMsg, 'phpsaml');
-        }else{
-            $this->errorMsgs[] = $errorMsg;
+            // Create field specific error else generate generic error
+            if (!empty($field)) {
+                $spaceholder = '[['.strtoupper($field).']]';
+                $this->formValues[$spaceholder] = __($errorMsg, 'phpsaml');
+            }else{
+                    $this->errorMsgs[] = $errorMsg;
+            }
         }
     }
 
@@ -561,8 +570,10 @@ class PluginPhpsamlConfig extends CommonDBTM
     protected function saml_sp_certificate(string $cValue)
     {
         $cert = $this->validateAndParseCertString($cValue);
-        $validationErrors = (!$cert['msgs']['BEGIN_TAG_PRESENT']) ? 'The certificate BEGIN tag should be present<br>' : '';
-        $validationErrors = (!$cert['msgs']['END_TAG_PRESENT']) ? 'The certificate END tag should be present<br>' : '';
+
+        $validationErrors  ='';
+        $validationErrors .= (!$cert['msgs']['BEGIN_TAG_PRESENT']) ? 'The certificate BEGIN tag should be present<br>' : '';
+        $validationErrors .= (!$cert['msgs']['END_TAG_PRESENT']) ? 'The certificate END tag should be present<br>' : '';
 
         if (is_array($cert['certDetails'])) {
             $cer = "Configured SPD certificate was issued by: {$cert['certDetails']['isCN']} for: {$cert['certDetails']['cn']} and has {$cert['certAge']} days left";
@@ -745,8 +756,10 @@ class PluginPhpsamlConfig extends CommonDBTM
     protected function saml_idp_certificate(string $cValue)
     {
         $cert = $this->validateAndParseCertString($cValue);
-        $validationErrors = (!$cert['msgs']['BEGIN_TAG_PRESENT']) ? 'The certificate BEGIN tag should be present<br>' : '';
-        $validationErrors = (!$cert['msgs']['END_TAG_PRESENT']) ? 'The certificate END tag should be present<br>' : '';
+
+        $validationErrors ='';
+        $validationErrors .= (!$cert['msgs']['BEGIN_TAG_PRESENT']) ? 'The certificate BEGIN tag should be present<br>' : '';
+        $validationErrors .= (!$cert['msgs']['END_TAG_PRESENT']) ? 'The certificate END tag should be present<br>' : '';
 
         if (is_array($cert['certDetails'])) {
             $cer = "Configured IPD certificate was issued by: {$cert['certDetails']['isCN']} for: {$cert['certDetails']['cn']} and has {$cert['certAge']} days left";
@@ -858,6 +871,11 @@ class PluginPhpsamlConfig extends CommonDBTM
      */
     protected function saml_security_nameidencrypted(int $cValue)
     {
+        // Validate input
+        if (!preg_match('/[0-1]/', $cValue)) {
+            $this->registerError("Nameidencrypted can only be 1 or 0", 'ENCR_NAMEID_ERROR');
+        }
+
         // Declare template labels
         $formValues = [
             '[[ENCR_NAMEID_LABEL]]' =>  __("Encrypt NameID", "phpsaml"),
@@ -891,6 +909,11 @@ class PluginPhpsamlConfig extends CommonDBTM
      */
     protected function saml_security_authnrequestssigned(int $cValue)
     {
+        // Validate input
+        if (!preg_match('/[0-1]/', $cValue)) {
+            $this->registerError("Authnrequestssigned can only be 1 or 0", 'SIGN_AUTHN_REQ_ERROR');
+        }
+
         // Declare template labels
         $formValues = [
             '[[SIGN_AUTHN_REQ_LABEL]]' =>  __("Sign Authn Requests", "phpsaml"),
@@ -924,6 +947,11 @@ class PluginPhpsamlConfig extends CommonDBTM
      */
     protected function saml_security_logoutrequestsigned(int $cValue)
     {
+        // Validate input
+        if (!preg_match('/[0-1]/', $cValue)) {
+            $this->registerError("Logoutrequestsigned can only be 1 or 0", 'SIGN_LOGOUT_REQ_ERROR');
+        }
+
         // Declare template labels
         $formValues = [
             '[[SIGN_LOGOUT_REQ_LABEL]]' =>  __("Sign Logout Requests", "phpsaml"),
@@ -957,8 +985,13 @@ class PluginPhpsamlConfig extends CommonDBTM
      */
     protected function saml_security_logoutresponsesigned(int $cValue)
     {
-         // Declare template labels
-         $formValues = [
+        // Validate input
+        if (!preg_match('/[0-1]/', $cValue)) {
+            $this->registerError("Logoutresponsesigned can only be 1 or 0", 'SIGN_LOGOUT_RES_ERROR');
+        }
+
+        // Declare template labels
+        $formValues = [
             '[[SIGN_LOGOUT_RES_LABEL]]' => __("Sign Logout Requests", "phpsaml"),
             '[[SIGN_LOGOUT_RES_TITLE]]' => __("Toggle yes to sign Logout Requests.  Requires service provider certificate and key", "phpsaml"),
             '[[SIGN_LOGOUT_RES_SELECT]]'=> ''
@@ -973,6 +1006,31 @@ class PluginPhpsamlConfig extends CommonDBTM
             $formValues['[[SIGN_LOGOUT_RES_SELECT]]'] .= "<option value='$value' $selected>$label</option>";
         }
 
+        // Merge outcomes in formValues
+        $this->formValues = array_merge($this->formValues, $formValues);
+    }
+
+
+     /**
+     *
+     * Evaluates the configuration friendly name property for changes
+     * and populates the form template
+     *
+     * @param string $cValue
+     * @return void
+     * @since 1.2.1
+     * @todo write unit test
+     */
+    protected function saml_configuration_name(string $cValue)
+    {
+         // Declare template labels
+         $formValues = [
+            '[[CONF_NAME_LABEL]]' =>  __("Provider friendly name", "phpsaml"),
+            '[[CONF_NAME_TITLE]]' =>  __("Provider friendly name as shown on the logon button", "phpsaml"),
+            '[[CONF_NAME_VALUE]]' => $cValue];
+
+        //Validate URL?
+        
         // Merge outcomes in formValues
         $this->formValues = array_merge($this->formValues, $formValues);
     }

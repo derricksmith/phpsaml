@@ -241,9 +241,9 @@ function plugin_init_session_phpsaml() {
 }
 
 function plugin_display_login(){
-	// lets check for the redirect parameter, if it doesn't exist we will redirect back to front page
+	$cfg = new PluginPhpsamlConfig();
 	$redirect = (isset($_GET['redirect']) ? '&redirect='.urlencode($_GET['redirect']) : null);
-	?>
-	<input class="submit btn btn-primary w-100" value="Sign In with SSO" onclick="window.location.href='?SSO=1<?php echo $redirect; ?>'" />
-	<?php
+	$btn = $cfg->getConfig('1', 'saml_configuration_name');
+	$btn = (!empty($btn) && is_string($btn)) ? htmlentities($btn) : 'phpsaml';
+	echo "<input class=\"submit btn btn-primary\" value=\"Use $btn\" onclick=\"window.location.href='?SSO=1$redirect'\" />";
 }
