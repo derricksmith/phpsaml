@@ -27,7 +27,7 @@
 
    @package   phpsaml
    @author    Derrick Smith
-   @co-author
+   @co-author Chris Gralike
    @copyright Copyright (c) 2018 by Derrick Smith
    @license   AGPL License 3.0 or (at your option) any later version
               http://www.gnu.org/licenses/agpl-3.0-standalone.html
@@ -36,7 +36,7 @@
    ------------------------------------------------------------------------
  */
  
-define ("PLUGIN_PHPSAML_VERSION", "1.2.1");
+define("PLUGIN_PHPSAML_VERSION", "1.2.1");
 define("PLUGIN_PHPSAML_MIN_GLPI", "9.4");
 define("PLUGIN_PHPSAML_MAX_GLPI", "10.0.99");
 define('PLUGIN_PHPSAML_DIR', __DIR__);
@@ -44,29 +44,29 @@ define('PLUGIN_PHPSAML_BASEURL', GLPI_ROOT .'/plugins/phpsaml/');
 
 
 /**
+ *
  * Definition of the plugin version and its compatibility with the version of core
  *
  * @return array
  */
-function plugin_version_phpsaml()
+function plugin_version_phpsaml() : array
 {
-
-    return array('name' => "PHP SAML",
-        'version' => PLUGIN_PHPSAML_VERSION,
-        'author' => 'Derrick Smith',
-        'license' => 'GPLv2+',
-        'homepage' => 'http://derrick-smith.com',
-		'requirements'   => [
-            'glpi' => [
-                'min' => PLUGIN_PHPSAML_MIN_GLPI,
-                'max' => PLUGIN_PHPSAML_MAX_GLPI,
-                'dev' => true, //Required to allow 9.2-dev
-            ]
-        ],
-	);
+    return ['name' 			=> "PHP SAML",
+            'version' 		=> PLUGIN_PHPSAML_VERSION,
+            'author' 		=> 'Derrick Smith',
+            'license' 		=> 'GPLv2+',
+            'homepage' 		=> 'http://derrick-smith.com',
+		    'requirements'	=> [
+				'glpi' 		=> [
+					'min'  	=> PLUGIN_PHPSAML_MIN_GLPI,
+					'max'  	=> PLUGIN_PHPSAML_MAX_GLPI,
+					'dev'  	=> true]] //Required to allow 9.2-dev
+	];
 }
 
+
 /**
+ *
  * Blocking a specific version of GLPI.
  * GLPI constantly evolving in terms of functions of the heart, it is advisable
  * to create a plugin blocking the current version, quite to modify the function
@@ -75,10 +75,11 @@ function plugin_version_phpsaml()
  *
  * @return boolean
  */
-function plugin_phpsaml_check_prerequisites()
+function plugin_phpsaml_check_prerequisites() : bool
 {
+    if (version_compare(GLPI_VERSION, PLUGIN_PHPSAML_MIN_GLPI, 'lt') || 
+	    version_compare(GLPI_VERSION, PLUGIN_PHPSAML_MAX_GLPI, 'gt')) {
 
-    if (version_compare(GLPI_VERSION, PLUGIN_PHPSAML_MIN_GLPI, 'lt') || version_compare(GLPI_VERSION, PLUGIN_PHPSAML_MAX_GLPI, 'gt')) {
         if (method_exists('Plugin', 'messageIncompatible')) {
 			//since GLPI 9.2
 			Plugin::messageIncompatible('core', PLUGIN_PHPSAML_MIN_GLPI, PLUGIN_PHPSAML_MAX_GLPI);
@@ -86,20 +87,23 @@ function plugin_phpsaml_check_prerequisites()
 			echo "This plugin requires GLPI >= ".PLUGIN_PHPSAML_MIN_GLPI." and GLPI <= ".PLUGIN_PHPSAML_MAX_GLPI;
         }
 		return false;
-    }
-
-    return true;
+    } else {
+		return true;
+	}
 }
 
 /**
- * Control of the configuration
  *
- * @param type $verbose
- * @return boolean
+ * Check the configuration
+ *
+ * @param bool $verbose
+ * @return bool
  */
-function plugin_phpsaml_check_config($verbose = false)
+function plugin_phpsaml_check_config(bool $verbose = false) : bool
 {
-    if (true) { // Your configuration check
+	// This will always return true, it will never reach $verbose or false.
+	// Do we want to use this? 
+    if (true) {
        return true;
     }
 
@@ -111,11 +115,13 @@ function plugin_phpsaml_check_config($verbose = false)
 }
 
 /**
- * Initialization of the plugin
+ *
+ * Called at init
  *
  * @global array $PLUGIN_HOOKS
+ * @return void
  */
-function plugin_init_phpsaml()
+function plugin_init_phpsaml() : void
 {
     global $PLUGIN_HOOKS;
 
@@ -129,13 +135,20 @@ function plugin_init_phpsaml()
 			if (Session::haveRight('config', UPDATE)) {
 				// Config page
 				$PLUGIN_HOOKS['config_page']['phpsaml'] = 'front/config.php';
-				//Redirect code
-				$PLUGIN_HOOKS['redirect_page']['phpsaml'] = 'phpsaml.form.php';
+
+				// TODO: @derrick this file is not existing in phpsaml what does/should it do?
+				//$PLUGIN_HOOKS['redirect_page']['phpsaml'] = 'phpsaml.form.php';
+
 				Plugin::registerClass('PluginPhpsamlRuleRight');
 				Plugin::registerClass('PluginPhpsamlRuleRightCollection', ['rulecollections_types' => true]);
 			}
 		}
 	}
+
+	// Hooks: https://glpi-developer-documentation.readthedocs.io/en/master/plugins/hooks.html
+	// Hook for rule matched
+	$PLUGIN_HOOKS['rule_matched']['phpsaml'] = 'updateUser';
+
 	// Hook for Single Sign On
 	$PLUGIN_HOOKS['post_init']['phpsaml'] = 'plugin_post_init_phpsaml';
 	
@@ -148,78 +161,92 @@ function plugin_init_phpsaml()
 	if (strpos($_SERVER['REQUEST_URI'], 'plugins/phpsaml/front/config.php') || strpos($_SERVER['REQUEST_URI'], 'plugins\phpsaml\front\config.php')){
 		// Load JS on config page
 		$PLUGIN_HOOKS['add_javascript']['phpsaml'][] = 'js/jquery.multi-select.js';
-		//$PLUGIN_HOOKS['add_javascript']['phpsaml'][] = 'js/phpsaml.js';
 		
 		// Load CSS on config page
 		$PLUGIN_HOOKS['add_css']['phpsaml'] = 'css/multi-select.css';
 	}
 }
 
-function plugin_post_init_phpsaml(){
-	global $DB, $CFG_GLPI;
+
+/**
+ * Called after init of GLPI.
+ *
+ * @global array $PLUGIN_HOOKS
+ */
+function plugin_post_init_phpsaml()
+{
+	global $CFG_GLPI;
 	
-	$phpsamlConfig = new PluginPhpsamlConfig();
-	$config = $phpsamlConfig->getConfig();
-	
-	if (strpos($_SERVER['REQUEST_URI'], 'front/logout.php') || strpos($_SERVER['REQUEST_URI'], 'front\logout.php')){
+	$phpsamlConfig 	= new PluginPhpsamlConfig();
+	$config 		= $phpsamlConfig->getConfig();
+
+	// Collect the properties we need;
+	$enforced 		= $phpsamlConfig->getConfig('','enforced');
+	$sloUri 		= $phpsamlConfig->getConfig('','saml_idp_single_logout_service');
+
+
+
+	if (strpos($_SERVER['REQUEST_URI'], 'front/logout.php') || strpos($_SERVER['REQUEST_URI'], 'front\logout.php')) {
 		$_SESSION['noAUTO'] = 1;
 	}
 	
 	//Added 1.1.0 - SSO enforcement and signin with SSO button on login page
-	if ((isset($_GET['SSO']) && $_GET['SSO'] == 1) || (isset($config['enforced']) && $config['enforced'] == 1) || (!empty($_SESSION['plugin_phpsaml_nameid']))){
+	if ((isset($_GET['SSO']) && $_GET['SSO'] == 1) || ($enforced) || (!empty($_SESSION['plugin_phpsaml_nameid']))) {
 		$phpsaml = new PluginPhpsamlPhpsaml();
 		
 		//Added 1.2.0 - Return if cli, cannot use SSO on cli
 		if (PHP_SAPI === 'cli'){
 			return;
 		}
-		
-		if (strpos($_SERVER['REQUEST_URI'], 'front/cron.php') !== false || strpos($_SERVER['REQUEST_URI'], 'front\cron.php') !== false){
-			return;
-		}
-		
-		if (strpos($_SERVER['REQUEST_URI'], 'ldap_mass_sync.php') !== false){
-			return;
-		}
-		
-		if (strpos($_SERVER['REQUEST_URI'], 'apirest.php') !== false){
-			return;
-		}
-		
-		if (strpos($_SERVER['REQUEST_URI'], 'front/acs.php') !== false || strpos($_SERVER['REQUEST_URI'], 'front\acs.php') !== false){
-			return;
-		}
 
-		if (class_exists('PluginFusioninventoryCommunication') && strpos($_SERVER['HTTP_USER_AGENT'], 'FusionInventory-Agent_') !== false){ 
-			if(strpos($_SERVER['REQUEST_URI'], '/plugins/fusioninventory/') !== false || strpos($_SERVER['REQUEST_URI'], '\plugins\fusioninventory/') !== false){
-				return;
+		$excludes = ['cron.php',
+					 'ldap_mass_sync.php',
+					 'apirest.php',
+					 'acs.php'];
+		
+		foreach ($excludes as $value) {
+			if (strpos($_SERVER['REQUEST_URI'], $value) !== false) {
+				return true;
 			}
 		}
 		
-		if (strpos($_SERVER['REQUEST_URI'], 'front/logout.php') !== false || strpos($_SERVER['REQUEST_URI'], 'front\logout.php') !== false){
-			if (!empty($config['saml_idp_single_logout_service'])){
-				$phpsaml::sloRequest();
-			} 
+		// Not used anymore in glpi 10 with native inventory.
+		if ((class_exists('PluginFusioninventoryCommunication') &&
+			(strpos($_SERVER['HTTP_USER_AGENT'], 'FusionInventory-Agent_') !== false)) &&
+			((strpos($_SERVER['REQUEST_URI'], '/plugins/fusioninventory/') !== false) ||
+			 (strpos($_SERVER['REQUEST_URI'], '\plugins\fusioninventory/') !== false))) {
+				return false;
 		}
 		
+		if ((strpos($_SERVER['REQUEST_URI'], 'front/logout.php') !== false ||
+		     strpos($_SERVER['REQUEST_URI'], 'front\logout.php') !== false) &&
+			 (!empty($sloUri))) {
+				$phpsaml::sloRequest();
+		}
+		
+		// This needs cleanup.
 		if (!$phpsaml::isUserAuthenticated()) {
-			if ((isset($_GET['noAUTO']) && $_GET['noAUTO'] == 1) || (isset($_SESSION['noAUTO']) && $_SESSION['noAUTO'] == 1)){
+			if ((isset($_GET['noAUTO']) && $_GET['noAUTO'] == 1) || (isset($_SESSION['noAUTO']) && $_SESSION['noAUTO'] == 1)) {
 				
 				//lets make sure the session is cleared.
 				$phpsaml::glpiLogout();
 				
-				$error = "You have logged out of GLPI but are still logged into your Identity Provider.  Select Log in Again to automatically log back into GLPI or close this window.  Configure the SAML setting in the PHPSAML plugin configuration to enable Single Logout.";
+				$error = "You have logged out of GLPI but are still logged into your Identity Provider.
+						  Select Log in Again to automatically log back into GLPI or close this window.
+						  Configure the SAML setting in the PHPSAML plugin configuration to enable Single Logout.";
 				
 				// we have done at least a good login? No, we exit.
 				Html::nullHeader("Login", $CFG_GLPI['url_base'] . '/index.php');
 				echo '<div class="center b">'.$error.'<br><br>';
+
 				// Logout whit noAUto to manage auto_login with errors
 				echo '<a href="' . $CFG_GLPI['url_base'] .'/index.php">' .__('Log in again') . '</a></div>';
 				Html::nullFooter();
+
 				exit();
 			} else {
 				// Fix for invalid redirect errors when port number is included in HTTP_HOST.
-				// Maybe replace it with GLPI config: URL of the application? 
+				// Maybe replace it with GLPI config: URL of the application?
 				list($realhost,)=explode(':',$_SERVER['HTTP_HOST']);
 				
 				// lets check for the redirect parameter, if it doesn't exist lets redirect the visitor back to the original page
@@ -229,21 +256,22 @@ function plugin_post_init_phpsaml(){
 			}
 		}
 	}
-	return;
 }
 
-function plugin_init_session_phpsaml() {
+function plugin_init_session_phpsaml()
+{
    $phpsaml = new PluginPhpsamlPhpsaml();
 
-   if(!empty($phpsaml::$nameid)) $_SESSION['plugin_phpsaml_nameid'] = $phpsaml::$nameid;
-   if(!empty($phpsaml::$nameidformat)) $_SESSION['plugin_phpsaml_nameidformat'] = $phpsaml::$nameidformat;
-   if(!empty($phpsaml::$sessionindex)) $_SESSION['plugin_phpsaml_sessionindex'] = $phpsaml::$sessionindex;
+   if (!empty($phpsaml::$nameid)) { $_SESSION['plugin_phpsaml_nameid'] = $phpsaml::$nameid; }
+   if (!empty($phpsaml::$nameidformat)) { $_SESSION['plugin_phpsaml_nameidformat'] = $phpsaml::$nameidformat; }
+   if (!empty($phpsaml::$sessionindex)) { $_SESSION['plugin_phpsaml_sessionindex'] = $phpsaml::$sessionindex; }
 }
 
-function plugin_display_login(){
-	$cfg = new PluginPhpsamlConfig();
-	$redirect = (isset($_GET['redirect']) ? '&redirect='.urlencode($_GET['redirect']) : null);
-	$btn = $cfg->getConfig('1', 'saml_configuration_name');
-	$btn = (!empty($btn) && is_string($btn)) ? htmlentities($btn) : 'phpsaml';
-	echo "<input class=\"submit btn btn-primary\" value=\"Use $btn\" onclick=\"window.location.href='?SSO=1$redirect'\" />";
+function plugin_display_login()
+{
+	$cfg 		= new PluginPhpsamlConfig();
+	$btn 		= $cfg->getConfig('1', 'saml_configuration_name');
+	$redirect 	= (isset($_GET['redirect'])) ? '&redirect='.urlencode($_GET['redirect']) : null;
+	$btn 		= (!empty($btn) && is_string($btn)) ? htmlentities($btn) : 'phpsaml';
+	echo 		  "<input class=\"submit btn btn-primary\" value=\"Use $btn\" onclick=\"window.location.href='?SSO=1$redirect'\" />";
 }

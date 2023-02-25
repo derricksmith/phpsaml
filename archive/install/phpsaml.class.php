@@ -1,38 +1,41 @@
 <?php
 
+// There are errors in this file like not declared globals.
+// Is this file even used? 
+
 class PluginPhpsamlPhpsaml
 {
-
     const SESSION_GLPI_NAME_ACCESSOR = 'glpiname';
     const SESSION_VALID_ID_ACCESSOR = 'valid_id';
 	
-	static private $init = false; 
-	static private $docsPath = GLPI_PLUGIN_DOC_DIR.'/phpsaml/';
-	static public $auth;
-	static public $phpsamlsettings;
-	static public $nameid;
-	static public $userdata;
-	static public $nameidformat;
-	static public $sessionindex;
-	static public $rightname = 'plugin_phpsaml_phpsaml';
+	private static $init = false;
+	private static $docsPath = GLPI_PLUGIN_DOC_DIR.'/phpsaml/';
 	
-
-
+	// We should not make everything publicly available
+	public static $auth;
+	public static $phpsamlsettings;
+	public static $nameid;
+	public static $userdata;
+	public static $nameidformat;
+	public static $sessionindex;
+	public static $rightname = 'plugin_phpsaml_phpsaml';
+	
 	/**
      * Constructor
     **/
-	function __construct() {
+	function __construct()
+	{
 		self::init();
 	}
 	
-	public static function init() 
+	public static function init()
 	{
 		if (!self::$init) {
 			require_once('libs.php');
 			//require_once(GLPI_ROOT .'/plugins/phpsaml/lib/php-saml/settings.php');
 		
 			self::$phpsamlsettings = self::getSettings();
-			self::$init = true; 
+			self::$init = true;
 		}
 	}
 	

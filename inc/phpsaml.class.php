@@ -2,19 +2,20 @@
 
 class PluginPhpsamlPhpsaml
 {
-
+	/**
+     * Constants
+    **/
     const SESSION_GLPI_NAME_ACCESSOR= 'glpiname';
     const SESSION_VALID_ID_ACCESSOR = 'valid_id';
-	
-	// Created constants to keep within required 120 chars php line lengths.
-	// https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md
 	const SCHEMA_NAME 				= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
 	const SCHEMA_SURNAME 			= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';
 	const SCHEMA_FIRSTNAME 			= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname';
+	const SCHEMA_GIVENNAME 			= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname';
 	const SCHEMA_EMAILADDRESS 		= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';
 	
 
 	// Reversed keyword order to comply with PSR-2.
+	// TODO: We should not make all of them publicly available.
 	public static  $auth;
 	public static  $phpsamlsettings;
 	public static  $nameid;
@@ -46,7 +47,7 @@ class PluginPhpsamlPhpsaml
 			self::$phpsamlsettings = self::getSettings();
 			self::$nameid 		= (!empty($_SESSION['plugin_phpsaml_nameid'])) 		 ? $_SESSION['plugin_phpsaml_nameid'] 		: null;
 			self::$nameidformat = (!empty($_SESSION['plugin_phpsaml_nameidformat'])) ? $_SESSION['plugin_phpsaml_nameidformat'] : null;
-			self::$sessionindex = (!empty($_SESSION['plugin_phpsaml_sessionindex'])) ? $_SESSION['plugin_phpsaml_sessionindex'] : null; 
+			self::$sessionindex = (!empty($_SESSION['plugin_phpsaml_sessionindex'])) ? $_SESSION['plugin_phpsaml_sessionindex'] : null;
 			self::$init = true;
 		}
 	}
@@ -68,7 +69,6 @@ class PluginPhpsamlPhpsaml
      */
     public static function isUserAuthenticated()
     {
-
         if (version_compare(GLPI_VERSION, '0.85', 'lt') && version_compare(GLPI_VERSION, '0.84', 'gt')) {
             return isset($_SESSION[self::SESSION_GLPI_NAME_ACCESSOR]);
         } else {
@@ -80,36 +80,32 @@ class PluginPhpsamlPhpsaml
 	
 
 	/**
+	 * 
+	 * Perform login or JIT
+	 * 
      * @return bool
+	 * @since 1.1.3
      */
-	public static function glpiLogin($relayState = null)
+	public static function glpiLogin($relayState = null) : void
     {
-
 		$phpsamlconf 	= new PluginPhpsamlConfig();
         $auth 			= new PluginPhpsamlAuth();
 		$config 		= $phpsamlconf->getConfig();
 		
 		// Perform login
 		if ($auth->loadUserData(self::$nameid) && $auth->checkUserData()) {
-			
 			Session::init($auth);
 			self::redirectToMainPage($relayState);
-			return;
-
 		} else {
-		
 			// JIT Provisioning added version 1.1.3
 			if (isset($config['jit']) && $config['jit'] == 1) {
-
 				self::performJit($relayState);
-
 			} else {
 				$error = "User or NameID not found.  Enable JIT Provisioning or manually create the user account";
 				Toolbox::logInFile("php-errors", $error . "\n", true);
 			}
 			
 			throw new Exception($error);
-			//self::sloRequest();					// Unreachable, by design?
 		}
     }
 
@@ -119,40 +115,37 @@ class PluginPhpsamlPhpsaml
      */
 	private static function performJit($relayState)
 	{
-		
 		$user = new User();
 		$auth = new PluginPhpsamlAuth();
 
 		if (!$user->getFromDBbyEmail(self::$nameid)){
 			if ((!empty(self::$userdata[self::SCHEMA_NAME][0])) && (!empty(self::$userdata[self::SCHEMA_EMAILADDRESS][0]))){
 				
+				// Generate a random password
 				$password = bin2hex(random_bytes(20));
-				
-				$input = array(
-					"name"        => self::$userdata[self::SCHEMA_NAME][0],
-					"realname"    => self::$userdata[self::SCHEMA_SURNAME][0],
-					"firstname"   => self::$userdata[self::SCHEMA_FIRSTNAME][0],
-					"_useremails" => array(self::$userdata[self::SCHEMA_EMAILADDRESS][0]),
-					"password"    => $password,
-					"password2"   => $password,
-				);
 
-				// Load the rulesEngine and required params
-				$phpSamlRuleCollection = new PluginPhpsamlRuleRightCollection();
-				$matchInput = ['_useremails' => $input['_useremails']];
-
-				// Create the new user
+				// figure out what schema to use;
+				$nameObj = (isset(self::$userdata[self::SCHEMA_FIRSTNAME][0])) ? self::SCHEMA_FIRSTNAME : self::SCHEMA_GIVENNAME;
 				$newUser = new User();
+				$input = [
+					'name'        => self::$userdata[self::SCHEMA_NAME][0],
+					'realname'    => self::$userdata[self::SCHEMA_SURNAME][0],
+					'firstname'   => self::$userdata[$nameObj][0],
+					'_useremails' => [self::$userdata[self::SCHEMA_EMAILADDRESS][0]],
+					'password'    => $password,
+					'password2'   => $password];
+
 				$newUser->add($input);
 
-				// Run the RuleEngine
-				$phpSamlRuleCollection->processAllRules($matchInput, [], ['class'=>$user]);
+				// Load the rulesEngine and process them
+				$phpSamlRuleCollection = new PluginPhpsamlRuleRightCollection();
+				$matchInput = ['_useremails' => $input['_useremails']];
+				$phpSamlRuleCollection->processAllRules($matchInput, [], []);
 
 				// Retry login with newly created user.
 				if ($auth->loadUserData(self::$nameid) && $auth->checkUserData()) {
 					Session::init($auth);
 					self::redirectToMainPage($relayState);
-					return;
 				}
 			} else {
 				$error = "JIT Error: Unable to create user because missing claims (emailaddress)";
@@ -163,7 +156,6 @@ class PluginPhpsamlPhpsaml
 			Toolbox::logInFile("php-errors", $error . "\n", true);
 		}
 	}
-	
 
 	/**
      * @return bool
