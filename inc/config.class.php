@@ -241,10 +241,10 @@ class PluginPhpsamlConfig extends CommonDBTM
      * Finally it will echo the generated htmlForm.
      *
      * @param bool $return   // return the generated htmlform as string
-     * @return mixed
+     * @return string HTML of the form
      * @since 1.2.1
      */
-    private function generateForm() : mixed
+    private function generateForm() : string
     {
         global $CFG_GLPI;
 
