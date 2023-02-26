@@ -155,12 +155,11 @@ class PluginPhpsamlConfig extends CommonDBTM
      * errors and provided values and will not process the form and will loop untill the errors
      * are fixed. Navigating away will reset the form.
      *
-     * @param void
-     * @return mixed
+     * @return string HTML Form or header redirect
      * @since 1.2.1
      * @todo add option to reset the form with configuration items calling discarding the POST and caling 'show form'
      */
-    public function processChanges() : mixed
+    public function processChanges()
     {
         // populate config
         $id = (isset($_POST['id']) && is_numeric($_POST['id']) && (strlen($_POST['id']) < 10)) ? (int) $_POST['id'] : '1';
@@ -195,11 +194,11 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param mixed  $id         mixed to allow to migrate to int only not yet the case.
      * @param string $property   return 1 specific configuration property if it exists
-     * @return mixed $config     returns array of properties
+     * @return array $config     returns array of properties
      * @since 1.2.1
      * @todo reafactor method string $ID property to datatype INT
      */
-    public function getConfig(mixed $id = '1', string $property = '') : mixed
+    public function getConfig($id = '1', ?string $property = '') : array
 	{
         global $DB;
         $config['valid'] = true;

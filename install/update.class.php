@@ -292,9 +292,6 @@ class PluginPhpsamlUpdate {
 			if (!$result || $DB->numrows($result) == 0){
 				$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD `proxied` int(2) default 0 after enforced";
 				$DB->query($query);
-				// Insert a default value because null values are not accepted in a string property of the property handler
-				$query = "update glpi_plugin_phpsaml_configs set saml_configuration_name = 'default'";
-				$DB->query($query);
 				if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
 				if (!$DB->error()) Toolbox::logInFile("phpsaml", "INFO -- Column 'saml_configuration_name' added to 'glpi_plugin_phpsaml_configs'" . "\n", true);
 			}
