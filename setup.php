@@ -262,7 +262,8 @@ function plugin_init_session_phpsaml()
 function plugin_display_login()
 {
 	$cfg 		= new PluginPhpsamlConfig();
-	$btn 		= $cfg->getConfig('1', 'saml_configuration_name');
+	$btn 		= $cfg->getConfig('1');
+	$btn 		= $btn['saml_configuration_name'];
 	$redirect 	= (isset($_GET['redirect'])) ? '&redirect='.urlencode($_GET['redirect']) : null;
 	$btn 		= (!empty($btn) && is_string($btn)) ? htmlentities($btn) : 'phpsaml';
 	echo 		  "<input class=\"submit btn btn-primary\" value=\"Use $btn\" onclick=\"window.location.href='?SSO=1$redirect'\" />";

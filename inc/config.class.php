@@ -200,7 +200,7 @@ class PluginPhpsamlConfig extends CommonDBTM
      * @since                   1.2.1
      * @todo                    Needs attention, everything depends on this being succesfull. If config is bugged everything will break, including login, config, etc.
      */
-    public function getConfig($id = '1', $property = '')
+    public function getConfig($id = '1')
 	{
         global $DB;
         $config = [];
