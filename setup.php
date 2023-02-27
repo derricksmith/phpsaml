@@ -35,12 +35,13 @@
 
    ------------------------------------------------------------------------
  */
- 
 define("PLUGIN_PHPSAML_VERSION", "1.2.1");
 define("PLUGIN_PHPSAML_MIN_GLPI", "9.4");
 define("PLUGIN_PHPSAML_MAX_GLPI", "10.0.99");
 define('PLUGIN_PHPSAML_DIR', __DIR__);
-define('PLUGIN_PHPSAML_BASEURL', GLPI_ROOT .'/plugins/phpsaml/');
+
+$phpSamlPath = (strpos(dirname(__FILE__), 'plugins') !== false) ? '/plugins/phpsaml' : '/marketplace/phpsaml';
+define('PLUGIN_PHPSAML_BASEURL', GLPI_ROOT . $phpSamlPath . '/');
 
 
 /**
@@ -77,7 +78,7 @@ function plugin_version_phpsaml() : array
  */
 function plugin_phpsaml_check_prerequisites() : bool
 {
-    if (version_compare(GLPI_VERSION, PLUGIN_PHPSAML_MIN_GLPI, 'lt') || 
+    if (version_compare(GLPI_VERSION, PLUGIN_PHPSAML_MIN_GLPI, 'lt') ||
 	    version_compare(GLPI_VERSION, PLUGIN_PHPSAML_MAX_GLPI, 'gt')) {
 
         if (method_exists('Plugin', 'messageIncompatible')) {
@@ -102,16 +103,12 @@ function plugin_phpsaml_check_prerequisites() : bool
 function plugin_phpsaml_check_config(bool $verbose = false) : bool
 {
 	// This will always return true, it will never reach $verbose or false.
-	// Do we want to use this? 
-    if (true) {
-       return true;
-    }
-
+	// Do we want to use this?
     if ($verbose) {
         echo 'Installed / not configured';
     }
 
-    return false;
+    return true;
 }
 
 /**
@@ -131,17 +128,15 @@ function plugin_init_phpsaml() : void
 	
 	if (Session::getLoginUserID()) {
 		$plugin = new Plugin();
-		if ($plugin->isActivated("phpsaml")) {
-			if (Session::haveRight('config', UPDATE)) {
-				// Config page
-				$PLUGIN_HOOKS['config_page']['phpsaml'] = 'front/config.php';
+		if ($plugin->isActivated("phpsaml") && Session::haveRight('config', UPDATE)) {
+			// Config page
+			$PLUGIN_HOOKS['config_page']['phpsaml'] = 'front/config.php';
 
-				// TODO: @derrick this file is not existing in phpsaml what does/should it do?
-				//$PLUGIN_HOOKS['redirect_page']['phpsaml'] = 'phpsaml.form.php';
+			// TODO: @derrick this file is not existing in phpsaml what does/should it do?
+			//$PLUGIN_HOOKS['redirect_page']['phpsaml'] = 'phpsaml.form.php';
 
-				Plugin::registerClass('PluginPhpsamlRuleRight');
-				Plugin::registerClass('PluginPhpsamlRuleRightCollection', ['rulecollections_types' => true]);
-			}
+			Plugin::registerClass('PluginPhpsamlRuleRight');
+			Plugin::registerClass('PluginPhpsamlRuleRightCollection', ['rulecollections_types' => true]);
 		}
 	}
 
@@ -177,13 +172,11 @@ function plugin_post_init_phpsaml()
 {
 	global $CFG_GLPI;
 	
+	// Collect the properties we need;
 	$phpsamlConfig 	= new PluginPhpsamlConfig();
 	$config 		= $phpsamlConfig->getConfig();
-
-	// Collect the properties we need;
-	$enforced 		= $phpsamlConfig->getConfig('','enforced');
-	$sloUri 		= $phpsamlConfig->getConfig('','saml_idp_single_logout_service');
-
+	$enforc 		= $config['enforced'];
+	$sloUri 		= $config['saml_idp_single_logout_service'];
 
 
 	if (strpos($_SERVER['REQUEST_URI'], 'front/logout.php') || strpos($_SERVER['REQUEST_URI'], 'front\logout.php')) {
@@ -191,21 +184,19 @@ function plugin_post_init_phpsaml()
 	}
 	
 	//Added 1.1.0 - SSO enforcement and signin with SSO button on login page
-	if ((isset($_GET['SSO']) && $_GET['SSO'] == 1) || ($enforced) || (!empty($_SESSION['plugin_phpsaml_nameid']))) {
+	     // Is SSO URI flag set to 1
+	if ((!isset($_GET['noenforce'])) && (isset($_GET['SSO']) && $_GET['SSO'] == 1) ||
+	    ($enforc) ||
+		(!empty($_SESSION['plugin_phpsaml_nameid']))) {
 		$phpsaml = new PluginPhpsamlPhpsaml();
 		
-		//Added 1.2.0 - Return if cli, cannot use SSO on cli
-		if (PHP_SAPI === 'cli'){
-			return;
-		}
-
+		// Handle excludes
 		$excludes = ['cron.php',
 					 'ldap_mass_sync.php',
 					 'apirest.php',
 					 'acs.php'];
-		
 		foreach ($excludes as $value) {
-			if (strpos($_SERVER['REQUEST_URI'], $value) !== false) {
+			if ((PHP_SAPI === 'cli') || strpos($_SERVER['REQUEST_URI'], $value) !== false) {
 				return true;
 			}
 		}
@@ -256,6 +247,7 @@ function plugin_post_init_phpsaml()
 			}
 		}
 	}
+	return true;
 }
 
 function plugin_init_session_phpsaml()

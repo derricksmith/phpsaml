@@ -80,7 +80,7 @@ class PluginPhpsamlConfig extends CommonDBTM
      * Change value for unit testing
      * @var int
      **/
-    private $expectedItems = 22;
+    private $expectedItems = 21;
 
 
     /**
@@ -123,12 +123,12 @@ class PluginPhpsamlConfig extends CommonDBTM
      * @param mixed $id         The id of the configuration
      * @param array $options    Not used
      * @return string           Returns the generated html form
-     * @since 1.2.1
+     * @since                   1.2.1
      */
-    public function showForm(mixed $id, array $options = []) : string
+    public function showForm($id, $options = []) : string
     {
         // Populate current configuration
-        if ($this->config = $this->getConfig($id)) {
+        if (is_numeric($id) && $this->config = $this->getConfig($id)) {
             // Call the form field handlers
             if (is_array($this->config)) {
                 foreach ($this->config as $method => $current) {
@@ -144,6 +144,8 @@ class PluginPhpsamlConfig extends CommonDBTM
             } else {
                 $this->registerError("Error: db config did not return required config array", true);
             }
+        } else {
+            $this->registerError("Error: unknown configuration requested", true);
         }
         return $this->generateForm(true);
     }
@@ -155,9 +157,9 @@ class PluginPhpsamlConfig extends CommonDBTM
      * errors and provided values and will not process the form and will loop untill the errors
      * are fixed. Navigating away will reset the form.
      *
-     * @return string HTML Form or header redirect
-     * @since 1.2.1
-     * @todo add option to reset the form with configuration items calling discarding the POST and caling 'show form'
+     * @return string   HTML Form or header redirect
+     * @since           1.2.1
+     * @todo            add option to reset the form with configuration items calling discarding the POST and caling 'show form'
      */
     public function processChanges()
     {
@@ -192,43 +194,33 @@ class PluginPhpsamlConfig extends CommonDBTM
      * in a structured array. Finally this structured array is returned. The caller should evaluate the 'valid' array
      * key to validate the configuration array is usable.
      *
-     * @param mixed  $id         mixed to allow to migrate to int only not yet the case.
-     * @param string $property   return 1 specific configuration property if it exists
-     * @return array $config     returns array of properties
-     * @since 1.2.1
-     * @todo reafactor method string $ID property to datatype INT
+     * @param mixed  $id        mixed to allow to migrate to int only not yet the case.
+     * @param string $property  return 1 specific configuration property if it exists
+     * @return array $config    returns array of properties
+     * @since                   1.2.1
+     * @todo                    Needs attention, everything depends on this being succesfull. If config is bugged everything will break, including login, config, etc.
      */
-    public function getConfig($id = '1', ?string $property = '') : array
+    public function getConfig($id = '1', $property = '')
 	{
         global $DB;
-        $config['valid'] = true;
-
+        $config = [];
 		$sql = 'SHOW COLUMNS FROM '.$this->getTable();
 		if ($result = $DB->query($sql)) {
             if ($this->getFromDB($id)) {
                 while ($data = $result->fetch_assoc()) {
                     $config[$data['Field']] =  $this->fields[$data['Field']];
                 }
+                // Test if config exists;
+                if (count($config) <> $this->expectedItems) {
+                    $this->registerError('Phpsaml expected '.$this->expectedItems.' configuration items but got '.count($config).' items instead', '', false, false);
+                }
             } else {
                 $this->registerError('Phpsaml could not retrieve configuration values from database.', 'general', true, false);
-                $config['valid'] = false;
             }
         } else {
             $this->registerError('Phpsaml was not able to retrieve configuration columns from database', 'general', true, false);
-            $config['valid'] = false;
         }
-        // Test if config exists;
-        if (count($config) <> $this->expectedItems) {
-            $this->registerError('Phpsaml expected '.$this->expectedItems.' configuration items but got '.count($config).' items instead', '', false, false);
-            $config['valid'] = false;
-        }
-
-        // Just return 1 item if requested or false if it doesnt exist.
-        if(!empty($property) && array_key_exists($property, $config)) {
-            return $config[$property];
-        }else{
-            return $config;
-        }
+        return $config;
 	}
 
 
@@ -240,9 +232,10 @@ class PluginPhpsamlConfig extends CommonDBTM
      * It will disable all form fields if a fatal error was reported using the fatalError class property.
      * Finally it will echo the generated htmlForm.
      *
-     * @param bool $return   // return the generated htmlform as string
-     * @return string HTML of the form
-     * @since 1.2.1
+     * @param bool $return  return the generated htmlform as string
+     * @return string       HTML of the form
+     * @since               1.2.1
+     * @todo                replace with twig templates
      */
     private function generateForm() : string
     {
@@ -320,7 +313,7 @@ class PluginPhpsamlConfig extends CommonDBTM
      * @param bool $fatal       is it fatal?
      * @param bool $warning     is it a warning?
      * @return void
-     * @since 1.2.1
+     * @since                   1.2.1
      */
     private function registerError(string $errorMsg, string $field='', bool $fatal=false, bool $warning=true) : void
     {
@@ -345,9 +338,9 @@ class PluginPhpsamlConfig extends CommonDBTM
      * method to inject all errors into the top header of the htmlForm. If fatal is set to true the generateForm method will
      * disable all form elements and make sure an insert/update can no longer be performed.
      *
-     * @param string $certString  the error message
+     * @param string $certString    the error message
      * @return array $certDetails
-     * @since 1.2.1
+     * @since                       1.2.1
      */
     public function validateAndParseCertString(string $certString) : array
     {
@@ -425,8 +418,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $cValue   configuration value to process
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since               1.2.1
+     * @todo                write unit test
      */
     protected function enforced(int $cValue) : void
     {
@@ -463,8 +456,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since               1.2.1
+     * @todo                write unit test
      */
     protected function strict(int $cValue) : void
     {
@@ -500,8 +493,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since               1.2.1
+     * @todo                write unit test
      */
     protected function debug(int $cValue) : void
     {
@@ -537,8 +530,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since               1.2.1
+     * @todo                write unit test
      */
     protected function proxied(int $cValue) : void
     {
@@ -574,8 +567,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since               1.2.1
+     * @todo                write unit test
      */
     protected function jit(int $cValue) : void
     {
@@ -611,9 +604,10 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
-     * @todo suspected that GLPI is applying input- output filters that might break certificate on successive updates.
+     * @since                   1.2.1
+     * @todo                    write unit test
+     * @todo                    Suspected that GLPI is applying input- output filters replacing ch(10) with CRLF that might break certificate on successive updates.
+     *                          now being addressed in the validateAndParseCertString() but is not fully tested (fuzzing) yet .
      */
     protected function saml_sp_certificate(string $cValue) : void
     {
@@ -624,7 +618,8 @@ class PluginPhpsamlConfig extends CommonDBTM
         $validationErrors .= (!$cert['msgs']['END_TAG_PRESENT']) ? 'The certificate END tag should be present<br>' : '';
 
         if (is_array($cert['certDetails'])) {
-            $cer = "✔️ Configured sp cert was issued by: {$cert['certDetails']['isCN']} for: {$cert['certDetails']['cn']} and is valid {$cert['certAge']} day(s)";
+            $valid = (strpos($cert['certAge'],'-') !== false) ? 'no longer valid <font style="color:red">(expired:'.$cert['certAge'].' day(s) ago)</font>' : 'no valid (for the next:'.$cert['certAge'].' day(s))';
+            $cer = "✔️ Configured sp cert was issued by: {$cert['certDetails']['isCN']} for: {$cert['certDetails']['cn']} and is $valid";
         } else {
             $cer = '❌ No SP certificate details provided or available';
         }
@@ -656,9 +651,9 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
-     * @todo write key validation function using openssl.
+     * @since                   1.2.1
+     * @todo                    write unit test
+     * @todo                    write key validation function using openssl.
      */
     protected function saml_sp_certificate_key(string $cValue) : void
     {
@@ -687,8 +682,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since                   1.2.1
+     * @todo                    write unit test
      */
     protected function saml_sp_nameid_format(string $cValue) : void
     {
@@ -720,8 +715,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since                   1.2.1
+     * @todo                    write unit test
      */
     protected function saml_idp_entity_id(string $cValue) : void
     {
@@ -744,8 +739,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since                   1.2.1
+     * @todo                    write unit test
      */
     protected function saml_idp_single_sign_on_service(string $cValue) : void
     {
@@ -768,8 +763,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since                   1.2.1
+     * @todo                    write unit test
      */
     protected function saml_idp_single_logout_service(string $cValue) : void
     {
@@ -792,8 +787,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since                   1.2.1
+     * @todo                    write unit test
      */
     protected function saml_idp_certificate(string $cValue) : void
     {
@@ -804,7 +799,8 @@ class PluginPhpsamlConfig extends CommonDBTM
         $validationErrors .= (!$cert['msgs']['END_TAG_PRESENT']) ? 'The certificate END tag should be present<br>' : '';
 
         if (is_array($cert['certDetails'])) {
-            $cer = "✔️ Configured Idp cert was issued by: {$cert['certDetails']['isCN']} for: {$cert['certDetails']['cn']} and is valid {$cert['certAge']} day(s)";
+            $valid = (strpos($cert['certAge'],'-') !== false) ? 'no longer valid <font style="color:red">(expired:'.$cert['certAge'].' day(s) ago)</font>' : 'no valid (for the next:'.$cert['certAge'].' day(s))';
+            $cer = "✔️ Configured Idp cert was issued by: {$cert['certDetails']['isCN']} for: {$cert['certDetails']['cn']} and is $valid";
         } else {
             $cer = '❌ <font color="red">No valid Ipd certificate details provided or available</font>';
         }
@@ -832,8 +828,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $cValue
      * @return boolean
-     * @since 1.2.1
-     * @todo write unit test
+     * @since                   1.2.1
+     * @todo                    write unit test
      */
     protected function requested_authn_context(string $cValue) : void
     {
@@ -871,8 +867,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since                   1.2.1
+     * @todo                    write unit test
      */
     protected function requested_authn_context_comparison(string $cValue) : void
     {
@@ -905,8 +901,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since               1.2.1
+     * @todo                write unit test
      */
     protected function saml_security_nameidencrypted(int $cValue) : void
     {
@@ -942,8 +938,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since               1.2.1
+     * @todo                write unit test
      */
     protected function saml_security_authnrequestssigned(int $cValue) : void
     {
@@ -979,8 +975,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since               1.2.1
+     * @todo                write unit test
      */
     protected function saml_security_logoutrequestsigned(int $cValue) : void
     {
@@ -1016,8 +1012,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since               1.2.1
+     * @todo                write unit test
      */
     protected function saml_security_logoutresponsesigned(int $cValue) : void
     {
@@ -1053,8 +1049,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since                   1.2.1
+     * @todo                    write unit test
      */
     protected function saml_configuration_name(string $cValue) : void
     {
@@ -1077,8 +1073,8 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param int $cValue
      * @return void
-     * @since 1.2.1
-     * @todo write unit test
+     * @since               1.2.1
+     * @todo                write unit test
      */
     protected function id(int $cValue) : void
     {
@@ -1092,13 +1088,13 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * version($dbConf, $return);
      *
-     * @param string $compare       //version to compare
-     * @param bool $return          //return the outcomes
-     * @return mixed $outcomes //optional return
-     * @since 1.2.1
-     * @todo write unit test
+     * @param string $compare       Version to compare
+     * @param bool $return          Return the outcomes
+     * @return array $outcomes      Optional return
+     * @since                       1.2.1
+     * @todo                        write unit test
      */
-    public function version(string $compare, bool $return = false) : mixed
+    public function version(string $compare, bool $return = false) : array
     {
         if ($feed = implode(file($this->phpSamlGitAtomUrl))) {
             if ($xmlArray = simplexml_load_string($feed)) {
@@ -1113,7 +1109,7 @@ class PluginPhpsamlConfig extends CommonDBTM
                                     'gitUrl'     => $href,
                                     'latest'     => true];
                         }
-                        $this->formValues['VERSION'] = "<a href='$href' target='_blank'>❌ A new version of Phpsaml is available</a>. Version $v was found in the repository, you are running $compare";
+                        $this->formValues['VERSION'] = "<a href='$href' target='_blank'>❌ A different version of Phpsaml is marked latest</a>. Version $v was found in the repository, you are running $compare";
                     } else {
                         if ($return) {
                             return ['gitVersion' => $v,
@@ -1132,6 +1128,11 @@ class PluginPhpsamlConfig extends CommonDBTM
         } else {
             $this->registerError("Could not retrieve version information from:".$this->phpSamlGitAtomUrl." is internet access blocked?");
         }
-        return false;
+        $this->formValues['VERSION'] = "❌ Phpsaml could not verify the latest version, please verify manually at <a href='$href' target='_blank'>latest version</a>";
+        // Return dummy array.
+        return ['gitVersion' => 'Unknown',
+                'compare'    => $compare,
+                'gitUrl'     => $href,
+                'latest'     => false];
     }
 }
