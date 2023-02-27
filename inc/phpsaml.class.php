@@ -1,33 +1,140 @@
 <?php
 
+/**
+ *  ------------------------------------------------------------------------
+ *  Derrick Smith - PHP SAML Plugin
+ *  Copyright (C) 2014 by Derrick Smith
+ *  ------------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of phpsaml project.
+ *
+ * PHP SAML Plugin is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * phpsaml is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with phpsaml. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * ------------------------------------------------------------------------
+ *
+ *  @package  	phpsamlconfig
+ *  @author    	Derrick Smith
+ *  @author	   	Chris Gralike
+ *  @copyright 	Copyright (c) 2018 by Derrick Smith
+ *  @license   	AGPL License 3.0 or (at your option) any later version
+ *             	http://www.gnu.org/licenses/agpl-3.0-standalone.html
+ *  @since     	0.1
+ * ------------------------------------------------------------------------
+ **/
+
 class PluginPhpsamlPhpsaml
 {
+	// CLASS CONSTANTS
+    public const SESSION_GLPI_NAME_ACCESSOR	= 'glpiname';
+    public const SESSION_VALID_ID_ACCESSOR 	= 'valid_id';
+	public const EXCLUDED					= [	'cron.php',
+									   			'ldap_mass_sync.php',
+									   			'apirest.php',
+									   			'acs.php'];
+	private const SCHEMA_NAME 				= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
+	private const SCHEMA_SURNAME 			= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';
+	private const SCHEMA_FIRSTNAME 			= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname';
+	private const SCHEMA_GIVENNAME 			= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname';
+	private const SCHEMA_EMAILADDRESS 		= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';
+	
+	// CLASS PROPERTIES
+	// Do we need all these class properties to keep their values (static) after exec?
 	/**
-     * Constants
-    **/
-    const SESSION_GLPI_NAME_ACCESSOR= 'glpiname';
-    const SESSION_VALID_ID_ACCESSOR = 'valid_id';
-	const SCHEMA_NAME 				= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
-	const SCHEMA_SURNAME 			= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';
-	const SCHEMA_FIRSTNAME 			= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname';
-	const SCHEMA_GIVENNAME 			= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname';
-	const SCHEMA_EMAILADDRESS 		= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';
+     * Holds the OneLogin\Saml\Auth object
+	 *
+	 * @var 	object 	(OneLogin\Saml2\Auth)
+	 * @link 			Also called statically in /front/acs.php
+     **/
+	public static $auth;
+
+	/**
+     * Holds the populated OneLogin\Saml\auth(configuration) array
+	 * populated in $this->init() as a return value
+	 *
+     * @var 	array
+	 * @access 	public
+	 * @link 			Referenced statically by front\acs.php
+	 * @todo 			Write a getter for the OneLogin configuration instead of directly accessing the class property.
+	 * @todo 			Make getSettings() populate the class property directly instead of passing it as a return value to $this->init().
+     **/
+	public static $phpsamlsettings;
+
+	/**
+     * Holds the (if allready) authenticated user reference provided by idp after succesfull authentication.
+	 *
+     * @var 	string
+	 * @access 	public
+	 * @link 			Referenced and populated by phpsaml\front\acs.php using the samlResponse->getNameId() method;
+	 * @link			References by phpsaml\setup.php function plugin_init_session_phpsaml() hooked to the GLPI init_session event_hook;
+	 * @see				setup.php some $_SESSION declarations dont seem to be used anywhere, are they required?
+	 * @todo			External direct access to the property should not be allowed, we should use getters and setters;
+     **/
+	public static $nameid;
+
+	/**
+     * Holds the idp provided user Attributes populated by phpsaml\front\acs.php using the samlResponse->getAttributes() method.
+	 *
+     * @var 	array
+	 * @access 	public
+	 * @link 			Referenced and populated by phpsaml\front\acs.php using the samlResponse->getAttributes() method;
+	 * @link			Referenced locally to populate JIT function;
+	 * @todo			External direct access to the property should not be allowed, we should use getters and setters;
+     **/
+	public static $userdata;
+
+	/**
+     * Holds the nameidformat populated by phpsaml\front\acs.php with the nameIdFormat configured in the $this->$auth (\OneLogin\Saml\Auth).
+	 *
+     * @var 	string
+	 * @access 	public
+	 * @link 			Referenced and populated by phpsaml\front\acs.php using the $phpsaml::$auth->getNameIdFormat() method;
+	 * @link			References by phpsaml\setup.php function plugin_init_session_phpsaml hooked to GLPI session_init hook.
+	 * @see				setup.php some $_SESSION declarations dont seem to be used anywhere, are they required?
+     **/
+	public static $nameidformat;
+
+	/**
+     * Holds the sessionIndex populated by phpsaml\front\acs.php using the phpsaml::$auth->getAttributes() method.
+	 *
+     * @var 	string|null
+	 * @access 	public
+	 * @link 			Referenced and populated by phpsaml\front\acs.php using the $phpsaml::$auth->getSessionIndex() method;
+	 * @link			References by phpsaml\setup.php function plugin_init_session_phpsaml hooked to GLPI session_init hook.
+	 * @see				setup.php some $_SESSION declarations dont seem to be used anywhere, are they required?
+     **/
+	public static $sessionindex;
+
+	/**
+     * Define the user rights required, GLPI plugin property
+     * @var		string
+     **/
+	public static $rightname = 'plugin_phpsaml_phpsaml';
+
+	/**
+     * Indicate the object has allready been initialized
+	 * @access 	private
+     * @var 	bool
+     **/
+	private static $init = false;
 	
 
-	// Reversed keyword order to comply with PSR-2.
-	// TODO: We should not make all of them publicly available.
-	public static  $auth;
-	public static  $phpsamlsettings;
-	public static  $nameid;
-	public static  $userdata;
-	public static  $nameidformat;
-	public static  $sessionindex;
-	public static  $rightname = 'plugin_phpsaml_phpsaml';
-	private static  $init = false;
-	
-
+	// CLASS METHODS
 	/**
-     * Constructor
+     * Not sure why we need everything in this object to be static.
+	 * @see https://www.php.net/manual/en/language.variables.scope.php#language.variables.scope.static
     **/
 	public function __construct()
 	{
@@ -36,19 +143,17 @@ class PluginPhpsamlPhpsaml
 	
 
 	/**
-     * @return bool
+     * @return void
      */
-	public static function init()
+	private static function init()
 	{
-
 		if (!self::$init) {
 			require_once('libs.php');
-
-			self::$phpsamlsettings = self::getSettings();
-			self::$nameid 		= (!empty($_SESSION['plugin_phpsaml_nameid'])) 		 ? $_SESSION['plugin_phpsaml_nameid'] 		: null;
-			self::$nameidformat = (!empty($_SESSION['plugin_phpsaml_nameidformat'])) ? $_SESSION['plugin_phpsaml_nameidformat'] : null;
-			self::$sessionindex = (!empty($_SESSION['plugin_phpsaml_sessionindex'])) ? $_SESSION['plugin_phpsaml_sessionindex'] : null;
-			self::$init = true;
+			self::$phpsamlsettings 	= self::getSettings();
+			self::$nameid 			= (!empty($_SESSION['plugin_phpsaml_nameid'])) 		 ? $_SESSION['plugin_phpsaml_nameid'] 		: null;
+			self::$nameidformat 	= (!empty($_SESSION['plugin_phpsaml_nameidformat'])) ? $_SESSION['plugin_phpsaml_nameidformat'] : null;
+			self::$sessionindex 	= (!empty($_SESSION['plugin_phpsaml_sessionindex'])) ? $_SESSION['plugin_phpsaml_sessionindex'] : null;
+			self::$init 			= true;
 		}
 	}
 	
@@ -60,6 +165,78 @@ class PluginPhpsamlPhpsaml
 	{
 		if (!self::$auth) {
 			self::$auth = new OneLogin\Saml2\Auth(self::$phpsamlsettings);
+		}
+	}
+
+	 /**
+	 * ProcessUserLogin handles the login process
+	 * called by the glpi post init if used is not found to be logged in;
+	 *
+     * @return bool
+	 * @since 1.2.2
+     */
+	public function processUserLogin()
+	{
+		global $CFG_GLPI;
+
+		$cfgObj		    = new PluginPhpsamlConfig();
+		$config 		= $cfgObj->getConfig();
+
+		// Return false for fusioninventory agents
+		if ((strpos($_SERVER['HTTP_USER_AGENT'], 'FusionInventory-Agent_') !== false) &&
+			(strpos($_SERVER['REQUEST_URI'], '/plugins/fusioninventory/'))) {
+
+			return false;
+		}
+
+		// Return true for files in Excludes
+		foreach (self::EXCLUDED as $value) {
+			if ((PHP_SAPI === 'cli') || strpos($_SERVER['REQUEST_URI'], $value) !== false) {
+				return true;
+			}
+		}
+
+		// Perform logout if requested.
+		if ((strpos($_SERVER['REQUEST_URI'], 'front/logout.php') !== false) &&
+			(!empty($config[PluginPhpsamlConfig::SLOURL]))) {
+
+			$_SESSION['noAUTO'] = 1;
+			self::sloRequest();
+		}
+
+		// Check if the user was authenticated
+		if (!self::isUserAuthenticated()) {
+
+			if ((isset($_GET['noAUTO']) && $_GET['noAUTO'] == 1) ||
+			    (isset($_SESSION['noAUTO']) && $_SESSION['noAUTO'] == 1)) {
+				
+				//Make sure the session is cleared.
+				self::glpiLogout();
+				
+				$error = "You have logged out of GLPI but are still logged into your Identity Provider.
+						  Select Log in Again to automatically log back into GLPI or close this window.
+						  Configure the SAML setting 'Single Logout URI' to perform automatic logout.";
+				
+				// we have done at least a good login? No, we exit.
+				Html::nullHeader("Login", $CFG_GLPI['url_base'] . '/index.php');
+				echo '<div class="center b">'.$error.'<br><br>';
+
+				// Logout with noAUto to manage auto_login with errors
+				echo '<a href="' . $CFG_GLPI['url_base'] .'/index.php">' .__('Log in again') . '</a></div>';
+				Html::nullFooter();
+
+				exit();
+			} else {
+
+				// Fix for invalid redirect errors when port number is included in HTTP_HOST.
+				// Maybe replace it with GLPI config: URL of the application?
+				list($realhost,)=explode(':',$_SERVER['HTTP_HOST']);
+				
+				// lets check for the redirect parameter, if it doesn't exist lets redirect the visitor back to the original page
+				// Fixed in 1.2.0 - Resolved Undefinded index: HTTP_HOST
+				$returnTo = (isset($_GET['redirect']) ? $_GET['redirect'] : (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $realhost . $_SERVER['REQUEST_URI']);
+				self::ssoRequest($returnTo);
+			}
 		}
 	}
 
@@ -77,20 +254,19 @@ class PluginPhpsamlPhpsaml
             && $_SESSION[self::SESSION_VALID_ID_ACCESSOR] === session_id();
         }
     }
-	
 
 	/**
-	 * 
+	 *
 	 * Perform login or JIT
-	 * 
+	 *
      * @return bool
 	 * @since 1.1.3
      */
 	public static function glpiLogin($relayState = null) : void
     {
-		$phpsamlconf 	= new PluginPhpsamlConfig();
         $auth 			= new PluginPhpsamlAuth();
-		$config 		= $phpsamlconf->getConfig();
+		$cfgObj			= new PluginPhpsamlConfig();
+		$config 		= $cfgObj->getConfig();
 		
 		// Perform login
 		if ($auth->loadUserData(self::$nameid) && $auth->checkUserData()) {
@@ -158,7 +334,7 @@ class PluginPhpsamlPhpsaml
 	}
 
 	/**
-     * @return bool
+     * @return void
      */
 	public static function glpiLogout()
 	{
@@ -207,10 +383,7 @@ class PluginPhpsamlPhpsaml
 		global $CFG_GLPI;
 		
 		$returnTo 		= null;
-		$parameters 	= array();
-		$nameId 		= null;
-		$sessionIndex 	= null;
-		$nameIdFormat 	= null;
+		$parameters 	= [];
 		$nameId 	    = (isset(self::$nameid)) 	   ? self::$nameid 		 : null;
 		$sessionIndex   = (isset(self::$sessionindex)) ? self::$sessionindex : null;
 		$nameIdFormat   = (isset(self::$nameidformat)) ? self::$nameidformat : null;
@@ -265,156 +438,77 @@ class PluginPhpsamlPhpsaml
         }
         header("Location: " . $destinationUrl);
     }
-	
+
+	 /**
+     *
+     * Pupulates and returns the configuration array for the PHP-saml library.
+     *
+     * @return array $config    returns array with php-saml configuration
+     * @since                   1.0.0
+     * @example					https://github.com/SAML-Toolkits/php-saml/blob/master/settings_example.php
+	 * @todo					CG: use getters in the future instead of doing validations here.
+	 * @todo 					CG: This method makes more sense inside a separate config class that can then also be used by config form class.
+     */
 	public static function getSettings()
 	{
 		global $CFG_GLPI;
-		$glpiUrl = $CFG_GLPI['url_base'];
 
-		$phpsamlconf = new PluginPhpsamlConfig();
-		$config = $phpsamlconf->getConfig();
+		$cfgObj		 = new PluginPhpsamlConfig();
+		$config 	 = $cfgObj->getConfig();
 		
-		// This array is messy and very hard to read.
-		return array (
-			// If 'strict' is True, then the PHP Toolkit will reject unsigned
-			// or unencrypted messages if it expects them signed or encrypted
-			// Also will reject the messages if not strictly follow the SAML
-			// standard: Destination, NameId, Conditions ... are validated too.
-			'strict' => (isset($config['strict']) && $config['strict'] == 1 ? true : false),
+		// Populate configuration array using phpsaml configuration in database then return the array
+		$libSamlConf = [
+			'strict' 						=> (isset($config[PluginPhpsamlConfig::STRICT]) && $config[PluginPhpsamlConfig::STRICT] == 1) ? true : false,
+			'debug' 						=> (isset($config[PluginPhpsamlConfig::DEBUG])  && $config[PluginPhpsamlConfig::DEBUG]  == 1) ? true : false,
+			'baseurl' 						=> null,
+			// Service provider configuration
+			'sp' 							=> [
+				'entityId' 					=> $CFG_GLPI['url_base'].'/',
+				'assertionConsumerService' 	=> [
+					'url' 					=> $CFG_GLPI['url_base'].PluginPhpsamlConfig::ACSPATH
+				],
+				'singleLogoutService' 		=> [
+					'url' 					=> $CFG_GLPI['url_base'].PluginPhpsamlConfig::SLOPATH
+				],
+				'x509cert' 					=> (isset($config[PluginPhpsamlConfig::SPCERT])) ? $config[PluginPhpsamlConfig::SPCERT] : '',
+				'privateKey' 				=> (isset($config[PluginPhpsamlConfig::SPKEY]))  ? $config[PluginPhpsamlConfig::SPKEY]  : '',
+				'NameIDFormat' 				=> 'urn:oasis:names:tc:SAML:1.1:nameid-format:'.(isset($config[PluginPhpsamlConfig::NAMEFM]) ? $config[PluginPhpsamlConfig::NAMEFM] : 'unspecified')
+			],
+			// Identity Provider configuration to connect with our SP
+			'idp' 							=> [
+				'entityId' 					=> (isset($config[PluginPhpsamlConfig::ENTITY])) ? $config[PluginPhpsamlConfig::ENTITY] : '',
+				'singleSignOnService' 		=> [
+					'url' 					=> (isset($config[PluginPhpsamlConfig::SSOURL])) ? $config[PluginPhpsamlConfig::SSOURL] : '',
+				],
+				'singleLogoutService' 		=> [
+					'url' 					=> (isset($config[PluginPhpsamlConfig::SLOURL])) ? $config[PluginPhpsamlConfig::SLOURL] : '',
+				],
+				'x509cert' 					=> (isset($config[PluginPhpsamlConfig::IPCERT])) ? $config[PluginPhpsamlConfig::IPCERT] : '',
+			],
+			// Compress requests and responses
+			'compress' 						=> [
+				'requests' 					=> PluginPhpsamlConfig::CMPREQ,
+				'responses' 				=> PluginPhpsamlConfig::CMPRES,
+			],
+			// Security configuration
+			'security' 						=> [
+				'nameIdEncrypted' 			=> (isset($config[PluginPhpsamlConfig::ENAME])  && $config[PluginPhpsamlConfig::ENAME]  == 1) ? true : false,  // normalize in PluginPhpsamlConfig::getConfig instead of validate and assign here?
+				'authnRequestsSigned' 		=> (isset($config[PluginPhpsamlConfig::SAUTHN]) && $config[PluginPhpsamlConfig::SAUTHN] == 1) ? true : false,  // normalize in PluginPhpsamlConfig::getConfig instead of validate and assign here?
+				'logoutRequestSigned' 		=> (isset($config[PluginPhpsamlConfig::SSLORQ]) && $config[PluginPhpsamlConfig::SSLORQ] == 1) ? true : false,  // normalize in PluginPhpsamlConfig::getConfig instead of validate and assign here?
+				'logoutResponseSigned' 		=> (isset($config[PluginPhpsamlConfig::SSLORE]) && $config[PluginPhpsamlConfig::SSLORE] == 1) ? true : false,  // normalize in PluginPhpsamlConfig::getConfig instead of validate and assign here?
 
-			// Enable debug mode (to print errors)
-			'debug' => (isset($config['debug']) && $config['debug'] == 1 ? true : false),
-
-			// Set a BaseURL to be used instead of try to guess
-			// the BaseURL of the view that process the SAML Message.
-			// Ex. http://sp.example.com/
-			//     http://example.com/sp/
-			'baseurl' => null,
-
-			// Service Provider Data that we are deploying
-			'sp' => array (
-				// Identifier of the SP entity  (must be a URI)
-				'entityId' => $glpiUrl.'/',
-				// Specifies info about where and how the <AuthnResponse> message MUST be
-				// returned to the requester, in this case our SP.
-				'assertionConsumerService' => array (
-					// URL Location where the <Response> from the IdP will be returned
-					'url' => $glpiUrl. "/plugins/phpsaml/front/acs.php",
-				),
-				// If you need to specify requested attributes, set a
-				// attributeConsumingService. nameFormat, attributeValue and
-				// friendlyName can be omitted. Otherwise remove this section.
-				
-				// Specifies info about where and how the <Logout Response> message MUST be
-				// returned to the requester, in this case our SP.
-				'singleLogoutService' => array (
-					// URL Location where the <Response> from the IdP will be returned
-					'url' => $glpiUrl ."/plugins/phpsaml/front/slo.php",
-				),
-				'x509cert' => (isset($config['saml_sp_certificate']) ? $config['saml_sp_certificate'] : ''),
-				'privateKey' => (isset($config['saml_sp_certificate_key']) ? $config['saml_sp_certificate_key'] : ''),
-				// Specifies constraints on the name identifier to be used to
-				// represent the requested subject.
-				// Take a look on lib/Saml2/Constants.php to see the NameIdFormat supported
-				'NameIDFormat' => 'urn:oasis:names:tc:SAML:1.1:nameid-format:'.(isset($config['saml_sp_nameid_format']) ? $config['saml_sp_nameid_format'] : 'unspecified'),
-			),
-
-			// Identity Provider Data that we want connect with our SP
-			'idp' => array (
-				// Identifier of the IdP entity  (must be a URI)
-				'entityId' => (isset($config['saml_idp_entity_id']) ? $config['saml_idp_entity_id'] : ''),
-				// SSO endpoint info of the IdP. (Authentication Request protocol)
-				'singleSignOnService' => array (
-					// URL Target of the IdP where the SP will send the Authentication Request Message
-					'url' => (isset($config['saml_idp_single_sign_on_service']) ? $config['saml_idp_single_sign_on_service'] : ''),
-				),
-				// SLO endpoint info of the IdP.
-				'singleLogoutService' => array (
-					// URL Location of the IdP where the SP will send the SLO Request
-					'url' => (isset($config['saml_idp_single_logout_service']) ? $config['saml_idp_single_logout_service'] : ''),
-				),
-				// Public x509 certificate of the IdP
-				'x509cert' => (isset($config['saml_idp_certificate']) ? $config['saml_idp_certificate'] : ''),
-				
-			),
-			// Compression settings
-			// Handle if the getRequest/getResponse methods will return the Request/Response deflated.
-			// But if we provide a $deflate boolean parameter to the getRequest or getResponse
-			// method it will have priority over the compression settings.
-			'compress' => array (
-				'requests' => true,
-				'responses' => true
-			),
-
-			// Security settings
-			'security' => array (
-
-				/** signatures and encryptions offered */
-
-				// Indicates that the nameID of the <samlp:logoutRequest> sent by this SP
-				// will be encrypted.
-				'nameIdEncrypted' => (isset($config['saml_security_nameidencrypted']) && $config['saml_security_nameidencrypted'] == 1 ? true : false),
-
-				// Indicates whether the <samlp:AuthnRequest> messages sent by this SP
-				// will be signed.              [The Metadata of the SP will offer this info]
-				'authnRequestsSigned' => (isset($config['saml_security_authnrequestssigned']) && $config['saml_security_authnrequestssigned'] == 1 ? true : false),
-
-				// Indicates whether the <samlp:logoutRequest> messages sent by this SP
-				// will be signed.
-				'logoutRequestSigned' => (isset($config['saml_security_logoutrequestsigned']) && $config['saml_security_logoutrequestsigned'] == 1 ? true : false),
-
-				// Indicates whether the <samlp:logoutResponse> messages sent by this SP
-				// will be signed.
-				'logoutResponseSigned' => (isset($config['saml_security_logoutresponsesigned']) && $config['saml_security_logoutresponsesigned'] == 1 ? true : false),
-
-				/* Sign the Metadata
-				 False || True (use sp certs) || array (
-															keyFileName => 'metadata.key',
-															certFileName => 'metadata.crt'
-														)
-				*/
-				//'signMetadata' => false,
-
-
-				/** signatures and encryptions required **/
-
-				// Indicates a requirement for the <samlp:Response>, <samlp:LogoutRequest> and
-				// <samlp:LogoutResponse> elements received by this SP to be signed.
-				//'wantMessagesSigned' => false,
-
-				// Indicates a requirement for the <saml:Assertion> elements received by
-				// this SP to be encrypted.
+				//'signMetadata' 			=> false,
+				//'wantMessagesSigned' 		=> false,
 				//'wantAssertionsEncrypted' => false,
-
-				// Indicates a requirement for the <saml:Assertion> elements received by
-				// this SP to be signed.        [The Metadata of the SP will offer this info]
-				//'wantAssertionsSigned' => false,
-
-				// Indicates a requirement for the NameID element on the SAMLResponse received
-				// by this SP to be present.
-				//'wantNameId' => true,
-
-				// Indicates a requirement for the NameID received by
-				// this SP to be encrypted.
-				//'wantNameIdEncrypted' => false,
-
-				// Authentication context.
-				// Set to false and no AuthContext will be sent in the AuthNRequest,
+				//'wantAssertionsSigned' 	=> false,
+				//'wantNameId' 				=> true,
+				//'wantNameIdEncrypted' 	=> false,
 				// Set true or don't present this parameter and you will get an AuthContext 'exact' 'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport'
 				// Set an array with the possible auth context values: array ('urn:oasis:names:tc:SAML:2.0:ac:classes:Password', 'urn:oasis:names:tc:SAML:2.0:ac:classes:X509'),
-				'requestedAuthnContext' => self::getAuthn($config["requested_authn_context"]),
-
-				// Allows the authn comparison parameter to be set, defaults to 'exact' if
-				// the setting is not present.
-				'requestedAuthnContextComparison' => (isset($config["requested_authn_context_comparison"]) ? $config["requested_authn_context_comparison"] : 'exact'),
-
-				// Indicates if the SP will validate all received xmls.
-				// (In order to validate the xml, 'strict' and 'wantXMLValidation' must be true).
-				'wantXMLValidation' => true,
-
-				// If true, SAMLResponses with an empty value at its Destination
-				// attribute will not be rejected for this fact.
-				'relaxDestinationValidation' => false,
+				'requestedAuthnContext' 	=> self::getAuthn($config[PluginPhpsamlConfig::AUTHNC]),
+				'requestedAuthnContextComparison' => (isset($config[PluginPhpsamlConfig::AUTHND]) ? $config[PluginPhpsamlConfig::AUTHND] : 'exact'),
+				'wantXMLValidation' 		=> PluginPhpsamlConfig::XMLVAL,
+				'relaxDestinationValidation'=> PluginPhpsamlConfig::DSTVAL,
 
 				// Algorithm that the toolkit will use on signing process. Options:
 				//    'http://www.w3.org/2000/09/xmldsig#rsa-sha1'
@@ -423,7 +517,7 @@ class PluginPhpsamlPhpsaml
 				//    'http://www.w3.org/2001/04/xmldsig-more#rsa-sha384'
 				//    'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512'
 				// Notice that sha1 is a deprecated algorithm and should not be used
-				'signatureAlgorithm' => 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',
+				'signatureAlgorithm' 		=> 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',
 				//'signatureAlgorithm' => XMLSecurityKey::RSA_SHA256,
 
 				// Algorithm that the toolkit will use on digest process. Options:
@@ -432,13 +526,13 @@ class PluginPhpsamlPhpsaml
 				//    'http://www.w3.org/2001/04/xmldsig-more#sha384'
 				//    'http://www.w3.org/2001/04/xmlenc#sha512'
 				// Notice that sha1 is a deprecated algorithm and should not be used
-				'digestAlgorithm' => 'http://www.w3.org/2001/04/xmlenc#sha256',
+				'digestAlgorithm' 			=> 'http://www.w3.org/2001/04/xmlenc#sha256',
+				'lowercaseUrlencoding' 		=> PluginPhpsamlConfig::LOWURL
+			]
+		];
 
-				// ADFS URL-Encodes SAML data as lowercase, and the toolkit by default uses
-				// uppercase. Turn it True for ADFS compatibility on signature verification
-				'lowercaseUrlencoding' => true,
-			),
-		);
+		// Maybe do some validations in the future on free format fields like URIs
+		return $libSamlConf;
 	}
 	
 	public static function getAuthn($value)

@@ -190,10 +190,7 @@ class PluginPhpsamlPhpsaml
 		global $CFG_GLPI;
 		$glpiUrl = $CFG_GLPI['url_base'];
 
-		$phpsamlconf = new PluginPhpsamlConfig();
-		$config = $phpsamlconf->getConfig();
-		
-		
+		$config = PluginPhpsamlConfig::getConfig();
 
 		$phpsamlsettings = array (
 			// If 'strict' is True, then the PHP Toolkit will reject unsigned

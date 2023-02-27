@@ -1,16 +1,56 @@
 <?php
+
+/**
+ *  ------------------------------------------------------------------------
+ *  Derrick Smith - PHP SAML Plugin
+ *  Copyright (C) 2014 by Derrick Smith
+ *  ------------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of phpsaml project.
+ *
+ * PHP SAML Plugin is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * phpsaml is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with phpsaml. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * ------------------------------------------------------------------------
+ *
+ *  @package  	phpsamlconfig
+ *  @version	1.2.2
+ *  @author    	Derrick Smith
+ *  @copyright 	Copyright (c) 2018 by Derrick Smith
+ *  @license   	MIT
+ *  @see       	https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
+ *  @link		https://github.com/derricksmith/phpsaml/
+ *  @since     	0.1
+ * ------------------------------------------------------------------------
+ **/
+
 if (defined('GLPI_ROOT')) {
     $glpi_root = GLPI_ROOT;
 } else {
     $glpi_root = '../../..';
 }
 
-
+// Capture the post preventing
+// GLPI from cleaning it.
 $post = $_POST;
 unset($_POST);
 
 include ($glpi_root.'/inc/includes.php');
 
+// Put this in a separate loader object?
+// This code is reused on various locations.
 require_once $glpi_root.'/plugins/phpsaml/lib/xmlseclibs/xmlseclibs.php';
 $libDir = $glpi_root.'/plugins/phpsaml/lib/php-saml/src/Saml2/';
 
