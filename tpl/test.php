@@ -1,3 +1,4 @@
 <?php
 
-echo DIRECTORY_SEPARATOR;
+echo "<pre>";
+print_r($_SERVER);

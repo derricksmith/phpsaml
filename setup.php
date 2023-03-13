@@ -200,7 +200,7 @@ function pluginPhpsamlInitSession()
 /**
  * Shows login button, function is HOOKED at the GLPI 'display_login' event.
  *
- * @todo	move hook into phpsaml object?
+ * @todo	Add something to select a Font Awsome to use.
  */
 function pluginPhpsamlDisplayLogin()
 {
@@ -209,5 +209,17 @@ function pluginPhpsamlDisplayLogin()
 	$btn 		= $btn['saml_configuration_name'];
 	$redirect 	= (isset($_GET['redirect'])) ? '&redirect='.urlencode($_GET['redirect']) : null;
 	$btn 		= (!empty($btn) && is_string($btn)) ? htmlentities($btn) : 'phpsaml';
-	echo 		  "<input class=\"submit btn btn-primary\" value=\"Use $btn\" onclick=\"window.location.href='?SSO=1$redirect'\" />";
+	print('
+	<div>
+		<div class="card-header">
+			<h2>Connect with an external provider</h2>
+		</div>
+		<div class="card-body">
+			<div class="list-group list-group-horizontal justify-content-center" style="cursor:pointer; padding:43px 0px 0px 0px;">
+				<a class="list-group-item d-flex flex-column" onclick="window.location.href=\'?SSO=1'.$redirect.'\'" title="phpSaml">
+					<i class="fab fa-windows fa-5x"></i><span>'.$btn.'</span></a>
+			</div>
+		</div>
+	</div>
+	');
 }

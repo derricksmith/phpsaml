@@ -1117,11 +1117,11 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $compare       Version to compare
      * @param bool $return          Return the outcomes
-     * @return array $outcomes      Optional return
+     * @return array|void $outcomes      Optional return
      * @since                       1.2.1
      * @todo                        write unit test
      */
-    public function version(string $compare, bool $return = false) : array
+    public function version(string $compare, bool $return = false)
     {
         if ($feed = implode(file($this->phpSamlGitAtomUrl))) {
             if ($xmlArray = simplexml_load_string($feed)) {
@@ -1148,18 +1148,23 @@ class PluginPhpsamlConfig extends CommonDBTM
                     }
                 } else {
                     $this->registerError("Could not correctly parse xml information from:".$this->phpSamlGitAtomUrl." is simpleXml available?");
+                    $this->formValues['VERSION'] = "❌ Phpsaml could not verify the latest version, please verify manually";
                 }
             } else {
                 $this->registerError("Could not correctly parse xml information from:".$this->phpSamlGitAtomUrl." is simpleXml available?");
+                $this->formValues['VERSION'] = "❌ Phpsaml could not verify the latest version, please verify manually";
             }
         } else {
             $this->registerError("Could not retrieve version information from:".$this->phpSamlGitAtomUrl." is internet access blocked?");
+            $this->formValues['VERSION'] = "❌ Phpsaml could not verify the latest version, please verify manually";
         }
-        $this->formValues['VERSION'] = "❌ Phpsaml could not verify the latest version, please verify manually at <a href='$href' target='_blank'>latest version</a>";
-        // Return dummy array.
-        return ['gitVersion' => 'Unknown',
-                'compare'    => $compare,
-                'gitUrl'     => $href,
-                'latest'     => false];
+        if ($return) {
+            // Return dummy array.
+            return ['gitVersion' => 'Unknown',
+                    'compare'    => $compare,
+                    'gitUrl'     => '',
+                    'latest'     => false];
+        }
+       
     }
 }
