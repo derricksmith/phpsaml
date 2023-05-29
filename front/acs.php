@@ -33,6 +33,8 @@
  *  @see       	https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
  *  @link		https://github.com/derricksmith/phpsaml/
  *  @since     	0.1
+ *  @todo		This file needs refactoring. It currently is not providing any usefull feedback on errors
+ * 				Additional logging might be a nice to have as well.
  * ------------------------------------------------------------------------
  **/
 
@@ -49,7 +51,6 @@ unset($_POST);
 
 include ($glpi_root.'/inc/includes.php');
 
-// Put this in a separate loader object?
 // This code is reused on various locations.
 require_once $glpi_root.'/plugins/phpsaml/lib/xmlseclibs/xmlseclibs.php';
 $libDir = $glpi_root.'/plugins/phpsaml/lib/php-saml/src/Saml2/';
@@ -86,7 +87,7 @@ try {
 				Toolbox::logInFile("php-errors", $error . "\n", true);
 			}
         } else {
-			$error = "Invalid SAML Response";
+			$error = "Invalid SAML Response, strict mode enabled without a valid SP certificate?";
 			Toolbox::logInFile("php-errors", $error . "\n", true);
         }
     } else {
