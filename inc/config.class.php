@@ -158,6 +158,8 @@ class PluginPhpsamlConfig extends CommonDBTM
             if (is_array($this->config)) {
                 foreach ($this->config as $method => $current) {
                     if (method_exists($this, $method)) {
+                        // Make sure we pass strings on null values.
+                        $current = (is_null($current)) ? '' : $current;
                         // Handle property
                         $this->$method($current);
                     } else {

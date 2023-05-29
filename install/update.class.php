@@ -298,7 +298,7 @@ class PluginPhpsamlUpdate {
 			
 			
 			self::set_installed_version("1.2.2");
-			Toolbox::logInFile("phpsaml", "INFO -- PHPSAML upgraded to 1.2.1" . "\n", true);
+			Toolbox::logInFile("phpsaml", "INFO -- PHPSAML upgraded to 1.2.2" . "\n", true);
 		}
 	}
 }

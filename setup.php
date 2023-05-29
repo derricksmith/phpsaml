@@ -41,7 +41,7 @@
 if (!defined("GLPI_ROOT")) { die("Sorry. You can't access directly to this file"); }
 
 // CONSTANTS
-define("PLUGIN_PHPSAML_VERSION", "1.2.1");
+define("PLUGIN_PHPSAML_VERSION", "1.2.2");
 define("PLUGIN_PHPSAML_MIN_GLPI", "9.4");
 define("PLUGIN_PHPSAML_MAX_GLPI", "10.0.99");
 define('PLUGIN_PHPSAML_DIR', __DIR__);
@@ -137,6 +137,7 @@ function plugin_init_phpsaml() : void
 	// Register config page if user has correct rights.
 	$p = new Plugin();
 	if (Session::getLoginUserID() && $p->isActivated("phpsaml") && Session::haveRight('config', UPDATE)) {
+		Plugin::registerClass('PluginPhpsamlConfig', ['addtabon' => 'Config']);
 		$PLUGIN_HOOKS['config_page']['phpsaml'] = 'front/config.php';
 	}
 
@@ -209,7 +210,7 @@ function pluginPhpsamlDisplayLogin()
 	$btn 		= $btn['saml_configuration_name'];
 	$redirect 	= (isset($_GET['redirect'])) ? '&redirect='.urlencode($_GET['redirect']) : null;
 	$btn 		= (!empty($btn) && is_string($btn)) ? htmlentities($btn) : 'phpsaml';
-	print('
+	print 		'
 	<div>
 		<div class="card-header">
 			<h2>Connect with an external provider</h2>
@@ -221,5 +222,5 @@ function pluginPhpsamlDisplayLogin()
 			</div>
 		</div>
 	</div>
-	');
+	';
 }
