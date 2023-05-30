@@ -305,6 +305,7 @@ class PluginPhpsamlPhpsaml
 
 	/**
      * @return bool
+	 * Todo: https://github.com/derricksmith/phpsaml/issues/108 Add additional validations on field presence.
      */
 	private static function performJit($relayState)
 	{
