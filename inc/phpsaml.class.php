@@ -305,7 +305,6 @@ class PluginPhpsamlPhpsaml
 
 	/**
      * @return bool
-	 * Todo: https://github.com/derricksmith/phpsaml/issues/108 Add additional validations on field presence.
      */
 	private static function performJit($relayState)
 	{
@@ -313,6 +312,9 @@ class PluginPhpsamlPhpsaml
 		$auth = new PluginPhpsamlAuth();
 
 		if (!$user->getFromDBbyEmail(self::$nameid)){
+
+			// Todo: https://github.com/derricksmith/phpsaml/issues/108 Add better validations on field presence makeing only email mandatory
+			// using email as name if no name is present. Add additional optional fields if present in the saml response like phonenumbers etc.
 			if ((!empty(self::$userdata[self::SCHEMA_NAME][0])) && (!empty(self::$userdata[self::SCHEMA_EMAILADDRESS][0]))){
 				
 				// Generate a random password
