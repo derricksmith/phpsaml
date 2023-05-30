@@ -65,9 +65,6 @@ class LogoutResponse
      *
      * @param Settings $settings Settings.
      * @param string|null             $response An UUEncoded SAML Logout response from the IdP.
-     *
-     * @throws Error
-     * @throws Exception
      */
     public function __construct(\OneLogin\Saml2\Settings $settings, $response = null)
     {
@@ -139,8 +136,6 @@ class LogoutResponse
      * @param bool        $retrieveParametersFromServer True if we want to use parameters from $_SERVER to validate the signature
      *
      * @return bool Returns if the SAML LogoutResponse is or not valid
-     *
-     * @throws ValidationError
      */
     public function isValid($requestId = null, $retrieveParametersFromServer = false)
     {
@@ -153,7 +148,7 @@ class LogoutResponse
                 $security = $this->_settings->getSecurityData();
 
                 if ($security['wantXMLValidation']) {
-                    $res = Utils::validateXML($this->document, 'saml-schema-protocol-2.0.xsd', $this->_settings->isDebugActive(), $this->_settings->getSchemasPath());
+                    $res = Utils::validateXML($this->document, 'saml-schema-protocol-2.0.xsd', $this->_settings->isDebugActive());
                     if (!$res instanceof DOMDocument) {
                         throw new ValidationError(
                             "Invalid SAML Logout Response. Not match the saml-schema-protocol-2.0.xsd",
@@ -184,35 +179,26 @@ class LogoutResponse
 
                 $currentURL = Utils::getSelfRoutedURLNoQuery();
 
+                // Check destination
                 if ($this->document->documentElement->hasAttribute('Destination')) {
                     $destination = $this->document->documentElement->getAttribute('Destination');
-                    if (empty($destination)) {
-                        if (!$security['relaxDestinationValidation']) {
+                    if (!empty($destination)) {
+                        if (strpos($destination, $currentURL) === false) {
                             throw new ValidationError(
-                                "The LogoutResponse has an empty Destination value",
-                                ValidationError::EMPTY_DESTINATION
+                                "The LogoutResponse was received at $currentURL instead of $destination",
+                                ValidationError::WRONG_DESTINATION
                             );
-                        }
-                    } else {
-                        $urlComparisonLength = $security['destinationStrictlyMatches'] ? strlen($destination) : strlen($currentURL);
-                        if (strncmp($destination, $currentURL, $urlComparisonLength) !== 0) {
-                            $currentURLNoRouted = Utils::getSelfURLNoQuery();
-                            $urlComparisonLength = $security['destinationStrictlyMatches'] ? strlen($destination) : strlen($currentURLNoRouted);
-                            if (strncmp($destination, $currentURLNoRouted, $urlComparisonLength) !== 0) {
-                                throw new ValidationError(
-                                    "The LogoutResponse was received at $currentURL instead of $destination",
-                                    ValidationError::WRONG_DESTINATION
-                                );
-                            }
                         }
                     }
                 }
 
-                if ($security['wantMessagesSigned'] && !isset($_GET['Signature'])) {
-                    throw new ValidationError(
-                        "The Message of the Logout Response is not signed and the SP requires it",
-                        ValidationError::NO_SIGNED_MESSAGE
-                    );
+                if ($security['wantMessagesSigned']) {
+                    if (!isset($_GET['Signature'])) {
+                        throw new ValidationError(
+                            "The Message of the Logout Response is not signed and the SP requires it",
+                            ValidationError::NO_SIGNED_MESSAGE
+                        );
+                    }
                 }
             }
 
@@ -239,7 +225,7 @@ class LogoutResponse
     /**
      * Extracts a node from the DOMDocument (Logout Response Menssage)
      *
-     * @param string $query Xpath Expression
+     * @param string $query Xpath Expresion
      *
      * @return DOMNodeList The queried node
      */
@@ -258,18 +244,19 @@ class LogoutResponse
     {
 
         $spData = $this->_settings->getSPData();
+        $idpData = $this->_settings->getIdPData();
 
         $this->id = Utils::generateUniqueID();
         $issueInstant = Utils::parseTime2SAML(time());
+
         $spEntityId = htmlspecialchars($spData['entityId'], ENT_QUOTES);
-        $destination = $this->_settings->getIdPSLOResponseUrl();
         $logoutResponse = <<<LOGOUTRESPONSE
 <samlp:LogoutResponse xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
                   xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
                   ID="{$this->id}"
                   Version="2.0"
                   IssueInstant="{$issueInstant}"
-                  Destination="{$destination}"
+                  Destination="{$idpData['singleLogoutService']['url']}"
                   InResponseTo="{$inResponseTo}"
                   >
     <saml:Issuer>{$spEntityId}</saml:Issuer>
