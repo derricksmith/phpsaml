@@ -173,7 +173,8 @@ class PluginPhpsamlPhpsaml
 		$cfgObj		    = new PluginPhpsamlConfig();
 		$config 		= $cfgObj->getConfig();
 		if ($config[PluginPhpsamlConfig::PROXIED]) {
-			self::$auth->setProxyVars(true);
+			$samltoolkit = new OneLogin\Saml2\Utils();
+			$samltoolkit::setProxyVars(true);
 		}
 	}
 
