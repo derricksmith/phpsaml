@@ -55,7 +55,7 @@ class PluginPhpsamlConfig extends CommonDBTM
 	public const SSOURL	 = 'saml_idp_single_sign_on_service';
 	public const SLOURL	 = 'saml_idp_single_logout_service';
 	public const IPCERT	 = 'saml_idp_certificate';
-	public const CMPREQ	 = true;	// Compress requests
+	public const CMPREQ	 = true; // Compress requests
 	public const CMPRES	 = true; // Compress response
 	public const ENAME	 = 'saml_security_nameidencrypted';
 	public const SAUTHN	 = 'saml_security_authnrequestssigned';
@@ -69,6 +69,7 @@ class PluginPhpsamlConfig extends CommonDBTM
     public const ACSPATH = '/plugins/phpsaml/front/acs.php';
     public const SLOPATH = '/plugins/phpsaml/front/slo.php';
     public const FORCED  = 'enforced';
+    public const PROXIED = 'proxied';
 
     // PROPERTIES
     /**

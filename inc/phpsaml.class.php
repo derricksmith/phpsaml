@@ -166,6 +166,15 @@ class PluginPhpsamlPhpsaml
 		if (!self::$auth) {
 			self::$auth = new OneLogin\Saml2\Auth(self::$phpsamlsettings);
 		}
+
+		// Set ProxyVars if configured in PHPSAML Config
+		// https://github.com/SAML-Toolkits/php-saml#url-guessing-methods
+		// https://github.com/derricksmith/phpsaml/issues/127
+		$cfgObj		    = new PluginPhpsamlConfig();
+		$config 		= $cfgObj->getConfig();
+		if ($config[PluginPhpsamlConfig::PROXIED]) {
+			self::$auth->setProxyVars(true);
+		}
 	}
 
 	 /**
