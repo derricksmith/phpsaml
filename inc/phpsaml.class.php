@@ -278,6 +278,11 @@ class PluginPhpsamlPhpsaml
 	 *
      * @return bool
 	 * @since 1.1.3
+	 * 
+	 * Todo: Add the ability to change user properties when
+	 * fields (other than email) has changed in the saml response 
+	 * as suggested by https://github.com/derricksmith/phpsaml/issues/108
+	 * 
      */
 	public static function glpiLogin($relayState = null) : void
     {
