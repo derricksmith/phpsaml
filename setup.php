@@ -154,7 +154,8 @@ function plugin_init_phpsaml() : void
 	$PLUGIN_HOOKS['display_login']['phpsaml'] = 'pluginPhpsamlDisplayLogin';
 	
 	// Register hook to include required js and css files.
-	if (strpos($_SERVER['REQUEST_URI'], '/front/config.php')) {
+	// Added key exists validation for Cron https://github.com/derricksmith/phpsaml/issues/130
+	if (array_key_exists('REQUEST_URI', $_SERVER) && strpos($_SERVER['REQUEST_URI'], '/front/config.php')) {
 		$PLUGIN_HOOKS['add_javascript']['phpsaml'][] = 'js/jquery.multi-select.js';
 		$PLUGIN_HOOKS['add_css']['phpsaml'] = 'css/multi-select.css';
 	}
