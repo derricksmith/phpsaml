@@ -242,9 +242,16 @@ class PluginPhpsamlPhpsaml
 				// Maybe replace it with GLPI config: URL of the application?
 				list($realhost,)=explode(':',$_SERVER['HTTP_HOST']);
 				
+				/////////////////// Problematic code //////////////////
 				// lets check for the redirect parameter, if it doesn't exist lets redirect the visitor back to the original page
 				// Fixed in 1.2.0 - Resolved Undefinded index: HTTP_HOST
-				$returnTo = (isset($_GET['redirect']) ? $_GET['redirect'] : (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $realhost . $_SERVER['REQUEST_URI']);
+				// $returnTo = (isset($_GET['redirect']) ? $_GET['redirect'] : (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $realhost . $_SERVER['REQUEST_URI']);
+
+				// TODO: This needs additional testing in conjunction with the setProxyVars(true) at init!
+				// TODO: make this code readable.
+				// https://github.com/derricksmith/phpsaml/issues/120
+				$returnTo = ((((isset($_GET['redirect']) ? $_GET['redirect'] : isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) ?  $_SERVER['HTTP_X_FORWARDED_PROTO'] : isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http") . "://" . $realhost .  $_SERVER['REQUEST_URI']);
+
 				self::ssoRequest($returnTo);
 			}
 		}
