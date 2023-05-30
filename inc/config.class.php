@@ -70,6 +70,7 @@ class PluginPhpsamlConfig extends CommonDBTM
     public const SLOPATH = '/plugins/phpsaml/front/slo.php';
     public const FORCED  = 'enforced';
     public const PROXIED = 'proxied';
+    public const CFNAME  = 'saml_configuration_name';
 
     // PROPERTIES
     /**
@@ -1105,6 +1106,7 @@ class PluginPhpsamlConfig extends CommonDBTM
      /**
      *
      * Evaluates the configuration friendly name property for changes and populates the form template
+     * https://github.com/derricksmith/phpsaml/issues/126
      *
      * @param string $cValue
      * @return void

@@ -206,9 +206,11 @@ function pluginPhpsamlInitSession()
  */
 function pluginPhpsamlDisplayLogin()
 {
+	// Get button FriendlyName from config.
+	// https://github.com/derricksmith/phpsaml/issues/126
 	$cfgObj 	= new PluginPhpsamlConfig();
 	$btn 		= $cfgObj->getConfig();
-	$btn 		= $btn['saml_configuration_name'];
+	$btn 		= $btn[PluginPhpsamlConfig::CFNAME];
 	$redirect 	= (isset($_GET['redirect'])) ? '&redirect='.urlencode($_GET['redirect']) : null;
 	$btn 		= (!empty($btn) && is_string($btn)) ? htmlentities($btn) : 'phpsaml';
 	print 		'
