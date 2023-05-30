@@ -44,6 +44,7 @@ class PluginPhpsamlPhpsaml
 									   			'ldap_mass_sync.php',
 									   			'apirest.php',
 									   			'acs.php'];
+	// https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf
 	private const SCHEMA_NAME 				= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
 	private const SCHEMA_SURNAME 			= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';
 	private const SCHEMA_FIRSTNAME 			= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname';

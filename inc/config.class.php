@@ -379,13 +379,18 @@ class PluginPhpsamlConfig extends CommonDBTM
      */
     public function validateAndParseCertString(string $cert) : array
     {
-        $cert = preg_replace('/\r\n|\r|\n/', '', $cert);
-        
         // Do some basic validations
         $validationErrors['BEGIN_TAG_PRESENT']  = (!preg_match('/-+BEGIN CERTIFICATE-+/', $cert)) ? false : true;
         $validationErrors['END_TAG_PRESENT']    = (!preg_match('/-+END CERTIFICATE-+/', $cert)) ? false : true;
 
-        // Match the certificate elements using non greedy payload search
+        // Only chr(10) \n is allowed in an X509 certificate
+        // Only apply filtering if GLPI added CRLF
+        if(strpos($cert, "\r")){
+            $cert = preg_replace('/\r\n|\r|\n/', '', $cert);
+            // Match the certificate elements using non greedy payload search   
+        }
+
+        // Validate certificate components
         preg_match('/(-+BEGIN CERTIFICATE-+)(.+?)(-+END CERTIFICATE-+)/', $cert, $m);
 
         // There should be exactly 4 matches!
@@ -397,7 +402,6 @@ class PluginPhpsamlConfig extends CommonDBTM
             $validationErrors['CERT_SEMANTICS_VALID'] = false;
         }
         
-
         // Try to parse the reconstructed certificate.
         if (extension_loaded('openssl') && ($validationErrors['CERT_SEMANTICS_VALID'] == true)) {
             if ($pCert = openssl_x509_parse($cert)) {
@@ -410,7 +414,7 @@ class PluginPhpsamlConfig extends CommonDBTM
         }
 
         // Calculate additional fields and add them to
-        // an structured array.
+        // a structured certificate array.
         if (isset($pCert) && !empty($pCert)) {
             // Work out the certificate timestamps
             $n = new DateTimeImmutable('now');
@@ -421,7 +425,7 @@ class PluginPhpsamlConfig extends CommonDBTM
             $io= (array_key_exists('issuer', $pCert) && array_key_exists('O', $pCert['issuer'])) ? $pCert['issuer']['O'] : '';
             $icn=(array_key_exists('issuer', $pCert) && array_key_exists('CN', $pCert['issuer'])) ? $pCert['issuer']['CN'] : '';
 
-            $result = [
+            return [
                 'msgs'          => $validationErrors,
                 'certStr'       => $cert,
                 'certDetails'   => ['cn'  => $cn,
@@ -432,7 +436,7 @@ class PluginPhpsamlConfig extends CommonDBTM
                 'certAge'       => $d->format('%R%a')
             ];
         } else {
-            $result = [
+            return [
                 'msgs'          => $validationErrors,
                 'certStr'       => $cert,
                 'certDetails'   => false,
@@ -441,8 +445,6 @@ class PluginPhpsamlConfig extends CommonDBTM
                 'certAge'       => false
             ];
         }
-
-        return $result;
     }
 
 
@@ -647,15 +649,17 @@ class PluginPhpsamlConfig extends CommonDBTM
     protected function saml_sp_certificate(string $cValue) : void
     {
         // Validate certificate
-        if(!empty($cvalue)) {
+        if(!empty($cValue)) {
             $cert = $this->validateAndParseCertString($cValue);
+
+            
 
             if(!$cert['msgs']['BEGIN_TAG_PRESENT'] || !$cert['msgs']['END_TAG_PRESENT']) {
                 $this->registerError('⚠️ The optional SP Certificate does not look valid');
             }
 
             if (is_array($cert['certDetails'])) {
-                $valid = (strpos($cert['certAge'],'-') !== false) ? '<font style="color:red">expired:'.$cert['certAge'].' day(s) ago</font>' : '<font style="color:red">is valid the next:'.$cert['certAge'].' day(s)</font>';
+                $valid = (strpos($cert['certAge'],'-') !== false) ? '<font style="color:red">expired:'.$cert['certAge'].' day(s) ago</font>' : '<font style="color:green">is valid the next:'.$cert['certAge'].' day(s)</font>';
                 $cer = "🟩 Configured Service Provider cert was issued by: {$cert['certDetails']['isCN']} for: {$cert['certDetails']['cn']} and $valid";
             } else {
                 $cer = '🟨 No Service Provider certificate details provided or provided data is invalid';
@@ -760,16 +764,16 @@ class PluginPhpsamlConfig extends CommonDBTM
         if(!empty($cValue)) {
             if((!strstr($cValue, 'https')) && (filter_var($cValue, FILTER_VALIDATE_URL) === FALSE)) {
                 
-                $this->registerError('🟨 Provided Idp entity ID URL does not look like a valid TLS enabled URL');
+                $this->registerError('🟨 Provided IdP entity ID URL does not look like a valid TLS enabled URL');
             }
         } else {
-            $this->registerError('🟨 The Idp entity ID URL required field.');
+            $this->registerError('🟨 The IdP entity ID URL required field.');
         }
 
         
         // Declare template labels
         $formValues = [
-            'IP_ID_LABEL' =>  __("Identity Provider Entity ID", "phpsaml"),
+            'IP_ID_LABEL' =>  __("Identity Provider Entity Id", "phpsaml"),
             'IP_ID_TITLE' =>  __("Identifier of the IdP entity  (must be a URI).", "phpsaml"),
             'IP_ID_VALUE' => $cValue];
         
@@ -824,10 +828,10 @@ class PluginPhpsamlConfig extends CommonDBTM
         //Validate URL
         if(!empty($cValue)) {
             if((!strstr($cValue, 'https')) && (filter_var($cValue, FILTER_VALIDATE_URL) === FALSE)) {
-                $this->registerError('🟨 Provided idp single logout URL does not look like a valid URL', '');
+                $this->registerError('🟨 Provided IdP single logout URL does not look like a valid URL', '');
             }
         } else {
-            $this->registerError('🟨 The idp single logout URL  is a required field.', '');
+            $this->registerError('🟨 The IdP single logout URL  is a required field.', '');
         }
         
          // Declare template labels
@@ -860,7 +864,7 @@ class PluginPhpsamlConfig extends CommonDBTM
 
         if (is_array($cert['certDetails'])) {
             $valid = (strpos($cert['certAge'],'-') !== false) ? '<font style="color:red">expired:'.$cert['certAge'].' day(s) ago</font>' : '<font style="color:darkgreen">is valid for another:'.$cert['certAge'].' day(s)</font>';
-            $cer = "🟩 Configured Idp cert was issued by: {$cert['certDetails']['isCN']} for: {$cert['certDetails']['cn']} and $valid";
+            $cer = "🟩 Configured IdP cert was issued by: {$cert['certDetails']['isCN']} for: {$cert['certDetails']['cn']} and $valid";
         } else {
             $cer = '🟥 <font color="red">No valid Ipd certificate details provided or available</font>';
         }
