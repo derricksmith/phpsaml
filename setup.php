@@ -135,7 +135,7 @@ function plugin_init_phpsaml() : void
 	Plugin::registerClass('PluginPhpsamlRuleRightCollection', ['rulecollections_types' => true]);
 
 	// Register config page if user has correct rights.
-	$wp = new Plugin();
+	$p = new Plugin();
 	if (Session::getLoginUserID() && $p->isActivated("phpsaml") && Session::haveRight('config', UPDATE)) {
 		Plugin::registerClass('PluginPhpsamlConfig', ['addtabon' => 'Config']);
 		$PLUGIN_HOOKS['config_page']['phpsaml'] = 'front/config.php';
