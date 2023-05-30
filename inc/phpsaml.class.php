@@ -310,8 +310,10 @@ class PluginPhpsamlPhpsaml
 				// Generate a random password
 				$password = bin2hex(random_bytes(20));
 
-				// figure out what schema to use;
+				// figure out what binding to use;
+				// https://github.com/derricksmith/phpsaml/issues/125
 				$nameObj = (isset(self::$userdata[self::SCHEMA_FIRSTNAME][0])) ? self::SCHEMA_FIRSTNAME : self::SCHEMA_GIVENNAME;
+
 				$newUser = new User();
 				$input = [
 					'name'        => self::$userdata[self::SCHEMA_NAME][0],
