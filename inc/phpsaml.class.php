@@ -40,10 +40,22 @@ class PluginPhpsamlPhpsaml
 	// CLASS CONSTANTS
     public const SESSION_GLPI_NAME_ACCESSOR	= 'glpiname';
     public const SESSION_VALID_ID_ACCESSOR 	= 'valid_id';
-	public const EXCLUDED					= [	'cron.php',
-									   			'ldap_mass_sync.php',
-									   			'apirest.php',
-									   			'acs.php'];
+
+	// Excluded local files
+	public const EXCLUDED_FILES				= ['cron.php',
+									   		   'ldap_mass_sync.php',
+									   		   'apirest.php',
+									   		   'acs.php'];
+
+	// Excluded useragents
+	// https://github.com/derricksmith/phpsaml/issues/134
+	// "POST / HTTP/1.1" 200 473 "-" "GLPI-Agent_v1.5-gitf0e44092"
+	// "POST / HTTP/1.1" 200 330 "-" "GLPI-Injector_v1.5-gitf0e44092"
+	private const EXCLUDED_USERAGENTS		= ['FusionInventory-Agent'	=> '/plugins/fusioninventory/',
+											   'FusionInventory-Agent' => '/marketplace/fusioninventory/',
+											   'GLPI-Agent'	=>	'/',
+											   'GLPI-Injector' => '/'];
+
 	// https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf
 	private const SCHEMA_NAME 				= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
 	private const SCHEMA_SURNAME 			= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';
@@ -181,7 +193,7 @@ class PluginPhpsamlPhpsaml
 
 	 /**
 	 * ProcessUserLogin handles the login process
-	 * called by the glpi post init if used is not found to be logged in;
+	 * called by the glpi post init;
 	 *
      * @return bool
 	 * @since 1.2.2
@@ -194,14 +206,19 @@ class PluginPhpsamlPhpsaml
 		$config 		= $cfgObj->getConfig();
 
 		// Return false for fusioninventory agents
-		if ((strpos($_SERVER['HTTP_USER_AGENT'], 'FusionInventory-Agent_') !== false) &&
-			(strpos($_SERVER['REQUEST_URI'], '/plugins/fusioninventory/'))) {
-
-			return false;
+		// https://github.com/derricksmith/phpsaml/issues/134
+		foreach(self::EXCLUDED_USERAGENTS as $agent => $request){
+			if(array_key_exists('HTTP_USER_AGENT', $_SERVER) && array_key_exists('REQUEST_URI', $_SERVER)){
+				if(strpos($_SERVER['HTTP_USER_AGENT'], $agent) !== false){
+					if(strpos($_SERVER['REQUEST_URI'], $request) !== false) {
+						return false;
+					}
+				}
+			}
 		}
 
-		// Return true for files in Excludes
-		foreach (self::EXCLUDED as $value) {
+		// Return true for local files in Excludes constant
+		foreach (self::EXCLUDED_FILES as $value) {
 			if ((PHP_SAPI === 'cli') || strpos($_SERVER['REQUEST_URI'], $value) !== false) {
 				return true;
 			}
@@ -244,10 +261,6 @@ class PluginPhpsamlPhpsaml
 				list($realhost,)=explode(':',$_SERVER['HTTP_HOST']);
 				
 				/////////////////// Problematic code //////////////////
-				// lets check for the redirect parameter, if it doesn't exist lets redirect the visitor back to the original page
-				// Fixed in 1.2.0 - Resolved Undefinded index: HTTP_HOST
-				// $returnTo = (isset($_GET['redirect']) ? $_GET['redirect'] : (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $realhost . $_SERVER['REQUEST_URI']);
-
 				// TODO: This needs additional testing in conjunction with the setProxyVars(true) at init!
 				// TODO: make this code readable.
 				// https://github.com/derricksmith/phpsaml/issues/120
@@ -280,7 +293,7 @@ class PluginPhpsamlPhpsaml
      * @return bool
 	 * @since 1.1.3
 	 * 
-	 * Todo: Add the ability to change user properties when
+	 * TODO: Add the ability to change user properties when
 	 * fields (other than email) has changed in the saml response 
 	 * as suggested by https://github.com/derricksmith/phpsaml/issues/108
 	 * 
@@ -319,7 +332,7 @@ class PluginPhpsamlPhpsaml
 
 		if (!$user->getFromDBbyEmail(self::$nameid)){
 
-			// Todo: https://github.com/derricksmith/phpsaml/issues/108 Add better validations on field presence makeing only email mandatory
+			// TODO: https://github.com/derricksmith/phpsaml/issues/108 Add better validations on field presence makeing only email mandatory
 			// using email as name if no name is present. Add additional optional fields if present in the saml response like phonenumbers etc.
 			if ((!empty(self::$userdata[self::SCHEMA_NAME][0])) && (!empty(self::$userdata[self::SCHEMA_EMAILADDRESS][0]))){
 				
