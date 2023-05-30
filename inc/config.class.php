@@ -407,8 +407,9 @@ class PluginPhpsamlConfig extends CommonDBTM
             $validationErrors['CERT_LOGIC_VALID'] = 'Certificate is not validated, openssl might be disabled, or the certificate is not valid';
         }
 
-        // Add values if any to a static array.
-        if ($pCert) {
+        // Calculate additional fields and add them to
+        // an structured array.
+        if (isset($pCert) && !empty($pCert)) {
             // Work out the certificate timestamps
             $n = new DateTimeImmutable('now');
             $t = (array_key_exists('validTo', $pCert)) ? DateTimeImmutable::createFromFormat("ymdHisT", $pCert['validTo']) : false;
