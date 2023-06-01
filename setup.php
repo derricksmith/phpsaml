@@ -210,7 +210,7 @@ function pluginPhpsamlDisplayLogin()
 	// https://github.com/derricksmith/phpsaml/issues/126
 	$cfgObj 	= new PluginPhpsamlConfig();
 	$btn 		= $cfgObj->getConfig();
-	$btn 		= $btn[PluginPhpsamlConfig::CFNAME];
+	$btn 		= (array_key_exists(PluginPhpsamlConfig::CFNAME, $btn)) ? $btn[PluginPhpsamlConfig::CFNAME] : 'PHP Saml';
 	$redirect 	= (isset($_GET['redirect'])) ? '&redirect='.urlencode($_GET['redirect']) : null;
 	$btn 		= (!empty($btn) && is_string($btn)) ? htmlentities($btn) : 'phpsaml';
 	print 		'
