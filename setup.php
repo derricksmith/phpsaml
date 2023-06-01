@@ -208,6 +208,7 @@ function pluginPhpsamlDisplayLogin()
 {
 	// Get button FriendlyName from config.
 	// https://github.com/derricksmith/phpsaml/issues/126
+	// https://github.com/derricksmith/phpsaml/issues/135
 	$cfgObj 	= new PluginPhpsamlConfig();
 	$btn 		= $cfgObj->getConfig();
 	$btn 		= (array_key_exists(PluginPhpsamlConfig::CFNAME, $btn)) ? $btn[PluginPhpsamlConfig::CFNAME] : 'PHP Saml';
