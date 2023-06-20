@@ -307,6 +307,7 @@ class PluginPhpsamlPhpsaml
 		// Perform login
 		if ($auth->loadUserData(self::$nameid) && $auth->checkUserData()) {
 			Session::init($auth);
+			Session::addMessageAfterRedirect(__("SAML login succesful"), true, INFO); 
 			self::redirectToMainPage($relayState);
 		} else {
 			// JIT Provisioning added version 1.1.3
