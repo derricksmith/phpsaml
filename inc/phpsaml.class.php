@@ -372,10 +372,12 @@ class PluginPhpsamlPhpsaml
 						  "\n *_useremail:". self::$userdata[self::SCHEMA_EMAILADDRESS][0].
 						  "\n password: null all fields need to be present!";
 				Toolbox::logInFile("php-errors", $error . "\n", true);
+				self::redirectToMainPage($relayState);
 			}
 		} else {
 			$error = "JIT Error: Unable to create user because the email address already exists";
 			Toolbox::logInFile("php-errors", $error . "\n", true);
+			self::redirectToMainPage($relayState);
 		}
 	}
 
