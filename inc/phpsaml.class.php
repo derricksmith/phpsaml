@@ -316,8 +316,6 @@ class PluginPhpsamlPhpsaml
 				$error = "User or NameID not found.  Enable JIT Provisioning or manually create the user account";
 				Toolbox::logInFile("php-errors", $error . "\n", true);
 			}
-			
-			throw new Exception($error);
 		}
     }
 
