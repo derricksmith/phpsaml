@@ -133,6 +133,7 @@ function plugin_init_phpsaml() : void
 	Plugin::registerClass('PluginPhpsaml');
 	Plugin::registerClass('PluginPhpsamlRuleRight');
 	Plugin::registerClass('PluginPhpsamlRuleRightCollection', ['rulecollections_types' => true]);
+	Plugin::registerClass('PluginPhpsamlAcs');
 
 	// Register config page if user has correct rights.
 	$p = new Plugin();
