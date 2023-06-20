@@ -332,12 +332,15 @@ class PluginPhpsamlPhpsaml
 
 			// TODO: https://github.com/derricksmith/phpsaml/issues/108 Add better validations on field presence makeing only email mandatory
 			// using email as name if no name is present. Add additional optional fields if present in the saml response like phonenumbers etc.
-			if ((!empty(self::$userdata[self::SCHEMA_NAME][0])) && (!empty(self::$userdata[self::SCHEMA_EMAILADDRESS][0]))){
+			if ((!empty(self::$userdata[self::SCHEMA_NAME][0])) 
+			     && (!empty(self::$userdata[self::SCHEMA_EMAILADDRESS][0]))
+				 && (!empty(self::$userdata[self::SCHEMA_SURNAME][0]))
+				 && (!empty(self::$userdata[self::SCHEMA_FIRSTNAME][0]) || !empty(self::$userdata[self::SCHEMA_GIVENNAME][0]))) {
 				
 				// Generate a random password
 				$password = bin2hex(random_bytes(20));
 
-				// figure out what binding to use;
+				// figure out what claim to use;
 				// https://github.com/derricksmith/phpsaml/issues/125
 				$nameObj = (isset(self::$userdata[self::SCHEMA_FIRSTNAME][0])) ? self::SCHEMA_FIRSTNAME : self::SCHEMA_GIVENNAME;
 
@@ -363,7 +366,11 @@ class PluginPhpsamlPhpsaml
 					self::redirectToMainPage($relayState);
 				}
 			} else {
-				$error = "JIT Error: Unable to create user because missing claims (emailaddress)";
+				$error = "JIT Error: Unable to create user because missing claims we got the following to work with:".
+						  "\n *name:" . @self::$userdata[self::SCHEMA_NAME][0] .
+						  "\n *realname:" . self::$userdata[self::SCHEMA_SURNAME][0] . 
+						  "\n *_useremail:". self::$userdata[self::SCHEMA_EMAILADDRESS][0].
+						  "\n password: null all fields need to be present!";
 				Toolbox::logInFile("php-errors", $error . "\n", true);
 			}
 		} else {
