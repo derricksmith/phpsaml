@@ -188,7 +188,7 @@ class PluginPhpsamlAcs
     {
         $samlConfig = new PluginPhpsamlConfig;
         $config = $samlConfig->getConfig();
-        if($config[PluginPhpsamlConfig::ENAME]){
+        if($config[PluginPhpsamlConfig::DEBUG]){
             $this->debug = true;
         }
     }
@@ -207,23 +207,20 @@ class PluginPhpsamlAcs
 
     function dumpSamlResponse() : void
     {
-        $dumpfile = '/debug_dump-'.date('Y-m-d-H:i:s').'.php';
-
         // Make sure the dump cannot be viewed via a webserver
-        $data = "<?php /*\n". print_r($samlResponse, true);
-        if($this->samlResponse) {
-            if(is_object($this->$samlResponse)){
-                $objVars = get_object_vars($this->samlResponse);
-                $objMethods = get_class_methods($this->samlResponse);
-            }else{
-                $contents = 'noObject';
-            }
+        $data = "<?php /*\n";
+        // Process the response
+        if(gettype($this->samlResponse) == 'object') {
+            $objVars = get_object_vars($this->samlResponse);
+            $objMethods = get_class_methods($this->samlResponse);
             $data .= "\n\n Unpacked SamlResponse Methods:\n".print_r($objMethods, true);
             $data .= "\n\n Unpacked SamlResponse vars:\n".print_r($objVars, true);
         }
-        
         $data .= "\n\n POST:\n". print_r($_POST, true);
         $data .= "\n\n GET:\n". print_r($_GET, true);
+        
+        // Dump the data
+        $dumpfile = '/debug_dump-'.date('Y-m-d-H:i:s').'.php';
         file_put_contents($this->pathInfo['debug'].$dumpfile, $data);
     }
     
