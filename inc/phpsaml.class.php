@@ -315,6 +315,8 @@ class PluginPhpsamlPhpsaml
 			} else {
 				$error = "User or NameID not found.  Enable JIT Provisioning or manually create the user account";
 				Toolbox::logInFile("php-errors", $error . "\n", true);
+				Session::addMessageAfterRedirect(__("Login failed: $error"), true, ERROR); 
+				self::redirectToMainPage($relayState);
 			}
 		}
     }
@@ -363,6 +365,10 @@ class PluginPhpsamlPhpsaml
 				// Retry login with newly created user.
 				if ($auth->loadUserData(self::$nameid) && $auth->checkUserData()) {
 					Session::init($auth);
+					Session::addMessageAfterRedirect(__("SAML Login succesfull"), true, INFO); 
+					self::redirectToMainPage($relayState);
+				}else{
+					Session::addMessageAfterRedirect(__("SAML Login failed using create user, weird!"), true, ERROR); 
 					self::redirectToMainPage($relayState);
 				}
 			} else {
@@ -372,11 +378,13 @@ class PluginPhpsamlPhpsaml
 						  "\n *_useremail:". self::$userdata[self::SCHEMA_EMAILADDRESS][0].
 						  "\n password: null all fields need to be present!";
 				Toolbox::logInFile("php-errors", $error . "\n", true);
+				Session::addMessageAfterRedirect(__("Login failed: $error"), true, ERROR); 
 				self::redirectToMainPage($relayState);
 			}
 		} else {
 			$error = "JIT Error: Unable to create user because the email address already exists";
 			Toolbox::logInFile("php-errors", $error . "\n", true);
+			Session::addMessageAfterRedirect(__("Login failed: user email allready exists!"), true, ERROR);                   
 			self::redirectToMainPage($relayState);
 		}
 	}
