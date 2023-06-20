@@ -44,12 +44,11 @@ if (defined('GLPI_ROOT')) {
     $glpi_root = '../../..';
 }
 
+
 // Capture the post preventing
 // GLPI from cleaning it.
 $post = $_POST;
-unset($_POST);
-
-include ($glpi_root.'/inc/includes.php');
+$_POST = '';
 
 // This code is reused on various locations.
 require_once $glpi_root.'/plugins/phpsaml/lib/xmlseclibs/xmlseclibs.php';
@@ -63,8 +62,16 @@ foreach ($folderInfo as $element) {
 	}
 }
 
+include ($glpi_root.'/inc/includes.php');
+
 use OneLogin\Saml2\Settings;
 use OneLogin\Saml2\Response;
+
+if(!empty($post) && is_array($post))
+{
+	// Maybe in the future add ?debug to the URI to trigger this;
+	dumpPost($post);
+}
 
 $error = null;
 $phpsaml = new PluginPhpsamlPhpsaml();
@@ -106,4 +113,28 @@ if($error){
 	echo '<a href="' . $CFG_GLPI["root_doc"] .'/index.php">' .__('Log in again') . '</a></div>';
 	Html::nullFooter();
 	exit();
+}
+
+function dumpPost($post) 
+{
+	$dumpfile = pathinfo(__file__)['dirname'].DIRECTORY_SEPARATOR.'/debug_dump-'.date('Y-m-d-H:i:s').'.php';
+	// Make sure the dump cannot be viewed via a webserver
+	$data = "<?php /*\n". print_r($post, true);
+	if($post['SAMLResponse']) {
+		$phpsaml = new PluginPhpsamlPhpsaml();
+		$settings = $phpsaml::$phpsamlsettings;
+		$samlSettings = new OneLogin\Saml2\Settings($settings);
+        $samlResponse = new OneLogin\Saml2\Response($samlSettings, $post['SAMLResponse']);
+		if(is_object($samlResponse)){
+			$contents = get_object_vars($samlResponse);
+		}else{
+			$contents = 'noObject';
+		}
+		$data .= "\n\n Unpacked:\n".print_r($contents, true);
+	}
+	
+	$data .= "\n\n POST:\n". print_r($_POST, true);
+	$data .= "\n\n GET:\n". print_r($_GET, true);
+	$data .= "\n\n SERVER\n". print_r($_SERVER, true); 
+	file_put_contents($dumpfile, $data);
 }
