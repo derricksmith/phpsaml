@@ -75,6 +75,10 @@ class PluginPhpsamlAcs
                 // @throws Exception
                 try {
                     $this->samlResponse = new OneLogin\Saml2\Response($samlSettings, $samlResponse['SAMLResponse']);
+                    
+                    // Dump the response on debug?
+                    if($this->debug) { $this->dumpSamlResponse(); }
+                    
                 } catch(Exception $e) {
                     // Exit with error
                     $this->printError($e->getMessage());
@@ -133,11 +137,6 @@ class PluginPhpsamlAcs
             
         // If debugging is on dump outcomes to file
         if(is_array($error) && (count($error) > 1)) {
-            if($this->debug) {
-                // Something went wrong with the response
-                // Dump the response to file if debugging is enabled
-                $this->dumpSamlResponse();
-            }
             // Print error and exit
             $this->printError('Required elements where not found in samlResponse');
         }
@@ -213,9 +212,9 @@ class PluginPhpsamlAcs
         // Make sure the dump cannot be viewed via a webserver
         $data = "<?php /*\n". print_r($samlResponse, true);
         if($this->samlResponse) {
-            if(is_object($samlResponse)){
+            if(is_object($this->$samlResponse)){
                 $objVars = get_object_vars($this->samlResponse);
-                $objMethods = get_object_methods($this->samlResponse);
+                $objMethods = get_class_methods($this->samlResponse);
             }else{
                 $contents = 'noObject';
             }
