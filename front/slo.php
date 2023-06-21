@@ -7,18 +7,9 @@
  * IdP with an authorization request. If successful, it will then be
  * redirected to the consume URL (specified in settings) with the auth
  * details.
+ * 
+ * This file currently isnt used...
  */
 session_start();
 include ('../../../inc/includes.php');
 die();
-
-$phpsaml = new PluginPhpsamlPhpsaml();
-
-$auth = new OneLogin\Saml2\Auth();
-if (!isset($_SESSION['samlUserdata'])) {
-	$auth->login();
-} else {
-    $indexUrl = str_replace('/sso.php', '/index.php', Utils::getSelfURLNoQuery());
-    Utils::redirect($indexUrl);
-}
-

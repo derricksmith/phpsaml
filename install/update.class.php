@@ -53,6 +53,8 @@ class PluginPhpsamlUpdate {
 		self::do_120();
 		
 		self::do_121();
+
+		self::do_122();
 		
 	}
 	
@@ -259,6 +261,44 @@ class PluginPhpsamlUpdate {
 			
 			self::set_installed_version("1.2.1");
 			Toolbox::logInFile("phpsaml", "INFO -- PHPSAML upgraded to 1.2.1" . "\n", true);
+		}
+	}
+
+	// Update to 1.2.2
+	public static function do_122() {
+		global $DB;
+		
+		Toolbox::logInFile("phpsaml", "INFO -- Checking Settings and Upgrading to 1.2.2 if necessary"  . "\n", true);
+
+		if(self::$installed_version < '1.2.2'){
+			// Check if saml_provider column is present.
+			// https://github.com/derricksmith/phpsaml/issues/126
+			$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'saml_configuration_name'";
+			$result = $DB->query($query);
+			//Alter table if 'saml_configuration_name' column is missing
+			if (!$result || $DB->numrows($result) == 0){
+				$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD `saml_configuration_name` varchar(50) after saml_security_logoutresponsesigned";
+				$DB->query($query);
+				// Insert a default value because null values are not accepted in a string property of the property handler
+				$query = "update glpi_plugin_phpsaml_configs set saml_configuration_name = 'default'";
+				$DB->query($query);
+				if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
+				if (!$DB->error()) Toolbox::logInFile("phpsaml", "INFO -- Column 'saml_configuration_name' added to 'glpi_plugin_phpsaml_configs'" . "\n", true);
+			}
+
+			$query = "SHOW COLUMNS FROM `glpi_plugin_phpsaml_configs` LIKE 'proxied'";
+			$result = $DB->query($query);
+			//Alter table if 'saml_configuration_name' column is missing
+			if (!$result || $DB->numrows($result) == 0){
+				$query = "ALTER TABLE `glpi_plugin_phpsaml_configs` ADD `proxied` int(2) default 0 after enforced";
+				$DB->query($query);
+				if ($DB->error()) Toolbox::logInFile("php-errors", $DB->error()  . "\n", true);
+				if (!$DB->error()) Toolbox::logInFile("phpsaml", "INFO -- Column 'saml_configuration_name' added to 'glpi_plugin_phpsaml_configs'" . "\n", true);
+			}
+			
+			
+			self::set_installed_version("1.2.2");
+			Toolbox::logInFile("phpsaml", "INFO -- PHPSAML upgraded to 1.2.2" . "\n", true);
 		}
 	}
 }

@@ -1,4 +1,5 @@
 <?php
+
 /*
    ------------------------------------------------------------------------
    Derrick Smith - PHP SAML Plugin
@@ -24,7 +25,7 @@
 
    ------------------------------------------------------------------------
 
-   @package   phpsamlconfig
+   @package   phpsaml
    @author    Chris Gralike
    @co-author
    @copyright Copyright (c) 2018 by Derrick Smith
@@ -32,31 +33,11 @@
               http://www.gnu.org/licenses/agpl-3.0-standalone.html
    @since     2018
 
-   @changelog rewrite and restructure removing context switches and improving readability and maintainability
-   @changelog breaking config up into methods for maintainability and unit testing purposes.
-
    ------------------------------------------------------------------------
  */
 
-include ('../../../inc/includes.php');
+include_once('../../../inc/includes.php');
 
-Session::checkRight("config", UPDATE);
+$rulecollection = new PluginPhpsamlRuleRightCollection($_SESSION['glpiactive_entity']);
 
-Html::header(__('PHP SAML', 'phpsaml'), $_SERVER['PHP_SELF'], "config", "plugins");
-
-$phpSamlConfig = new PluginPhpsamlConfig();
-
-// Handle any changes made.
-if (isset($_POST['update'])) {
-  echo $phpSamlConfig->processChanges();
-}else{
-  echo $phpSamlConfig->showForm('1');
-}
-
-// Id to be used in the future for multiple providers
-
-
-// Adds all required JS libs
-Html::footer();
-
-
+include_once (GLPI_ROOT . "/front/rule.common.php");
