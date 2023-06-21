@@ -111,19 +111,18 @@ class PluginPhpsamlAcs
     private function evalAndAssignProperties() : void
     {
         $error = false;
-        // If the string #EXT# if found, a guest account is used thats not
-        // transformed properly. Write an error and exit!
-        // https://github.com/derricksmith/phpsaml/issues/135
-        $samlResponse = get_object_vars($this->samlResponse);
-        if(strstr($samlResponse['response'], '#EXT#@')) {
-            $this->printError('Detected inproperly transformed guest claims, make sure required claims are passed.<br> 
-                               Use debug saml dumps to compare claims passed.<br> 
-                               Also see: https://learn.microsoft.com/en-us/azure/active-directory/develop/saml-claims-customization');
-        }
-
+        
         if(!$response['nameId'] = $this->samlResponse->getNameId()) {
             $error['nameId'] = 'NameId is missing in response';
         } else {
+            // If the string #EXT# if found, a guest account is used thats not
+            // transformed properly. Write an error and exit!
+            // https://github.com/derricksmith/phpsaml/issues/135
+            if(strstr($response['nameId'], '#EXT#@')){
+                $this->printError('Detected inproperly transformed guest claims, make sure required claims are passed.<br> 
+                               Use debug saml dumps to compare claims passed.<br> 
+                               Also see: https://learn.microsoft.com/en-us/azure/active-directory/develop/saml-claims-customization');
+            }
             $this->phpsaml::$nameid = $response['nameId'];
         }
 
