@@ -243,7 +243,11 @@ class PluginPhpsamlConfig extends CommonDBTM
                 }
 
                 if (count($config) <> $this->expectedItems) {
-                    $this->registerError('🟨 Phpsaml expected '.$this->expectedItems.' configuration items but got '.count($config).' items instead');
+                    $this->registerError('🟨 Phpsaml expected '.$this->expectedItems.' configuration items but got '.count($config).' items instead triggered update');
+                    // Update is not triggered in all cases
+                    // This is just a quick check/fix
+                    include_once( PLUGIN_PHPSAML_DIR . "/install/update.class.php" );
+                    $update = new PluginPhpsamlUpdate();
                 }
             } else {
                 $this->registerError('🟥 Phpsaml could not retrieve configuration values from database.', 'general', true);

@@ -79,6 +79,9 @@ function plugin_phpsaml_install() {
 		$DB->query($query) or die("error populate glpi_plugin_phpsaml_configs ". $DB->error());
 	}
 
+	// This needs work table will exist if plugin was
+	// installed previously and will then NOT update
+	// the database correctly.
 	if ($DB->tableExists('glpi_plugin_phpsaml_configs')) {
 		include_once( PLUGIN_PHPSAML_DIR . "/install/update.class.php" );
 		$update = new PluginPhpsamlUpdate();

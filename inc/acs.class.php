@@ -119,9 +119,11 @@ class PluginPhpsamlAcs
             // transformed properly. Write an error and exit!
             // https://github.com/derricksmith/phpsaml/issues/135
             if(strstr($response['nameId'], '#EXT#@')){
-                $this->printError('Detected inproperly transformed guest claims, make sure required claims are passed.<br> 
-                               Use debug saml dumps to compare claims passed.<br> 
-                               Also see: https://learn.microsoft.com/en-us/azure/active-directory/develop/saml-claims-customization');
+                $this->printError('Detected an inproperly transformed guest claims, make sure nameid, 
+                                   name are populated using user.mail instead of the uset.principalname.<br> 
+                                   You can use the debug saml dumps to validate and compare the claims passed.<br>
+                                   They should contain the original email addresses.<br> 
+                                   Also see: https://learn.microsoft.com/en-us/azure/active-directory/develop/saml-claims-customization');
             }
             $this->phpsaml::$nameid = $response['nameId'];
         }
