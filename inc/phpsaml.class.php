@@ -172,7 +172,8 @@ class PluginPhpsamlPhpsaml
 	
 
 	/**
-     * @return bool
+	 * Initializes the SAML Auth object.
+     * @return void
      */
 	public static function auth()
 	{
