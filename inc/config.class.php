@@ -544,6 +544,11 @@ class PluginPhpsamlConfig extends CommonDBTM
             $this->registerError("Debug can only be 1 or 0", 'DEBUG_ERROR');
         }
 
+        // Check if debug directory is present and warn user
+        if(PluginPhpsamlAcs::checkDebugDir()) {
+            $this->registerError('⚠️ Warning a debug directory is detected in the plugin root. If debug is enabled potential vulnerable SAML responses are dumped there! Remove the directory if you are not debugging!');
+        }
+
         // Declare template labels
         $formValues = [
             'DEBUG_LABEL' =>  __("Debug", "phpsaml"),

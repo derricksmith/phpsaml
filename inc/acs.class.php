@@ -216,7 +216,7 @@ class PluginPhpsamlAcs
         exit();
     }
 
-    function dumpSamlResponse() : void
+    private function dumpSamlResponse() : void
     {
         // Make sure the dump cannot be viewed via a webserver
         $data = "<?php /*\n";
@@ -230,9 +230,22 @@ class PluginPhpsamlAcs
         $data .= "\n\n POST:\n". print_r($_POST, true);
         $data .= "\n\n GET:\n". print_r($_GET, true);
         
-        // Dump the data
-        $dumpfile = '/debug_dump-'.date('Y-m-d-H:i:s').'.php';
-        file_put_contents($this->pathInfo['debug'].$dumpfile, $data);
+        if(is_dir($this->pathInfo['debug'])) {
+            // Dump the data if a debug folder is created
+            $dumpfile = '/debug_dump-'.date('Y-m-d-H:i:s').'.php';
+            file_put_contents($this->pathInfo['debug'].$dumpfile, $data);
+        } else {
+            Toolbox::logInFile("php-errors", "INFO: Debugging is enabled but debug dir is not present in plugin folder.\n", true);
+        }
     }
-    
+
+    public static function checkDebugDir() : bool 
+    {
+        $debugdir = dirname(pathinfo(__file__)['dirname'], '1') . self::DS . 'debug';
+        if(is_dir($debugdir)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
