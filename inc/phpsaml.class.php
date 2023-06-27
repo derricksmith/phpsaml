@@ -374,10 +374,11 @@ class PluginPhpsamlPhpsaml
 				}
 			} else {
 				$error = "JIT Error: Unable to create user because missing claims we got the following to work with:".
+						  "\n *schemaname:" . self::$userdata[self::SCHEMA_NAME][0] .
 						  "\n *name:" . @self::$userdata[self::SCHEMA_NAME][0] .
 						  "\n *realname:" . self::$userdata[self::SCHEMA_SURNAME][0] . 
 						  "\n *_useremail:". self::$userdata[self::SCHEMA_EMAILADDRESS][0].
-						  "\n password: null all fields need to be present!";
+						  "\n password: null by default. Make sure all fields are present!";
 				Toolbox::logInFile("php-errors", $error . "\n", true);
 				Session::addMessageAfterRedirect(__("Login failed: $error"), true, ERROR); 
 				self::redirectToMainPage($relayState);
