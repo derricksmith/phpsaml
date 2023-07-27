@@ -36,16 +36,14 @@
 
 include ('../../../inc/includes.php');
 
-use GlpiPlugin\Phpsaml2;
 use OneLogin\Saml2\Metadata;
-use OneLogin\Saml2\Settings;
 
-
-
-
-
+// Quick fix for: https://github.com/derricksmith/phpsaml/issues/140
+// This is still problematic on errors.
 header('Content-Type: text/xml');
-$samlSettings = new Settings();
-$sp = $samlSettings->getSPData();
-$samlMetadata = Metadata::builder($sp);
+$config = PluginPhpsamlPhpsaml::getSettings();
+
+$samlMetadata = Metadata::builder($config['sp'], 
+                                  $config['security']['authnRequestsSigned'],
+                                  false);
 echo $samlMetadata;
