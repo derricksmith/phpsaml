@@ -38,6 +38,48 @@
 
 include_once('../../../inc/includes.php');
 
-$rulecollection = new PluginPhpsamlRuleRightCollection($_SESSION['glpiactive_entity']);
 
-include_once( GLPI_ROOT . '/front/rule.test.php');
+// Generate a random password
+$password   = bin2hex(random_bytes(20));
+$randomName = bin2hex(random_bytes(5));
+
+$usr = [ 
+  'name'  => $randomName,
+  'realname' => $randomName,
+  'firstname' => $randomName,
+  'email'     => $randomName.'@voorbeeld.tld',
+];
+
+$input = [
+  'name'        => $usr['name'],
+  'realname'    => $usr['realname'],
+  'firstname'   => $usr['firstname'],
+  '_useremails' => [$usr['email']],
+  'password'    => $password,
+  'password2'   => $password,
+  '_ruleright_process' => true];
+
+echo "<pre>";
+var_dump($usr);
+echo "<br/>";
+var_dump($input);
+// Load the rulesEngine and process them
+$phpSamlRuleCollection = new PluginPhpsamlRuleRightCollection();
+$matchInput = ['_useremails' => $input['_useremails']];
+$out = $phpSamlRuleCollection->processAllRules($matchInput, [], [], []);
+echo "<br/>";
+var_dump($out);
+
+if($out['_rule_process'] > 0) {
+  $input  = array_merge($input, $out);
+  
+}
+
+echo "<br/>";
+  var_dump($input);
+
+$newUser = new User();
+var_dump($newUser->add($input));
+echo "<br/>";
+var_dump($newUser->applyRightRules());
+
