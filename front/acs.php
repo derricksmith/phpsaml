@@ -10,5 +10,5 @@ $acs = new PluginPhpsamlAcs();
 if(array_key_exists('SAMLResponse', $post)){
     $acs->assertSaml($post);
 } else {
-    $acs->printError('no valid SAMLResponse found in POST header');
+    $acs->printError('no SAMLResponse found in POST header');
 }
