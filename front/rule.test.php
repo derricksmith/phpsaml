@@ -66,11 +66,11 @@ var_dump($input);
 // Load the rulesEngine and process them
 $phpSamlRuleCollection = new PluginPhpsamlRuleRightCollection();
 $matchInput = ['_useremails' => $input['_useremails']];
-$out = $phpSamlRuleCollection->processAllRules($matchInput, [], [], []);
+$out['_ldap_rules'] = $phpSamlRuleCollection->processAllRules($matchInput, [], [], []);
 echo "<br/>";
 var_dump($out);
 
-if($out['_rule_process'] > 0) {
+if($out['_ldap_rules']['_rule_process'] > 0) {
   $input  = array_merge($input, $out);
   
 }
@@ -79,7 +79,7 @@ echo "<br/>";
   var_dump($input);
 
 $newUser = new User();
-var_dump($newUser->add($input));
+var_dump($uid = $newUser->add($input));
 echo "<br/>";
 var_dump($newUser->applyRightRules());
 

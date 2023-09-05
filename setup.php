@@ -179,9 +179,10 @@ function pluginPhpsamlPostInit()
 	 * @since 1.1.0 	 perform SSO if..
 	 * @todo			 Move these validations to samlPhp object also check logic
 	 */
-	if ((isset($_GET['SSO']) && ($_GET['SSO'] == 1))  ||
-	    ($config[PluginPhpsamlConfig::FORCED])		  ||
-		(!empty($_SESSION['plugin_phpsaml_nameid']))) {
+	if (((isset($_GET['SSO']) && ($_GET['SSO'] == 1))  ||
+	    ($config[PluginPhpsamlConfig::FORCED])		   ||
+		(!empty($_SESSION['plugin_phpsaml_nameid'])))  && 
+		((!isset($_GET['NOSSO'])))) {
 			return $phpsaml->processUserLogin();
 	}
 }
