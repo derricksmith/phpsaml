@@ -174,6 +174,17 @@ function pluginPhpsamlPostInit()
 	$phpsaml 		= new PluginPhpsamlPhpsaml();
 	$cfgObj		    = new PluginPhpsamlConfig();
 	$config 		= $cfgObj->getConfig();
+
+	/**
+	 * Allow users to bypass enforce switch if needed. 
+	 * @see 	https://github.com/DonutsNL/phpsaml2/issues/1
+	 */
+	if(isset($_GET['NOSSO']) || isset($_SESSION['phpsamlNOSSO'])){
+		$nosso = true;
+		$_SESSION['phpsamlNOSSO']= true;
+	}else{
+		$nosso = false;
+	}
 	
 	/**
 	 * @since 1.1.0 	 perform SSO if..
@@ -182,7 +193,7 @@ function pluginPhpsamlPostInit()
 	if (((isset($_GET['SSO']) && ($_GET['SSO'] == 1))  ||
 	    ($config[PluginPhpsamlConfig::FORCED])		   ||
 		(!empty($_SESSION['plugin_phpsaml_nameid'])))  && 
-		((!isset($_GET['NOSSO'])))) {
+		((!$nosso))) {
 			return $phpsaml->processUserLogin();
 	}
 }
