@@ -170,22 +170,28 @@ function plugin_init_phpsaml() : void
  */
 function pluginPhpsamlPostInit()
 {
+	global $GLPI_CACHE;
+	
 	// Collect the properties we need;
 	$phpsaml 		= new PluginPhpsamlPhpsaml();
 	$cfgObj		    = new PluginPhpsamlConfig();
 	$config 		= $cfgObj->getConfig();
+	
+	$samlnosso = $GLPI_CACHE->get(session_id());
 
 	/**
-	 * Allow users to bypass enforce switch if needed. 
+	 * Allow users to bypass enforce switch if needed.
+	 * Use GLPI cache because $_SESSION is reset by GLPI and not persist. 
 	 * @see 	https://github.com/DonutsNL/phpsaml2/issues/1
 	 */
-	if(isset($_GET['NOSSO']) || isset($_SESSION['phpsamlNOSSO'])){
+	if( (!isset($_GET['SSO']) && (isset($_GET['nosso']) || ($samlnosso))) ){
+		$GLPI_CACHE->set(session_id(), true);
 		$nosso = true;
-		$_SESSION['phpsamlNOSSO']= true;
 	}else{
+		$GLPI_CACHE->set(session_id(), false);
 		$nosso = false;
 	}
-	
+
 	/**
 	 * @since 1.1.0 	 perform SSO if..
 	 * @todo			 Move these validations to samlPhp object also check logic
