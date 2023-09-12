@@ -171,13 +171,13 @@ function plugin_init_phpsaml() : void
 function pluginPhpsamlPostInit()
 {
 	global $GLPI_CACHE;
-	
+
 	// Collect the properties we need;
 	$phpsaml 		= new PluginPhpsamlPhpsaml();
 	$cfgObj		    = new PluginPhpsamlConfig();
 	$config 		= $cfgObj->getConfig();
 	
-	$samlnosso = $GLPI_CACHE->get(session_id());
+	$samlnosso = $GLPI_CACHE->get('phpsaml_'.session_id());
 
 	/**
 	 * Allow users to bypass enforce switch if needed.
@@ -185,10 +185,10 @@ function pluginPhpsamlPostInit()
 	 * @see 	https://github.com/DonutsNL/phpsaml2/issues/1
 	 */
 	if( (!isset($_GET['SSO']) && (isset($_GET['nosso']) || ($samlnosso))) ){
-		$GLPI_CACHE->set(session_id(), true);
+		$GLPI_CACHE->set('phpsaml_'.session_id(), true);
 		$nosso = true;
 	}else{
-		$GLPI_CACHE->set(session_id(), false);
+		$GLPI_CACHE->set('phpsaml_'.session_id(), false);
 		$nosso = false;
 	}
 
