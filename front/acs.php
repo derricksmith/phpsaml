@@ -40,7 +40,11 @@
 
 // Capture the post before GLPI does.
 $post = $_POST;
+
+// Use a countable datatype to empty the global
+// https://github.com/derricksmith/phpsaml/issues/153
 $_POST = [];
+
 // Load GLPI includes
 include_once '../../../inc/includes.php';
 
