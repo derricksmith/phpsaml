@@ -34,7 +34,7 @@
 * ------------------------------------------------------------------------
 **/
 
-include ('../../../inc/includes.php');
+include_once '../../../inc/includes.php';
 
 use OneLogin\Saml2\Metadata;
 

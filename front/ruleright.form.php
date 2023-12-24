@@ -36,8 +36,8 @@
    ------------------------------------------------------------------------
  */
 
-include_once('../../../inc/includes.php');
+include_once '../../../inc/includes.php';
 
 $rulecollection = new PluginPhpsamlRuleRightCollection($_SESSION['glpiactive_entity']);
 
-include_once( GLPI_ROOT . "/front/rule.common.form.php");
+include_once  GLPI_ROOT . "/front/rule.common.form.php";

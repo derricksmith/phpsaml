@@ -11,5 +11,5 @@
  * This file currently isnt used...
  */
 session_start();
-include ('../../../inc/includes.php');
+include_once '../../../inc/includes.php';
 die();

@@ -38,7 +38,7 @@
    ------------------------------------------------------------------------
  */
 
-include ('../../../inc/includes.php');
+include_once '../../../inc/includes.php';
 
 Session::checkRight("config", UPDATE);
 
