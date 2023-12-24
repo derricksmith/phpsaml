@@ -56,7 +56,7 @@ class PluginPhpsamlPhpsaml
 	private const EXCLUDED_USERAGENTS		= ['FusionInventory-Agent'	=> '/plugins/fusioninventory/',
 											   'FusionInventory-Agent'  => '/marketplace/fusioninventory/',
 											   'GLPI-Agent_' 			=> '/plugins/glpiinventory',
-											   'GLPI-Agent'				=>	'/',
+											   'GLPI-Agent'				=> '/',
 											   'GLPI-Injector'			=> '/'];
 
 	// https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf
