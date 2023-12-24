@@ -50,7 +50,7 @@ class PluginPhpsamlPhpsaml
 
 	// Excluded useragents
 	// https://github.com/derricksmith/phpsaml/issues/134
-	// https://github.com/derricksmith/phpsaml/issues/152 
+	// https://github.com/derricksmith/phpsaml/issues/152
 	// "POST / HTTP/1.1" 200 473 "-" "GLPI-Agent_v1.5-gitf0e44092"
 	// "POST / HTTP/1.1" 200 330 "-" "GLPI-Injector_v1.5-gitf0e44092"
 	private const EXCLUDED_USERAGENTS		= ['FusionInventory-Agent'	=> '/plugins/fusioninventory/',
