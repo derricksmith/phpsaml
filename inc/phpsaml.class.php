@@ -50,12 +50,14 @@ class PluginPhpsamlPhpsaml
 
 	// Excluded useragents
 	// https://github.com/derricksmith/phpsaml/issues/134
+	// https://github.com/derricksmith/phpsaml/issues/152 
 	// "POST / HTTP/1.1" 200 473 "-" "GLPI-Agent_v1.5-gitf0e44092"
 	// "POST / HTTP/1.1" 200 330 "-" "GLPI-Injector_v1.5-gitf0e44092"
 	private const EXCLUDED_USERAGENTS		= ['FusionInventory-Agent'	=> '/plugins/fusioninventory/',
-											   'FusionInventory-Agent' => '/marketplace/fusioninventory/',
-											   'GLPI-Agent'	=>	'/',
-											   'GLPI-Injector' => '/'];
+											   'FusionInventory-Agent'  => '/marketplace/fusioninventory/',
+											   'GLPI-Agent_' 			=> '/plugins/glpiinventory',
+											   'GLPI-Agent'				=>	'/',
+											   'GLPI-Injector'			=> '/'];
 
 	// https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf
 	private const SCHEMA_NAME 				= 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
