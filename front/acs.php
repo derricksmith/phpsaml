@@ -3,7 +3,7 @@
 $post = $_POST;
 $_POST = [];
 // Load GLPI includes
-include('../../../inc/includes.php');
+include_once '../../../inc/includes.php';
 
 // Peform assertion
 $acs = new PluginPhpsamlAcs();
