@@ -1,7 +1,7 @@
 <?php
 // Capture the post before GLPI does.
 $post = $_POST;
-$_POST = '';
+$_POST = [];
 // Load GLPI includes
 include('../../../inc/includes.php');
 
