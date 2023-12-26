@@ -55,7 +55,8 @@ class PluginPhpsamlPhpsaml
 	// "POST / HTTP/1.1" 200 330 "-" "GLPI-Injector_v1.5-gitf0e44092"
 	private const EXCLUDED_USERAGENTS		= ['FusionInventory-Agent'	=> '/plugins/fusioninventory/',
 											   'FusionInventory-Agent'  => '/marketplace/fusioninventory/',
-											   'GLPI-Agent_' 			=> '/plugins/glpiinventory',
+											   'FusionInventory-Agent'  => '/plugins/glpiinventory/',
+                                               'FusionInventory-Agent'  => '/marketplace/glpiinventory/',
 											   'GLPI-Agent'				=> '/',
 											   'GLPI-Injector'			=> '/'];
 

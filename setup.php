@@ -142,7 +142,8 @@ function plugin_init_phpsaml() : void
 		$PLUGIN_HOOKS['config_page']['phpsaml'] = 'front/config.php';
 	}
 
-	// Register hook matched rules
+	// Register hook matched rules (not yet implemented fully)
+	// https://github.com/derricksmith/phpsaml/issues/149
 	$PLUGIN_HOOKS['rule_matched']['phpsaml']  = 'updateUser';
 
 	// Register hook for Single Sign On

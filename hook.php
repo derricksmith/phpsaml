@@ -110,7 +110,7 @@ function plugin_phpsaml_uninstall() {
 	return true;
 }
 
-// Called by the rule_engine hook if a rule match has been made
+// Called by the rule_engine hook if a phpsaml rule has been succesfully matched
 function updateUser($params){
 	// https://github.com/derricksmith/phpsaml/issues/149
 	//var_dump($params);
