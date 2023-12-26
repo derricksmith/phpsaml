@@ -112,5 +112,6 @@ function plugin_phpsaml_uninstall() {
 
 // Called by the rule_engine hook if a rule match has been made
 function updateUser($params){
-	var_dump($params);
+	// https://github.com/derricksmith/phpsaml/issues/149
+	//var_dump($params);
 }
