@@ -52,6 +52,7 @@ function plugin_phpsaml_install() {
 			`id` int(11) NOT NULL auto_increment,
 			`version` varchar(15) NOT NULL,
 			`enforced` int(2) NOT NULL,
+   			`proxied` int(2) NOT NULL,
 			`strict` int(2) NOT NULL,
 			`debug` int(2) NOT NULL,
 			`jit` int(2) NOT NULL,
@@ -68,17 +69,21 @@ function plugin_phpsaml_install() {
 			`saml_security_authnrequestssigned` int(2) NOT NULL,
 			`saml_security_logoutrequestsigned` int(2) NOT NULL,
 			`saml_security_logoutresponsesigned` int(2) NOT NULL,
+   			`saml_configuration_name` varchar(50) collate utf8_unicode_ci NOT NULL,
             PRIMARY KEY  (`id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
 		$DB->query($query) or die("error creating glpi_plugin_phpsaml_configs ". $DB->error());
 
 		$query = "INSERT INTO `glpi_plugin_phpsaml_configs`
-            (`id`,`version`, `enforced`, `strict`, `debug`, `jit`, `saml_sp_certificate`, `saml_sp_certificate_key`, `saml_sp_nameid_format`, `saml_idp_entity_id`, `saml_idp_single_sign_on_service`, `saml_idp_single_logout_service`, `saml_idp_certificate`, `requested_authn_context`, `requested_authn_context_comparison`, `saml_security_nameidencrypted`, `saml_security_authnrequestssigned`, `saml_security_logoutrequestsigned`, `saml_security_logoutresponsesigned`)
+            (`id`,`version`, `enforced`, `proxied`, `strict`, `debug`, `jit`, `saml_sp_certificate`, `saml_sp_certificate_key`, `saml_sp_nameid_format`, `saml_idp_entity_id`, `saml_idp_single_sign_on_service`, `saml_idp_single_logout_service`, `saml_idp_certificate`, `requested_authn_context`, `requested_authn_context_comparison`, `saml_security_nameidencrypted`, `saml_security_authnrequestssigned`, `saml_security_logoutrequestsigned`, `saml_security_logoutresponsesigned`, `saml_configuration_name`)
             VALUES
-            ('1', '". PLUGIN_PHPSAML_VERSION ."', '0', '1','0', '0', '', '', '', '', '', '', '', '', '','0','0','0','0')";
+            ('1', '". PLUGIN_PHPSAML_VERSION ."', '0', '0', '1','0', '0', '', '', '', '', '', '', '', '', '','0','0','0','0','default')";
 		$DB->query($query) or die("error populate glpi_plugin_phpsaml_configs ". $DB->error());
 	}
 
+	// This needs work table will exist if plugin was
+	// installed previously and will then NOT update
+	// the database correctly.
 	if ($DB->tableExists('glpi_plugin_phpsaml_configs')) {
 		include_once( PLUGIN_PHPSAML_DIR . "/install/update.class.php" );
 		$update = new PluginPhpsamlUpdate();
@@ -103,4 +108,10 @@ function plugin_phpsaml_uninstall() {
 		$DB->query($query) or die("error deleting glpi_plugin_phpsaml_configs");
 	}
 	return true;
+}
+
+// Called by the rule_engine hook if a phpsaml rule has been succesfully matched
+function updateUser($params){
+	// https://github.com/derricksmith/phpsaml/issues/149
+	//var_dump($params);
 }

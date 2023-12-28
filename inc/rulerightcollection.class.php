@@ -51,7 +51,7 @@ class PluginPhpsamlRuleRightCollection extends RuleCollection {
   /**
      * @see Rule::getCriterias()
      **/
-	static $rightname = "rule_ldap";
+	static $rightname = "config";
 	
 
   /**
@@ -74,3 +74,37 @@ class PluginPhpsamlRuleRightCollection extends RuleCollection {
 	}
 
 }
+
+// class PluginPhpsamlRuleRightCollection extends RuleCollection {
+
+//   /**
+//      * @see Rule::getCriterias()
+//      **/
+// 	public $stop_on_first_match = false;
+
+//   /**
+//      * @see Rule::getCriterias()
+//      **/
+// 	static $rightname = "config";
+	
+
+//   /**
+//      * @see Rule::getCriterias()
+//      **/
+// 	public $menu_option = "";
+
+//  /**
+//      * @see Rule::getCriterias()
+//      **/
+//    // public $menu_type = "";
+
+
+//   /**
+//      * @see Rule::getCriterias()
+//      **/
+// 	function getTitle() 
+// 	{
+// 		return __('Import rules', 'phpsaml');
+// 	}
+
+// }

@@ -1,47 +1,208 @@
+<a  name="readme-top"></a>
 
-# GLPI SAML SSO AUTHENTICATION
+<p align="center">
+    <a href="https://github.com/derricksmith/phpsaml/contributors" alt="Contributors">
+        <img src="https://img.shields.io/github/contributors/derricksmith/phpsaml.svg?style=for-the-badge" /></a>
+    <a href="https://github.com/derricksmith/phpsaml/network/members" alt="Forks">
+        <img src="https://img.shields.io/github/forks/derricksmith/phpsaml.svg?style=for-the-badge" /></a>
+    <a href="https://github.com/derricksmith/phpsaml/stargazers" alt="Stars">
+        <img src="https://img.shields.io/github/stars/derricksmith/phpsaml.svg?style=for-the-badge" /></a>
+    <a href="https://github.com/derricksmith/phpsaml/issues" alt="Issues">
+        <img src="https://img.shields.io/github/issues/derricksmith/phpsaml.svg?style=for-the-badge" /></a>
+    <a href="https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt" alt="License">
+        <img src="https://img.shields.io/github/license/derricksmith/phpsaml.svg?style=for-the-badge" /></a>
+    <a href="https://www.linkedin.com/in/derrick-smith-cissp-cism-9b355b56/">
+        <img src="https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555" /></a>
+</p>
 
-#### This is a GLPI plugin that facilitates single sign on authentication with an identity provider using the SAML 2.0 protocol.  This tool leverages the Onelogin PHP library.  Tested with ADFS 2.0+ and Google IDP
+<p align="center">
+    <a href="https://twitter.com/intent/follow?screen_name=derrick_a_smith">
+        <img src="https://img.shields.io/twitter/follow/derrick_a_smith?style=social&logo=twitter"
+            alt="follow on Twitter"></a>
+</p>
 
-### Why SAML?
 
-SAML is an XML-based standard for web browser single sign-on and is defined by the OASIS Security Services Technical Committee. The standard has been around since 2002, but lately it is becoming popular due its advantages:
+<div  align="center">
 
-* Usability - One-click access from portals or intranets, deep linking, password elimination and automatically renewing sessions make life easier for the user.
-* Security - Based on strong digital signatures for authentication and integrity, SAML is a secure single sign-on protocol that the largest and most security conscious enterprises in the world rely on.
-* Speed - SAML is fast. One browser redirect is all it takes to securely sign a user into an application.
-* IT Friendly - SAML simplifies life for IT because it centralizes authentication, provides greater visibility and makes directory integration easier.
-* Opportunity - B2B cloud vendor should support SAML to facilitate the integration of their product.
+<h3  align="center">PHPSAML</h3>
+  
+PHPSAML is a GLPI plugin that provides SAML single sign authentication for the GLPI ITSM system. 
 
-### Usage
+</div>
 
-Enter settings on the Plugin Page
-![GLPI Settings Page](https://derrick-smith.com/wp-content/uploads/2020/10/Settings.png)
 
-* Plugin Enforced = Force SSO login or allow visitors to login using internal GLPI authentication (useful for testing).
-* Strict = PHPSAML setting rejects unsigned or unencrypted messages and follows SAML standard strictly, read more ![here](https://github.com/onelogin/php-saml)
-* Debug = Logs to the GLPI PHP log
-* JIT = Just in Time Provisioning adds the authenticated user to GLPI if it does not already exist
+<!-- ABOUT THE PROJECT -->
 
-* SP Certificate = Your webserver certificate
-* SP Certificate Key = Your webserver certificate key
-* NameID = NameID required by your IdP
+## About The Project
 
-##### Name ID requirement
-You can change the NameID that is sent from PHPSAML to the IdP or leave as unspecified.  Unspecified will work in most cases but some IdPs expect a specific NameID format.  Sending an incorrect NameID claim will result in a SAML Response error.
 
-#### Azure AD
-1. Create a new enterprise application
-2. Enable SAML Authentication
-3. Configuration
-* Entity ID = {Your GLPI web server base URL}
-* Reply URL (Assertion Consumer Service URL) = {Your GLPI web server base URL}/plugins/phpsaml/front/acs.php
+GLPI is a powerful ITIL aligned IT Service Management tool.  GLPI does not provide a SAML authentication provider.  This plugin leverages the Onelogin PHP library to authenticate users with an identity provider. Tested with ADFS 2.0+, Azure AD and Google IDP. 
 
-For Azure AD, the following NameID configuration is correct.  You could also use user.mail as the Source Attribute.
-![Azure AD NameID](https://derrick-smith.com/wp-content/uploads/2021/03/PHPSAML-nameid.png)
+  
 
-##### Where to find IdP settings required for GLPI?
-![Azure AD Configuration](https://derrick-smith.com/wp-content/uploads/2020/10/Azure-Configuration.png)
+<p  align="right">(<a  href="#readme-top">back to top</a>)</p>
 
-##### Single Logout?
-![Azure AD Single Logout](https://derrick-smith.com/wp-content/uploads/2022/11/logout.png)
+
+
+<!-- GETTING STARTED -->
+
+## Getting Started
+
+
+### Prerequisites
+
+* GLPI > 9.4
+* PHP > 7.0
+
+
+<!-- USAGE EXAMPLES -->
+
+## Usage
+
+See [Wiki](https://github.com/derricksmith/phpsaml/wiki)
+
+<p  align="right">(<a  href="#readme-top">back to top</a>)</p>
+
+  
+
+<!-- ROADMAP -->
+
+## Roadmap
+
+  
+
+- [ ] JIT Rules enforcement
+
+- [ ] Update user fields from claims
+
+
+
+  
+
+See the [open issues](https://github.com/derricksmith/phpsaml/issues) for a full list of proposed features (and known issues).
+
+  
+
+<p  align="right">(<a  href="#readme-top">back to top</a>)</p>
+
+  
+  
+  
+
+<!-- CONTRIBUTING -->
+
+## Contributing
+
+  
+
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+  
+
+If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
+
+Don't forget to give the project a star! Thanks again!
+
+  
+
+1. Fork the Project
+
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+
+5. Open a Pull Request
+
+  
+
+<p  align="right">(<a  href="#readme-top">back to top</a>)</p>
+
+  
+  
+  
+
+<!-- LICENSE -->
+
+## License
+
+  
+
+Distributed under the MIT License. See `LICENSE.txt` for more information.
+
+  
+
+<p  align="right">(<a  href="#readme-top">back to top</a>)</p>
+
+  
+  
+  
+
+<!-- CONTACT -->
+
+## Contact
+
+  
+
+Derrick Smith - [@derrick_a_smith](https://twitter.com/derrick_a_smith) - derricksmith01@msn.com
+
+  
+
+Project Link: [https://github.com/derricksmith/phpsaml](https://github.com/derricksmith/phpsaml)
+
+  
+
+<p  align="right">(<a  href="#readme-top">back to top</a>)</p>
+
+  
+  
+  
+
+<!-- ACKNOWLEDGMENTS
+
+## Acknowledgments
+
+* [Jordi Moraleda - PHP Rest Curl](https://github.com/jmoraleda/php-rest-curl)
+  
+
+<p  align="right">(<a  href="#readme-top">back to top</a>)</p> 
+
+-->
+
+  
+  
+  
+
+<!-- MARKDOWN LINKS & IMAGES -->
+
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[contributors-shield]: https://img.shields.io/github/contributors/derricksmith/phpsaml.svg?style=for-the-badge
+[contributors-url]: https://github.com/derricksmith/phpsaml/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/derricksmith/phpsaml.svg?style=for-the-badge
+[forks-url]: https://github.com/derricksmith/phpsaml/network/members
+[stars-shield]: https://img.shields.io/github/stars/derricksmith/phpsaml.svg?style=for-the-badge
+[stars-url]: https://github.com/derricksmith/phpsaml/stargazers
+[issues-shield]: https://img.shields.io/github/issues/derricksmith/phpsaml.svg?style=for-the-badge
+[issues-url]: https://github.com/derricksmith/phpsaml/issues
+[license-shield]: https://img.shields.io/github/license/derricksmith/phpsaml.svg?style=for-the-badge
+[license-url]: https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
+[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
+[linkedin-url]: https://www.linkedin.com/in/derrick-smith-cissp-cism-9b355b56/
+[product-screenshot]: images/screenshot.png
+[Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
+[Next-url]: https://nextjs.org/
+[React.js]: https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB
+[React-url]: https://reactjs.org/
+[Vue.js]: https://img.shields.io/badge/Vue.js-35495E?style=for-the-badge&logo=vuedotjs&logoColor=4FC08D
+[Vue-url]: https://vuejs.org/
+[Angular.io]: https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white
+[Angular-url]: https://angular.io/
+[Svelte.dev]: https://img.shields.io/badge/Svelte-4A4A55?style=for-the-badge&logo=svelte&logoColor=FF3E00
+[Svelte-url]: https://svelte.dev/
+[Laravel.com]: https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white
+[Laravel-url]: https://laravel.com
+[Bootstrap.com]: https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white
+[Bootstrap-url]: https://getbootstrap.com
+[JQuery.com]: https://img.shields.io/badge/jQuery-0769AD?style=for-the-badge&logo=jquery&logoColor=white
+[JQuery-url]: https://jquery.com
