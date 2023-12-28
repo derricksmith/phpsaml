@@ -62,9 +62,8 @@ class LogoutRequest
      * @param string|null             $sessionIndex        The SessionIndex (taken from the SAML Response in the SSO process).
      * @param string|null             $nameIdFormat        The NameID Format will be set in the LogoutRequest.
      * @param string|null             $nameIdNameQualifier The NameID NameQualifier will be set in the LogoutRequest.
-     * @param string|null             $nameIdSPNameQualifier The NameID SP NameQualifier will be set in the LogoutRequest.
      */
-    public function __construct(\OneLogin\Saml2\Settings $settings, $request = null, $nameId = null, $sessionIndex = null, $nameIdFormat = null, $nameIdNameQualifier = null, $nameIdSPNameQualifier = null)
+    public function __construct(\OneLogin\Saml2\Settings $settings, $request = null, $nameId = null, $sessionIndex = null, $nameIdFormat = null, $nameIdNameQualifier = null)
     {
         $this->_settings = $settings;
 
@@ -81,6 +80,7 @@ class LogoutRequest
             $id = Utils::generateUniqueID();
             $this->id = $id;
 
+            $nameIdValue = Utils::generateUniqueID();
             $issueInstant = Utils::parseTime2SAML(time());
 
             $cert = null;
@@ -99,37 +99,24 @@ class LogoutRequest
                     && $spData['NameIDFormat'] != Constants::NAMEID_UNSPECIFIED) {
                     $nameIdFormat = $spData['NameIDFormat'];
                 }
+                $spNameQualifier = null;
             } else {
                 $nameId = $idpData['entityId'];
                 $nameIdFormat = Constants::NAMEID_ENTITY;
-            }
-
-            /* From saml-core-2.0-os 8.3.6, when the entity Format is used:
-               "The NameQualifier, SPNameQualifier, and SPProvidedID attributes MUST be omitted.
-            */
-            if (!empty($nameIdFormat) && $nameIdFormat == Constants::NAMEID_ENTITY) {
-                $nameIdNameQualifier = null;
-                $nameIdSPNameQualifier = null;
-            }
-
-            // NameID Format UNSPECIFIED omitted
-            if (!empty($nameIdFormat) && $nameIdFormat == Constants::NAMEID_UNSPECIFIED) {
-                $nameIdFormat = null;
+                $spNameQualifier = $spData['entityId'];
             }
 
             $nameIdObj = Utils::generateNameId(
                 $nameId,
-                $nameIdSPNameQualifier,
+                $spNameQualifier,
                 $nameIdFormat,
                 $cert,
-                $nameIdNameQualifier,
-                $security['encryption_algorithm']
+                $nameIdNameQualifier
             );
 
             $sessionIndexStr = isset($sessionIndex) ? "<samlp:SessionIndex>{$sessionIndex}</samlp:SessionIndex>" : "";
 
             $spEntityId = htmlspecialchars($spData['entityId'], ENT_QUOTES);
-            $destination = $this->_settings->getIdPSLOUrl();
             $logoutRequest = <<<LOGOUTREQUEST
 <samlp:LogoutRequest
     xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
@@ -137,7 +124,7 @@ class LogoutRequest
     ID="{$id}"
     Version="2.0"
     IssueInstant="{$issueInstant}"
-    Destination="{$destination}">
+    Destination="{$idpData['singleLogoutService']['url']}">
     <saml:Issuer>{$spEntityId}</saml:Issuer>
     {$nameIdObj}
     {$sessionIndexStr}
@@ -152,7 +139,7 @@ LOGOUTREQUEST;
             } else {
                 $logoutRequest = $decoded;
             }
-            $this->id = static::getID($logoutRequest);
+            $this->id = self::getID($logoutRequest);
         }
         $this->_logoutRequest = $logoutRequest;
     }
@@ -186,7 +173,7 @@ LOGOUTREQUEST;
      *
      * @return string ID
      *
-     * @throws Error
+     * @throws OneLogin_Saml2_Error
      */
     public static function getID($request)
     {
@@ -217,9 +204,7 @@ LOGOUTREQUEST;
      *
      * @return array Name ID Data (Value, Format, NameQualifier, SPNameQualifier)
      *
-     * @throws Error
      * @throws Exception
-     * @throws ValidationError
      */
     public static function getNameIdData($request, $key = null)
     {
@@ -280,10 +265,6 @@ LOGOUTREQUEST;
      * @param string|null        $key     The SP key
      *
      * @return string Name ID Value
-     *
-     * @throws Error
-     * @throws Exception
-     * @throws ValidationError
      */
     public static function getNameId($request, $key = null)
     {
@@ -297,8 +278,6 @@ LOGOUTREQUEST;
      * @param string|DOMDocument $request Logout Request Message
      *
      * @return string|null $issuer The Issuer
-     *
-     * @throws Exception
      */
     public static function getIssuer($request)
     {
@@ -326,8 +305,6 @@ LOGOUTREQUEST;
      * @param string|DOMDocument $request Logout Request Message
      *
      * @return array The SessionIndex value
-     *
-     * @throws Exception
      */
     public static function getSessionIndexes($request)
     {
@@ -352,9 +329,6 @@ LOGOUTREQUEST;
      * @param bool $retrieveParametersFromServer True if we want to use parameters from $_SERVER to validate the signature
      *
      * @return bool If the Logout Request is or not valid
-     *
-     * @throws Exception
-     * @throws ValidationError
      */
     public function isValid($retrieveParametersFromServer = false)
     {
@@ -370,7 +344,7 @@ LOGOUTREQUEST;
                 $security = $this->_settings->getSecurityData();
 
                 if ($security['wantXMLValidation']) {
-                    $res = Utils::validateXML($dom, 'saml-schema-protocol-2.0.xsd', $this->_settings->isDebugActive(), $this->_settings->getSchemasPath());
+                    $res = Utils::validateXML($dom, 'saml-schema-protocol-2.0.xsd', $this->_settings->isDebugActive());
                     if (!$res instanceof DOMDocument) {
                         throw new ValidationError(
                             "Invalid SAML Logout Request. Not match the saml-schema-protocol-2.0.xsd",
@@ -395,32 +369,20 @@ LOGOUTREQUEST;
                 // Check destination
                 if ($dom->documentElement->hasAttribute('Destination')) {
                     $destination = $dom->documentElement->getAttribute('Destination');
-                    if (empty($destination)) {
-                        if (!$security['relaxDestinationValidation']) {
+                    if (!empty($destination)) {
+                        if (strpos($destination, $currentURL) === false) {
                             throw new ValidationError(
-                                "The LogoutRequest has an empty Destination value",
-                                ValidationError::EMPTY_DESTINATION
+                                "The LogoutRequest was received at $currentURL instead of $destination",
+                                ValidationError::WRONG_DESTINATION
                             );
-                        }
-                    } else {
-                        $urlComparisonLength = $security['destinationStrictlyMatches'] ? strlen($destination) : strlen($currentURL);
-                        if (strncmp($destination, $currentURL, $urlComparisonLength) !== 0) {
-                            $currentURLNoRouted = Utils::getSelfURLNoQuery();
-                            $urlComparisonLength = $security['destinationStrictlyMatches'] ? strlen($destination) : strlen($currentURLNoRouted);
-                            if (strncmp($destination, $currentURLNoRouted, $urlComparisonLength) !== 0) {
-                                throw new ValidationError(
-                                    "The LogoutRequest was received at $currentURL instead of $destination",
-                                    ValidationError::WRONG_DESTINATION
-                                );
-                            }
                         }
                     }
                 }
 
-                $nameId = static::getNameId($dom, $this->_settings->getSPkey());
+                $nameId = $this->getNameId($dom, $this->_settings->getSPkey());
 
                 // Check issuer
-                $issuer = static::getIssuer($dom);
+                $issuer = $this->getIssuer($dom);
                 if (!empty($issuer) && $issuer != $idPEntityId) {
                     throw new ValidationError(
                         "Invalid issuer in the Logout Request",
@@ -428,11 +390,13 @@ LOGOUTREQUEST;
                     );
                 }
 
-                if ($security['wantMessagesSigned'] && !isset($_GET['Signature'])) {
-                    throw new ValidationError(
-                        "The Message of the Logout Request is not signed and the SP require it",
-                        ValidationError::NO_SIGNED_MESSAGE
-                    );
+                if ($security['wantMessagesSigned']) {
+                    if (!isset($_GET['Signature'])) {
+                        throw new ValidationError(
+                            "The Message of the Logout Request is not signed and the SP require it",
+                            ValidationError::NO_SIGNED_MESSAGE
+                        );
+                    }
                 }
             }
 

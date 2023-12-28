@@ -200,8 +200,6 @@ METADATA_TEMPLATE;
      * @param string $digestAlgorithm Digest algorithm method
      *
      * @return string Signed Metadata
-     *
-     * @throws Exception
      */
     public static function signMetadata($metadata, $key, $cert, $signAlgorithm = XMLSecurityKey::RSA_SHA256, $digestAlgorithm = XMLSecurityDSig::SHA256)
     {
@@ -217,8 +215,6 @@ METADATA_TEMPLATE;
      * @param bool   $wantsEncrypted Whether to include the KeyDescriptor for encryption
      *
      * @return string Metadata with KeyDescriptors
-     *
-     * @throws Exception
      */
     public static function addX509KeyDescriptors($metadata, $cert, $wantsEncrypted = true)
     {

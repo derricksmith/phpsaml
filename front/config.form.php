@@ -39,24 +39,14 @@
    ------------------------------------------------------------------------
  */
 
-// Non menu entry case
-//header("Location:../../central.php");
-
 include ('../../../inc/includes.php');
 
-Session::checkRight("config", UPDATE);
-
-// To be available when plugin is not activated
-Plugin::load('phpsaml');
-
-Html::header(__('PHP SAML', 'phpsaml'), $_SERVER['PHP_SELF'], "config", "plugins");
-
-$phpSamlConfig = new PluginPhpsamlConfig();
+$phpsamlconf = new PluginPhpsamlConfig();
 
 if (isset($_POST["update"])) {
-	$messages = $phpSamlConfig->validate($_POST);
+	$messages = $phpsamlconf->validate($_POST);
 	if(empty($messages['errors'])){
-		$phpSamlConfig->update($_POST);
+		$phpsamlconf->update($_POST);
 	} 
 	$_SESSION['phpsaml_messages'] = $messages;
 	
@@ -65,7 +55,7 @@ if (isset($_POST["update"])) {
    Html::header(__('PHP SAML', 'phpsaml'), $_SERVER['PHP_SELF'], "config", "plugins");
    
    Session::checkRight("config", UPDATE);
-   $phpSamlConfig->showForm((isset($_POST["id"]) ? $_POST["id"] : ''));
+   $phpsamlconf->showForm($_POST["id"]);
 	
    Html::footer();
 

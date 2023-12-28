@@ -14,9 +14,9 @@ class  PluginPhpsamlAuth extends Auth
      */
     public function loadUserData($userName)
     {
-        if ($this->user->getFromDBbyName(addslashes($userName)) != '') {
+        if($this->user->getFromDBbyName(addslashes($userName)) != ''){
 			return $this;
-		} elseif ($this->user->getFromDBbyEmail(addslashes($userName)) != '') {
+		} elseif($this->user->getFromDBbyEmail(addslashes($userName)) != ''){
 			return $this;
 		}
     }
