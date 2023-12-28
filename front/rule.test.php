@@ -1,4 +1,5 @@
 <?php
+
 /*
    ------------------------------------------------------------------------
    Derrick Smith - PHP SAML Plugin
@@ -24,7 +25,7 @@
 
    ------------------------------------------------------------------------
 
-   @package   phpsamlconfig
+   @package   phpsaml
    @author    Chris Gralike
    @co-author
    @copyright Copyright (c) 2018 by Derrick Smith
@@ -32,31 +33,53 @@
               http://www.gnu.org/licenses/agpl-3.0-standalone.html
    @since     2018
 
-   @changelog rewrite and restructure removing context switches and improving readability and maintainability
-   @changelog breaking config up into methods for maintainability and unit testing purposes.
-
    ------------------------------------------------------------------------
  */
 
-include_once '../../../inc/includes.php';
+include_once('../../../inc/includes.php');
 
-Session::checkRight("config", UPDATE);
 
-Html::header(__('PHP SAML', 'phpsaml'), $_SERVER['PHP_SELF'], "config", "plugins");
+// Generate a random password
+$password   = bin2hex(random_bytes(20));
+$randomName = bin2hex(random_bytes(5));
 
-$phpSamlConfig = new PluginPhpsamlConfig();
+$usr = [ 
+  'name'  => $randomName,
+  'realname' => $randomName,
+  'firstname' => $randomName,
+  'email'     => $randomName.'@voorbeeld.tld',
+];
 
-// Handle any changes made.
-if (isset($_POST['update'])) {
-  echo $phpSamlConfig->processChanges();
-}else{
-  echo $phpSamlConfig->showForm('1');
+$input = [
+  'name'        => $usr['name'],
+  'realname'    => $usr['realname'],
+  'firstname'   => $usr['firstname'],
+  '_useremails' => [$usr['email']],
+  'password'    => $password,
+  'password2'   => $password,
+  '_ruleright_process' => true];
+
+echo "<pre>";
+var_dump($usr);
+echo "<br/>";
+var_dump($input);
+// Load the rulesEngine and process them
+$phpSamlRuleCollection = new PluginPhpsamlRuleRightCollection();
+$matchInput = ['_useremails' => $input['_useremails']];
+$out['_ldap_rules'] = $phpSamlRuleCollection->processAllRules($matchInput, [], [], []);
+echo "<br/>";
+var_dump($out);
+
+if($out['_ldap_rules']['_rule_process'] > 0) {
+  $input  = array_merge($input, $out);
+  
 }
 
-// Id to be used in the future for multiple providers
+echo "<br/>";
+  var_dump($input);
 
-
-// Adds all required JS libs
-Html::footer();
-
+$newUser = new User();
+var_dump($uid = $newUser->add($input));
+echo "<br/>";
+var_dump($newUser->applyRightRules());
 

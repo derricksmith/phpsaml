@@ -1,4 +1,5 @@
 <?php
+
 /*
    ------------------------------------------------------------------------
    Derrick Smith - PHP SAML Plugin
@@ -24,7 +25,7 @@
 
    ------------------------------------------------------------------------
 
-   @package   phpsamlconfig
+   @package   phpsaml
    @author    Chris Gralike
    @co-author
    @copyright Copyright (c) 2018 by Derrick Smith
@@ -32,31 +33,78 @@
               http://www.gnu.org/licenses/agpl-3.0-standalone.html
    @since     2018
 
-   @changelog rewrite and restructure removing context switches and improving readability and maintainability
-   @changelog breaking config up into methods for maintainability and unit testing purposes.
-
    ------------------------------------------------------------------------
  */
 
-include_once '../../../inc/includes.php';
-
-Session::checkRight("config", UPDATE);
-
-Html::header(__('PHP SAML', 'phpsaml'), $_SERVER['PHP_SELF'], "config", "plugins");
-
-$phpSamlConfig = new PluginPhpsamlConfig();
-
-// Handle any changes made.
-if (isset($_POST['update'])) {
-  echo $phpSamlConfig->processChanges();
-}else{
-  echo $phpSamlConfig->showForm('1');
+if (!defined('GLPI_ROOT')) {
+	die("Sorry. You can't access directly to this file");
 }
 
-// Id to be used in the future for multiple providers
+
+class PluginPhpsamlRuleRightCollection extends RuleCollection {
+
+  /**
+     * @see Rule::getCriterias()
+     **/
+	public $stop_on_first_match = false;
+
+  /**
+     * @see Rule::getCriterias()
+     **/
+	static $rightname = "config";
+	
+
+  /**
+     * @see Rule::getCriterias()
+     **/
+	public $menu_option = "";
+
+ /**
+     * @see Rule::getCriterias()
+     **/
+   // public $menu_type = "";
 
 
-// Adds all required JS libs
-Html::footer();
+  /**
+     * @see Rule::getCriterias()
+     **/
+	function getTitle() 
+	{
+		return __('Import rules', 'phpsaml');
+	}
+
+}
+
+// class PluginPhpsamlRuleRightCollection extends RuleCollection {
+
+//   /**
+//      * @see Rule::getCriterias()
+//      **/
+// 	public $stop_on_first_match = false;
+
+//   /**
+//      * @see Rule::getCriterias()
+//      **/
+// 	static $rightname = "config";
+	
+
+//   /**
+//      * @see Rule::getCriterias()
+//      **/
+// 	public $menu_option = "";
+
+//  /**
+//      * @see Rule::getCriterias()
+//      **/
+//    // public $menu_type = "";
 
 
+//   /**
+//      * @see Rule::getCriterias()
+//      **/
+// 	function getTitle() 
+// 	{
+// 		return __('Import rules', 'phpsaml');
+// 	}
+
+// }

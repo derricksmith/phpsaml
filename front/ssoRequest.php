@@ -8,7 +8,7 @@
  * details.
  */
 session_start();
-include ('../../../inc/includes.php');
+include_once '../../../inc/includes.php';
 require_once GLPI_ROOT.'/plugins/phpsaml/lib/xmlseclibs/xmlseclibs.php';
 $libDir = GLPI_ROOT.'/plugins/phpsaml/lib/php-saml/src/Saml2/';
 		
