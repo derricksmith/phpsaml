@@ -44,32 +44,21 @@ class AuthnRequest
     /**
      * Constructs the AuthnRequest object.
      *
-     * @param Settings $settings SAML Toolkit Settings
-     * @param bool $forceAuthn When true the AuthNReuqest will set the ForceAuthn='true'
-     * @param bool $isPassive When true the AuthNReuqest will set the Ispassive='true'
-     * @param bool $setNameIdPolicy When true the AuthNReuqest will set a nameIdPolicy
-     * @param string $nameIdValueReq Indicates to the IdP the subject that should be authenticated
+     * @param Settings $settings        SAML Toolkit Settings
+     * @param bool                    $forceAuthn      When true the AuthNReuqest will set the ForceAuthn='true'
+     * @param bool                    $isPassive       When true the AuthNReuqest will set the Ispassive='true'
+     * @param bool                    $setNameIdPolicy When true the AuthNReuqest will set a nameIdPolicy
      */
-    public function __construct(\OneLogin\Saml2\Settings $settings, $forceAuthn = false, $isPassive = false, $setNameIdPolicy = true, $nameIdValueReq = null)
+    public function __construct(\OneLogin\Saml2\Settings $settings, $forceAuthn = false, $isPassive = false, $setNameIdPolicy = true)
     {
         $this->_settings = $settings;
 
         $spData = $this->_settings->getSPData();
+        $idpData = $this->_settings->getIdPData();
         $security = $this->_settings->getSecurityData();
 
         $id = Utils::generateUniqueID();
         $issueInstant = Utils::parseTime2SAML(time());
-
-        $subjectStr = "";
-        if (isset($nameIdValueReq)) {
-            $subjectStr = <<<SUBJECT
-
-     <saml:Subject>
-        <saml:NameID Format="{$spData['NameIDFormat']}">{$nameIdValueReq}</saml:NameID>
-        <saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"></saml:SubjectConfirmation>
-    </saml:Subject>
-SUBJECT;
-        }
 
         $nameIdPolicyStr = '';
         if ($setNameIdPolicy) {
@@ -79,7 +68,6 @@ SUBJECT;
             }
 
             $nameIdPolicyStr = <<<NAMEIDPOLICY
-
     <samlp:NameIDPolicy
         Format="{$nameIDPolicyFormat}"
         AllowCreate="true" />
@@ -126,20 +114,14 @@ ISPASSIVE;
                 $authnComparison = $security['requestedAuthnContextComparison'];
             }
 
-            $authnComparisonAttr = '';
-            if (!empty($authnComparison)) {
-                $authnComparisonAttr = sprintf('Comparison="%s"', $authnComparison);
-            }
-
             if ($security['requestedAuthnContext'] === true) {
                 $requestedAuthnStr = <<<REQUESTEDAUTHN
-
-    <samlp:RequestedAuthnContext $authnComparisonAttr>
+    <samlp:RequestedAuthnContext Comparison="$authnComparison">
         <saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport</saml:AuthnContextClassRef>
     </samlp:RequestedAuthnContext>
 REQUESTEDAUTHN;
             } else {
-                $requestedAuthnStr .= "    <samlp:RequestedAuthnContext $authnComparisonAttr>\n";
+                $requestedAuthnStr .= "    <samlp:RequestedAuthnContext Comparison=\"$authnComparison\">\n";
                 foreach ($security['requestedAuthnContext'] as $contextValue) {
                     $requestedAuthnStr .= "        <saml:AuthnContextClassRef>".$contextValue."</saml:AuthnContextClassRef>\n";
                 }
@@ -149,7 +131,6 @@ REQUESTEDAUTHN;
 
         $spEntityId = htmlspecialchars($spData['entityId'], ENT_QUOTES);
         $acsUrl = htmlspecialchars($spData['assertionConsumerService']['url'], ENT_QUOTES);
-        $destination = $this->_settings->getIdPSSOUrl();
         $request = <<<AUTHNREQUEST
 <samlp:AuthnRequest
     xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
@@ -157,11 +138,13 @@ REQUESTEDAUTHN;
     ID="$id"
     Version="2.0"
 {$providerNameStr}{$forceAuthnStr}{$isPassiveStr}
-    IssueInstant="{$issueInstant}"
-    Destination="{$destination}"
+    IssueInstant="$issueInstant"
+    Destination="{$idpData['singleSignOnService']['url']}"
     ProtocolBinding="{$spData['assertionConsumerService']['binding']}"
     AssertionConsumerServiceURL="{$acsUrl}">
-    <saml:Issuer>{$spEntityId}</saml:Issuer>{$subjectStr}{$nameIdPolicyStr}{$requestedAuthnStr}
+    <saml:Issuer>{$spEntityId}</saml:Issuer>
+{$nameIdPolicyStr}
+{$requestedAuthnStr}
 </samlp:AuthnRequest>
 AUTHNREQUEST;
 

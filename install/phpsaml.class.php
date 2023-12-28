@@ -32,14 +32,7 @@ class PluginPhpsamlPhpsaml
 			//require_once(GLPI_ROOT .'/plugins/phpsaml/lib/php-saml/settings.php');
 		
 			self::$phpsamlsettings = self::getSettings();
-			
-			if(!empty($_SESSION['plugin_phpsaml_nameid'])) self::$nameid = $_SESSION['plugin_phpsaml_nameid'];
-			if(!empty($_SESSION['plugin_phpsaml_nameidformat'])) self::$nameidformat = $_SESSION['plugin_phpsaml_nameidformat'];
-			if(!empty($_SESSION['plugin_phpsaml_sessionindex'])) self::$sessionindex = $_SESSION['plugin_phpsaml_sessionindex'];
-			
 			self::$init = true; 
-			
-			
 		}
 	}
 	
@@ -66,9 +59,6 @@ class PluginPhpsamlPhpsaml
 	
 	static public function glpiLogin($relayState = null)
     {
-		
-		$phpsamlconf = new PluginPhpsamlConfig();
-		$config = $phpsamlconf->getConfig();
         $auth = new PluginPhpsamlAuth();
 		
 		if($auth->loadUserData(self::$nameid) && $auth->checkUserData()){
@@ -77,47 +67,11 @@ class PluginPhpsamlPhpsaml
 			return;
 		}
 		
-		// JIT Provisioning added version 1.1.3
-		if (isset($config['jit']) && $config['jit'] == 1){
-			$user = new User();
-			if(!$user->getFromDBbyEmail(self::$nameid)){
-				if ((!empty(SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'][0])) && (!empty(SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'][0]))){
-					
-					$password = bin2hex(random_bytes(20));
-					
-					$input = array(
-						"name" => SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'][0],
-						"realname" => SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname'][0],
-						"firstname" => SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/firstname'][0],
-						"_useremails" => array(SELF::$userdata['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'][0]),
-						"password" => $password,
-						"password2" => $password,
-					);
-					
-					$newuser = new User();
-					
-					$id = $newuser->add($input);
-					
-					if($auth->loadUserData(self::$nameid) && $auth->checkUserData()){
-						Session::init($auth);
-						self::redirectToMainPage($relayState);
-						return;
-					}
-				} else {
-					$error = "JIT Error: Unable to create user because missing claims (emailaddress)";
-					Toolbox::logInFile("php-errors", $error . "\n", true);
-				}	
-			} else {
-				$error = "JIT Error: Unable to create user because the email address already exists";
-				Toolbox::logInFile("php-errors", $error . "\n", true);
-			}
-		} else {
-			$error = "User or NameID not found.  Enable JIT Provisioning or manually create the user account";
-			Toolbox::logInFile("php-errors", $error . "\n", true);
-		}
-		
+		$error = "User or NameID not found";
+		Toolbox::logInFile("php-errors", $error . "\n", true);
 		throw new Exception($error);
 		sloRequest();
+		
     }
 	
 	static public function glpiLogout()
@@ -138,7 +92,6 @@ class PluginPhpsamlPhpsaml
 	
 	static public function ssoRequest($redirect)
 	{
-		global $CFG_GLPI;
 		
 		try {
 			self::auth();
@@ -148,10 +101,10 @@ class PluginPhpsamlPhpsaml
 			Toolbox::logInFile("php-errors", $error . "\n", true);
 			
 			
-			Html::nullHeader("Login", $CFG_GLPI["url_base"] . '/index.php');
+			Html::nullHeader("Login", $CFG_GLPI["root_doc"] . '/index.php');
 			echo '<div class="center b">'.$error.'<br><br>';
 			// Logout whit noAUto to manage auto_login with errors
-			echo '<a href="' . $CFG_GLPI["url_base"] .'/index.php">' .__('Log in again') . '</a></div>';
+			echo '<a href="' . $CFG_GLPI["root_doc"] .'/index.php">' .__('Log in again') . '</a></div>';
 			Html::nullFooter();
 			
 		}
@@ -159,8 +112,6 @@ class PluginPhpsamlPhpsaml
 	
 	static public function sloRequest()
 	{
-		global $CFG_GLPI;
-		
 		$returnTo 		= null;
 		$parameters 	= array();
 		$nameId 		= null;
@@ -187,10 +138,10 @@ class PluginPhpsamlPhpsaml
 				$error = $e->getMessage();
 				Toolbox::logInFile("php-errors", $error . "\n", true);
 				
-				Html::nullHeader("Login", $CFG_GLPI["url_base"] . '/index.php');
+				Html::nullHeader("Login", $CFG_GLPI["root_doc"] . '/index.php');
 				echo '<div class="center b">'.$error.'<br><br>';
 				// Logout whit noAUto to manage auto_login with errors
-				echo '<a href="' . $CFG_GLPI["url_base"] .'/index.php">' .__('Log in again') . '</a></div>';
+				echo '<a href="' . $CFG_GLPI["root_doc"] .'/index.php">' .__('Log in again') . '</a></div>';
 				Html::nullFooter();
 				
 			}
@@ -213,18 +164,18 @@ class PluginPhpsamlPhpsaml
                 if ($_SESSION['glpiactiveprofile']['create_ticket_on_login']
                     && empty($REDIRECT)
                 ) {
-                    $destinationUrl .= "/front/helpdesk.public.php?create_ticket=1";
+                    $destinationUrl .= $CFG_GLPI['root_doc'] . "/front/helpdesk.public.php?create_ticket=1";
                 } else {
-                    $destinationUrl .= "/front/helpdesk.public.php$REDIRECT";
+                    $destinationUrl .= $CFG_GLPI['root_doc'] . "/front/helpdesk.public.php$REDIRECT";
                 }
 
             } else {
                 if ($_SESSION['glpiactiveprofile']['create_ticket_on_login']
                     && empty($REDIRECT)
                 ) {
-                    $destinationUrl .= "/front/ticket.form.php";
+                    $destinationUrl .= $CFG_GLPI['root_doc'] . "/front/ticket.form.php";
                 } else {
-                    $destinationUrl .= "/front/central.php$REDIRECT";
+                    $destinationUrl .= $CFG_GLPI['root_doc'] . "/front/central.php$REDIRECT";
                 }
             }
         }
@@ -319,19 +270,19 @@ class PluginPhpsamlPhpsaml
 
 				// Indicates that the nameID of the <samlp:logoutRequest> sent by this SP
 				// will be encrypted.
-				'nameIdEncrypted' => (isset($config['saml_security_nameidencrypted']) && $config['saml_security_nameidencrypted'] == 1 ? true : false),
+				//'nameIdEncrypted' => false,
 
 				// Indicates whether the <samlp:AuthnRequest> messages sent by this SP
 				// will be signed.              [The Metadata of the SP will offer this info]
-				'authnRequestsSigned' => (isset($config['saml_security_authnrequestssigned']) && $config['saml_security_authnrequestssigned'] == 1 ? true : false),
+				//'authnRequestsSigned' => true,
 
 				// Indicates whether the <samlp:logoutRequest> messages sent by this SP
 				// will be signed.
-				'logoutRequestSigned' => (isset($config['saml_security_logoutrequestsigned']) && $config['saml_security_logoutrequestsigned'] == 1 ? true : false),
+				//'logoutRequestSigned' => true,
 
 				// Indicates whether the <samlp:logoutResponse> messages sent by this SP
 				// will be signed.
-				'logoutResponseSigned' => (isset($config['saml_security_logoutresponsesigned']) && $config['saml_security_logoutresponsesigned'] == 1 ? true : false),
+				//'logoutResponseSigned' =>true,
 
 				/* Sign the Metadata
 				 False || True (use sp certs) || array (
@@ -409,27 +360,25 @@ class PluginPhpsamlPhpsaml
 	}
 	
 	static public function getAuthn($value){
-		if(preg_match('/^none,.+/i', $value)){
-			$array = explode(',', $value);
-			$output = array();
-			// TODO: Current configuration input field allows multiple Items, logic below will select the first found then break. 
-			// Because of this the end result might not be what the user expects based on the config screen.
-			foreach ($array as $item){
-				switch($item){
-					case 'PasswordProtectedTransport':
-						$output[] = 'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport';
-						break;
-					case 'Password':
-						$output[] = 'urn:oasis:names:tc:SAML:2.0:ac:classes:Password';
-						break;
-					case 'X509':
-						$output[] = 'urn:oasis:names:tc:SAML:2.0:ac:classes:X509';
-						break;
-				}
-			}
-			return $output;
-		}else{
+		if (!isset($value) || $value == ''){
 			return false;
 		}
+		
+		$array = explode(',', $value);
+		$output = array();
+		foreach ($array as $item){
+			switch($item){
+				case 'PasswordProtectedTransport':
+					$output[] = 'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport';
+					break;
+				case 'Password':
+					$output[] = 'urn:oasis:names:tc:SAML:2.0:ac:classes:Password';
+					break;
+				case 'X509':
+					$output[] = 'urn:oasis:names:tc:SAML:2.0:ac:classes:X509';
+					break;
+			}
+		}
+		return $output;
 	}
 }

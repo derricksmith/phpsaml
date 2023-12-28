@@ -74,7 +74,6 @@ class Utils
      * @param string      $xml The XML string to be loaded.
      *
      * @return DOMDocument|false $dom The result of load the XML at the DOMDocument
-     *
      * @throws Exception
      */
     public static function loadXML(DOMDocument $dom, $xml)
@@ -82,24 +81,13 @@ class Utils
         assert($dom instanceof DOMDocument);
         assert(is_string($xml));
 
-        $oldEntityLoader = null;
-        if (PHP_VERSION_ID < 80000) {
-            $oldEntityLoader = libxml_disable_entity_loader(true);
+        if (strpos($xml, '<!ENTITY') !== false) {
+            throw new Exception('Detected use of ENTITY in XML, disabled to prevent XXE/XEE attacks');
         }
 
+        $oldEntityLoader = libxml_disable_entity_loader(true);
         $res = $dom->loadXML($xml);
-
-        if (PHP_VERSION_ID < 80000) {
-            libxml_disable_entity_loader($oldEntityLoader);
-        }
-
-        foreach ($dom->childNodes as $child) {
-            if ($child->nodeType === XML_DOCUMENT_TYPE_NODE) {
-                throw new Exception(
-                    'Detected use of DOCTYPE/ENTITY in XML, disabled to prevent XXE/XEE attacks'
-                );
-            }
-        }
+        libxml_disable_entity_loader($oldEntityLoader);
 
         if (!$res) {
             return false;
@@ -116,13 +104,10 @@ class Utils
      * @param string|DOMDocument $xml    The XML string or document which should be validated.
      * @param string             $schema The schema filename which should be used.
      * @param bool               $debug  To disable/enable the debug mode
-     * @param string             $schemaPath Change schema path
      *
      * @return string|DOMDocument $dom  string that explains the problem or the DOMDocument
-     *
-     * @throws Exception
      */
-    public static function validateXML($xml, $schema, $debug = false, $schemaPath = null)
+    public static function validateXML($xml, $schema, $debug = false)
     {
         assert(is_string($xml) || $xml instanceof DOMDocument);
         assert(is_string($schema));
@@ -140,20 +125,10 @@ class Utils
             }
         }
 
-        if (isset($schemaPath)) {
-            $schemaFile = $schemaPath . $schema;
-        } else {
-            $schemaFile = __DIR__ . '/schemas/' . $schema;
-        }
-
-        $oldEntityLoader = null;
-        if (PHP_VERSION_ID < 80000) {
-            $oldEntityLoader = libxml_disable_entity_loader(false);
-        }
+        $schemaFile = __DIR__ . '/schemas/' . $schema;
+        $oldEntityLoader = libxml_disable_entity_loader(false);
         $res = $dom->schemaValidate($schemaFile);
-        if (PHP_VERSION_ID < 80000) {
-            libxml_disable_entity_loader($oldEntityLoader);
-        }
+        libxml_disable_entity_loader($oldEntityLoader);
         if (!$res) {
             $xmlErrors = libxml_get_errors();
             syslog(LOG_INFO, 'Error validating the metadata: '.var_export($xmlErrors, true));
@@ -221,10 +196,6 @@ class Utils
      */
     public static function formatCert($cert, $heads = true)
     {
-        if (is_null($cert)) {
-          return;
-        }
-
         $x509cert = str_replace(array("\x0D", "\r", "\n"), "", $cert);
         if (!empty($x509cert)) {
             $x509cert = str_replace('-----BEGIN CERTIFICATE-----', "", $x509cert);
@@ -249,10 +220,6 @@ class Utils
      */
     public static function formatPrivateKey($key, $heads = true)
     {
-        if (is_null($key)) {
-          return;
-        }
-
         $key = str_replace(array("\x0D", "\r", "\n"), "", $key);
         if (!empty($key)) {
             if (strpos($key, '-----BEGIN PRIVATE KEY-----') !== false) {
@@ -327,12 +294,7 @@ class Utils
          * Verify that the URL matches the regex for the protocol.
          * By default this will check for http and https
          */
-        if (isset(self::$_protocolRegex)) {
-            $protocol = self::$_protocolRegex;
-        } else {
-            $protocol = "";
-        }
-        $wrongProtocol = !preg_match($protocol, $url);
+        $wrongProtocol = !preg_match(self::$_protocolRegex, $url);
         $url = filter_var($url, FILTER_VALIDATE_URL);
         if ($wrongProtocol || empty($url)) {
             throw new Error(
@@ -380,7 +342,7 @@ class Utils
     }
 
      /**
-     * @param $protocolRegex string
+     * @var $protocolRegex string
      */
     public static function setProtocolRegex($protocolRegex)
     {
@@ -651,7 +613,7 @@ class Utils
         if (!empty($_SERVER['REQUEST_URI'])) {
             $route = $_SERVER['REQUEST_URI'];
             if (!empty($_SERVER['QUERY_STRING'])) {
-                $route = self::strLreplace($_SERVER['QUERY_STRING'], '', $route);
+                $route = str_replace($_SERVER['QUERY_STRING'], '', $route);
                 if (substr($route, -1) == '?') {
                     $route = substr($route, 0, -1);
                 }
@@ -664,24 +626,7 @@ class Utils
         }
 
         $selfRoutedURLNoQuery = $selfURLhost . $route;
-
-        $pos = strpos($selfRoutedURLNoQuery, "?");
-        if ($pos !== false) {
-            $selfRoutedURLNoQuery = substr($selfRoutedURLNoQuery, 0, $pos);
-        }
-
         return $selfRoutedURLNoQuery;
-    }
-
-    public static function strLreplace($search, $replace, $subject)
-    {
-        $pos = strrpos($subject, $search);
-
-        if ($pos !== false) {
-            $subject = substr_replace($subject, $replace, $pos, strlen($search));
-        }
-
-        return $subject;
     }
 
     /**
@@ -696,9 +641,11 @@ class Utils
         $requestURI = '';
         if (!empty($_SERVER['REQUEST_URI'])) {
             $requestURI = $_SERVER['REQUEST_URI'];
-            $matches = array();
-            if ($requestURI[0] !== '/' && preg_match('#^https?://[^/]*(/.*)#i', $requestURI, $matches)) {
-                $requestURI = $matches[1];
+            if ($requestURI[0] !== '/') {
+                $matches = array();
+                if (preg_match('#^https?://[^/]*(/.*)#i', $requestURI, $matches)) {
+                    $requestURI = $matches[1];
+                }
             }
         }
 
@@ -756,7 +703,7 @@ class Utils
      */
     public static function generateUniqueID()
     {
-        return 'ONELOGIN_' . sha1(random_bytes(20));
+        return 'ONELOGIN_' . sha1(uniqid((string)mt_rand(), true));
     }
 
     /**
@@ -786,10 +733,6 @@ class Utils
      */
     public static function parseSAML2Time($time)
     {
-        if (empty($time)) {
-          return null;
-        }
-
         $matches = array();
 
         /* We use a very strict regex to parse the timestamp. */
@@ -879,8 +822,8 @@ class Utils
              * gmtime function. Instead we use the gmdate function, and split the result.
              */
             $yearmonth = explode(':', gmdate('Y:n', $timestamp));
-            $year = (int)$yearmonth[0];
-            $month = (int)$yearmonth[1];
+            $year = (int)($yearmonth[0]);
+            $month = (int)($yearmonth[1]);
 
             /* Remove the year and month from the timestamp. */
             $timestamp -= gmmktime(0, 0, 0, $month, 1, $year);
@@ -918,8 +861,6 @@ class Utils
      * @param string|int|null $validUntil    The valid until date, as a string or as a timestamp
      *
      * @return int|null $expireTime  The expiration time.
-     *
-     * @throws Exception
      */
     public static function getExpireTime($cacheDuration = null, $validUntil = null)
     {
@@ -948,7 +889,7 @@ class Utils
      * Extracts nodes from the DOMDocument.
      *
      * @param DOMDocument      $dom     The DOMDocument
-     * @param string           $query   \Xpath Expression
+     * @param string           $query   \Xpath Expresion
      * @param DOMElement|null  $context Context Node (DOMElement)
      *
      * @return DOMNodeList The queried nodes
@@ -991,12 +932,12 @@ class Utils
      */
     public static function deleteLocalSession()
     {
+
         if (Utils::isSessionStarted()) {
-            session_unset();
             session_destroy();
-        } else {
-            $_SESSION = array();
         }
+
+        unset($_SESSION);
     }
 
     /**
@@ -1027,10 +968,7 @@ class Utils
                 if (strncmp($curData, '-----END CERTIFICATE', 20) == 0) {
                     break;
                 }
-                if (isset($curData)) {
-                    $curData = trim($curData);
-                }
-                $data .= $curData;
+                $data .= trim($curData);
             }
         }
 
@@ -1063,9 +1001,6 @@ class Utils
      */
     public static function formatFingerPrint($fingerprint)
     {
-        if (is_null($fingerprint)) {
-            return;
-        }
         $formatedFingerprint = str_replace(':', '', $fingerprint);
         $formatedFingerprint = strtolower($formatedFingerprint);
         return $formatedFingerprint;
@@ -1079,13 +1014,10 @@ class Utils
      * @param string|null $format SP Format
      * @param string|null $cert   IdP Public cert to encrypt the nameID
      * @param string|null $nq     IdP Name Qualifier
-     * @param string|null $encAlg Encryption algorithm
      *
      * @return string $nameIDElement DOMElement | XMLSec nameID
-     *
-     * @throws Exception
      */
-    public static function generateNameId($value, $spnq, $format = null, $cert = null, $nq = null, $encAlg = XMLSecurityKey::AES128_CBC)
+    public static function generateNameId($value, $spnq, $format = null, $cert = null, $nq = null)
     {
 
         $doc = new DOMDocument();
@@ -1105,18 +1037,14 @@ class Utils
         $doc->appendChild($nameId);
 
         if (!empty($cert)) {
-            if ($encAlg == XMLSecurityKey::AES128_CBC) {
-                $seckey = new XMLSecurityKey(XMLSecurityKey::RSA_1_5, array('type'=>'public'));
-            } else {
-                $seckey = new XMLSecurityKey(XMLSecurityKey::RSA_OAEP_MGF1P, array('type'=>'public'));
-            }
+            $seckey = new XMLSecurityKey(XMLSecurityKey::RSA_1_5, array('type'=>'public'));
             $seckey->loadKey($cert);
 
             $enc = new XMLSecEnc();
             $enc->setNode($nameId);
             $enc->type = XMLSecEnc::Element;
 
-            $symmetricKey = new XMLSecurityKey($encAlg);
+            $symmetricKey = new XMLSecurityKey(XMLSecurityKey::AES128_CBC);
             $symmetricKey->generateSessionKey();
             $enc->encryptKey($seckey, $symmetricKey);
 
@@ -1144,7 +1072,7 @@ class Utils
      *
      * @return array $status The Status, an array with the code and a message.
      *
-     * @throws ValidationError
+     * @throws Exception
      */
     public static function getStatus(DOMDocument $dom)
     {
@@ -1192,7 +1120,7 @@ class Utils
      *
      * @return DOMElement  The decrypted element.
      *
-     * @throws ValidationError
+     * @throws Exception
      */
     public static function decryptElement(DOMElement $encryptedData, XMLSecurityKey $inputKey, $formatOutput = true)
     {
@@ -1261,7 +1189,7 @@ class Utils
                     $key = str_pad($key, $keySize);
                 }
             }
-            $symmetricKey->loadKey($key);
+            $symmetricKey->loadkey($key);
         } else {
             $symKeyAlgo = $symmetricKey->getAlgorithm();
             if ($inputKeyAlgo !== $symKeyAlgo) {
@@ -1339,11 +1267,6 @@ class Utils
         return $newKey;
     }
 
-    /**
-     * @param $algorithm
-     *
-     * @return bool
-     */
     public static function isSupportedSigningAlgorithm($algorithm)
     {
         return in_array(
@@ -1428,7 +1351,7 @@ class Utils
      * Validates a signature (Message or Assertion).
      *
      * @param string|\DomNode   $xml            The element we should validate
-     * @param string|null       $cert           The public cert
+     * @param string|null       $cert           The pubic cert
      * @param string|null       $fingerprint    The fingerprint of the public cert
      * @param string|null       $fingerprintalg The algorithm used to get the fingerprint
      * @param string|null       $xpath          The xpath of the signed element
@@ -1592,7 +1515,7 @@ class Utils
                 }
             }
 
-            if ($objKey->verifySignature($signedQuery, base64_decode($getData['Signature'])) === 1) {
+            if ($objKey->verifySignature($signedQuery, base64_decode($_GET['Signature'])) === 1) {
                 $signatureValid = true;
                 break;
             }
