@@ -25,7 +25,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package  	phpsamlconfig
- *  @version	1.2.2
+ *  @version	1.3.0
  *  @author    	Chris Gralike
  *  @author	   	Derrick Smith
  *  @copyright 	Copyright (c) 2018 by Derrick Smith

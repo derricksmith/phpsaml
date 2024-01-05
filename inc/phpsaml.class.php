@@ -1,5 +1,6 @@
 <?php
 
+
 /**
  *  ------------------------------------------------------------------------
  *  Derrick Smith - PHP SAML Plugin
@@ -26,13 +27,14 @@
  * ------------------------------------------------------------------------
  *
  *  @package  	phpsamlconfig
+ *  @version	1.3.0
  *  @author    	Derrick Smith
  *  @author	   	Chris Gralike
  *  @copyright 	Copyright (c) 2018 by Derrick Smith
- *  @license   	AGPL License 3.0 or (at your option) any later version
- *             	http://www.gnu.org/licenses/agpl-3.0-standalone.html
+ *  @license   	MIT
+ *  @see       	https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
+ *  @link		https://github.com/derricksmith/phpsaml/
  *  @since     	0.1
- *  @todo 		validate idempotence;
  * ------------------------------------------------------------------------
  **/
 

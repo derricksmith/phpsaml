@@ -26,7 +26,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package  	phpsamlconfig
- *  @version	1.2.2
+ *  @version	1.3.0
  *  @author    	Derrick Smith
  *  @author	   	Chris Gralike
  *  @copyright 	Copyright (c) 2018 by Derrick Smith
@@ -41,13 +41,11 @@
 if (!defined("GLPI_ROOT")) { die("Sorry. You can't access directly to this file"); }
 
 // CONSTANTS
-define("PLUGIN_PHPSAML_VERSION", "1.2.2");
+define("PLUGIN_PHPSAML_VERSION", "1.3.0");
 define("PLUGIN_PHPSAML_MIN_GLPI", "9.4");
 define("PLUGIN_PHPSAML_MAX_GLPI", "10.0.99");
 define('PLUGIN_PHPSAML_DIR', __DIR__);
-// Define correct plugin baseurl, either marketplace or plugins.
-$phpSamlPath = (strpos(dirname(__FILE__), 'plugins') !== false) ? '/plugins/phpsaml' : '/marketplace/phpsaml';
-define('PLUGIN_PHPSAML_BASEURL', GLPI_ROOT . $phpSamlPath . '/');
+//define('PLUGIN_PHPSAML_BASEURL', '/' . Plugin::getWebDir('phpsaml', false) . '/'); // Donuts: Used nowhere.
 
 
 /**
@@ -131,6 +129,7 @@ function plugin_init_phpsaml() : void
     $PLUGIN_HOOKS['csrf_compliant']['phpsaml'] = true;
 
 	Plugin::registerClass('PluginPhpsaml');
+	Plugin::registerClass('PluginPhpsamlExclude');
 	Plugin::registerClass('PluginPhpsamlRuleRight');
 	Plugin::registerClass('PluginPhpsamlRuleRightCollection', ['rulecollections_types' => true]);
 	Plugin::registerClass('PluginPhpsamlAcs');

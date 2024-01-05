@@ -26,7 +26,7 @@
  * ------------------------------------------------------------------------
  *
  *  @package  	phpsamlconfig
- *  @version	1.2.2
+ *  @version	1.3.0
  *  @author    	Chris Gralike
  *  @author	   	Derrick Smith
  *  @copyright 	Copyright (c) 2018 by Derrick Smith
@@ -1212,5 +1212,124 @@ class PluginPhpsamlConfig extends CommonDBTM
                     'gitUrl'     => '',
                     'latest'     => false];
         }
+    }
+
+    /**
+     * install(Migration migration) : void -
+     * Install table needed for Ticket Filter configuration dropdowns
+     *
+     * @return void
+     * @see             hook.php:plugin_ticketfilter_install()
+     */
+    public static function install(Migration $migration) : void
+    {
+        global $DB;
+        $default_charset = DBConnection::getDefaultCharset();
+        $default_collation = DBConnection::getDefaultCollation();
+        $default_key_sign = DBConnection::getDefaultPrimaryKeySignOption();
+        $version = PLUGIN_PHPSAML_VERSION;
+        $table = self::getTable();
+
+        // TODO: use mysql transaction and commit only when all queries are successfull.
+
+        // Create the base table if it does not yet exist;
+        // Dont update this table for later versions, use the migration class;
+        if (!$DB->tableExists($table)) {
+            $migration->displayMessage("Installing $table");
+            $query = <<<SQL
+            CREATE TABLE `$table` (
+                `id` int(11) {$default_key_sign} NOT NULL auto_increment,
+                `version` varchar(15) NOT NULL,
+                `enforced` int(2) unsigned NOT NULL,
+                `proxied` int(2) unsigned NOT NULL,
+                `strict` int(2) unsigned NOT NULL,
+                `debug` int(2) unsigned NOT NULL,
+                `jit` int(2) unsigned NOT NULL,
+                `saml_sp_certificate` text NOT NULL,
+                `saml_sp_certificate_key` text NOT NULL,
+                `saml_sp_nameid_format` varchar(128) NOT NULL,
+                `saml_idp_entity_id` varchar(128)  NOT NULL,
+                `saml_idp_single_sign_on_service` varchar(128) NOT NULL,
+                `saml_idp_single_logout_service` varchar(128) NOT NULL,
+                `saml_idp_certificate` text NOT NULL,
+                `requested_authn_context` text NOT NULL,
+                `requested_authn_context_comparison` varchar(25) NOT NULL,
+                `saml_security_nameidencrypted` int(2) unsigned NOT NULL,
+                `saml_security_authnrequestssigned` int(2) unsigned NOT NULL,
+                `saml_security_logoutrequestsigned` int(2) unsigned NOT NULL,
+                `saml_security_logoutresponsesigned` int(2) unsigned NOT NULL,
+                `saml_configuration_name` varchar(50) NOT NULL,
+                PRIMARY KEY  (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset} COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;
+            SQL;
+            $DB->query($query) or die($DB->error());
+        }
+        
+        if ($DB->tableExists($table)) {
+            // insert default config;
+            $query = <<<SQL
+            INSERT INTO `$table`
+                (`id`,
+                `version`,
+                `enforced`,
+                `proxied`,
+                `strict`,
+                `debug`,
+                `jit`,
+                `saml_sp_certificate`,
+                `saml_sp_certificate_key`,
+                `saml_sp_nameid_format`,
+                `saml_idp_entity_id`,
+                `saml_idp_single_sign_on_service`,
+                `saml_idp_single_logout_service`,
+                `saml_idp_certificate`,
+                `requested_authn_context`,
+                `requested_authn_context_comparison`,
+                `saml_security_nameidencrypted`,
+                `saml_security_authnrequestssigned`,
+                `saml_security_logoutrequestsigned`,
+                `saml_security_logoutresponsesigned`,
+                `saml_configuration_name`)
+            VALUES('1',
+                '$version',
+                '0',
+                '0',
+                '1',
+                '0',
+                '0',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '0',
+                '0',
+                '0',
+                '0',
+                'default');
+            SQL;
+            $DB->query($query) or die($DB->error());        // Die will leave the plugin in an unusable and terrible state.
+        }
+            // Migration
+            //$migration->changeField($table, 'OLDFIELD', 'NEWFIELD', 'DATATYPE', ['null' => false, 'value' => '1']);
+            //$migration->migrationOneTable($table);
+    }
+
+    /**
+     * uninstall(Migration migration) : void -
+     * Uninstall tables uncomment the line to make plugin clean table.
+     *
+     * @return void
+     * @see             hook.php:plugin_ticketfilter_uninstall()
+     */
+    public static function uninstall(Migration $migration) : void
+    {
+        $table = self::getTable();
+        $migration->displayMessage("Uninstalling $table");
+        $migration->dropTable($table);
     }
 }
