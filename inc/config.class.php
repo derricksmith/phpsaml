@@ -72,6 +72,13 @@ class PluginPhpsamlConfig extends CommonDBTM
     public const PROXIED = 'proxied';
     public const CFNAME  = 'saml_configuration_name';
 
+
+    // PROPERTIES
+    /**
+     * defines the rights a user must posses to be able to access this menu
+     * option in the rules section. Also required to be added to config menu.
+     * @var string
+     **/
     public static $rightname     = 'config';
 
     /**
@@ -98,11 +105,7 @@ class PluginPhpsamlConfig extends CommonDBTM
         return 'fas fa-address-book';
     }
 
-    // PROPERTIES
-    /**
-     * defines the rights a user must posses to be able to access this menu option in the rules section
-     * @var string
-     **/
+
 	//public static $rightname = 'plugin_phpsaml_config';
 
 
