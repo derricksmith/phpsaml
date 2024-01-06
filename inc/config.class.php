@@ -25,14 +25,14 @@
  *
  * ------------------------------------------------------------------------
  *
- *  @package  	phpsamlconfig
- *  @version	1.3.0
- *  @author    	Chris Gralike
- *  @author	   	Derrick Smith
- *  @copyright 	Copyright (c) 2018 by Derrick Smith
- *  @license   	MIT
- *  @see       	https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
- *  @link		https://github.com/derricksmith/phpsaml/
+ *  @package    phpsamlconfig
+ *  @version    1.3.0
+ *  @author     Chris Gralike
+ *  @author	    Derrick Smith
+ *  @copyright  Copyright (c) 2018 by Derrick Smith
+ *  @license    MIT
+ *  @see        https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
+ *  @link       https://github.com/derricksmith/phpsaml/
  *  @since     	1.2.2
  * ------------------------------------------------------------------------
  **/
@@ -43,29 +43,26 @@ if (!defined("GLPI_ROOT")) { die("Sorry. You can't access directly to this file"
 class PluginPhpsamlConfig extends CommonDBTM
 {
     // CONSTANTS
-     /**
-     * @todo: make sure all references to configuration properties use these constants
-     **/
-	public const STRICT	 = 'strict'; // todo: make sql add default value 0 so we can clear allot of additional isset checking.
-	public const DEBUG	 = 'debug';  // todo: make sql add default value 0 so we can clear allot of additional isset checking.
-	public const SPCERT	 = 'saml_sp_certificate';
-	public const SPKEY	 = 'saml_sp_certificate_key';
-	public const NAMEFM	 = 'saml_sp_nameid_format';
-	public const ENTITY	 = 'saml_idp_entity_id';
-	public const SSOURL	 = 'saml_idp_single_sign_on_service';
-	public const SLOURL	 = 'saml_idp_single_logout_service';
-	public const IPCERT	 = 'saml_idp_certificate';
-	public const CMPREQ	 = true; // Compress requests
-	public const CMPRES	 = true; // Compress response
-	public const ENAME	 = 'saml_security_nameidencrypted';
-	public const SAUTHN	 = 'saml_security_authnrequestssigned';
-	public const SSLORQ	 = 'saml_security_logoutrequestsigned';
-	public const SSLORE	 = 'saml_security_logoutresonsesigned';
-	public const AUTHNC	 = 'requested_authn_context';
-	public const AUTHND	 = 'requested_authn_context_comparison'; //diff
-	public const XMLVAL	 = true;  // Perform xml validation
-	public const DSTVAL	 = false; // relax destination validation
-	public const LOWURL	 = true;  // lowercaseUrlEncoding
+    public const STRICT	 = 'strict';
+    public const DEBUG	 = 'debug';
+    public const SPCERT	 = 'saml_sp_certificate';
+    public const SPKEY	 = 'saml_sp_certificate_key';
+    public const NAMEFM	 = 'saml_sp_nameid_format';
+    public const ENTITY	 = 'saml_idp_entity_id';
+    public const SSOURL	 = 'saml_idp_single_sign_on_service';
+    public const SLOURL	 = 'saml_idp_single_logout_service';
+    public const IPCERT	 = 'saml_idp_certificate';
+    public const CMPREQ	 = true; // Compress requests
+    public const CMPRES	 = true; // Compress response
+    public const ENAME	 = 'saml_security_nameidencrypted';
+    public const SAUTHN	 = 'saml_security_authnrequestssigned';
+    public const SSLORQ	 = 'saml_security_logoutrequestsigned';
+    public const SSLORE	 = 'saml_security_logoutresonsesigned';
+    public const AUTHNC	 = 'requested_authn_context';
+    public const AUTHND	 = 'requested_authn_context_comparison'; //diff
+    public const XMLVAL	 = true;  // Perform xml validation
+    public const DSTVAL	 = false; // relax destination validation
+    public const LOWURL	 = true;  // lowercaseUrlEncoding
     public const ACSPATH = '/plugins/phpsaml/front/acs.php';
     public const SLOPATH = '/plugins/phpsaml/front/slo.php';
     public const FORCED  = 'enforced';
@@ -78,23 +75,23 @@ class PluginPhpsamlConfig extends CommonDBTM
      * defines the rights a user must posses to be able to access this menu
      * option in the rules section. Also required to be added to config menu.
      * @var string
-     **/
+    **/
     public static $rightname     = 'config';
 
     /**
-    * getTypeName(int nb) : string -
-    * Method called by pre_item_add hook validates the object and passes
-    * it to the RegEx Matching then decides what to do.
-    *
-    * @param  int      $nb     number of items.
-    * @return void
+     * getTypeName(int nb) : string -
+     * Method called by pre_item_add hook validates the object and passes
+     * it to the RegEx Matching then decides what to do.
+     *
+     * @param  int      $nb     number of items.
+     * @return void
     */
-   public static function getTypeName($nb = 0) : string
-   {
-       return _n('Saml config', 'Saml config', $nb, 'phpsaml');
-   }
+    public static function getTypeName($nb = 0) : string
+    {
+        return _n('Saml config', 'Saml config', $nb, 'phpsaml');
+    }
 
-   /**
+    /**
      * getIcon() : string -
      * Sets icon for object.
      *
@@ -104,10 +101,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     {
         return 'fas fa-address-book';
     }
-
-
-	//public static $rightname = 'plugin_phpsaml_config';
-
 
     /**
      * Defines where the setup HTML template is located
