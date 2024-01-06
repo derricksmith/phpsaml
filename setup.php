@@ -255,7 +255,7 @@ function pluginPhpsamlDisplayLogin()
             </div>
             <div class="card-body">
                 <div class="list-group list-group-horizontal justify-content-center" style="cursor:pointer; padding:43px 0px 0px 0px;">
-                    <p>PHP SAML was enabled.<br>but we did not found a valid configuration.</p>
+                    <p>PHP SAML was enabled.<br>but we did not find a valid configuration.</p>
                 </div>
             </div>
         </div>
