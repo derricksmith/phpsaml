@@ -1,37 +1,41 @@
 <?php
 /**
  *  ------------------------------------------------------------------------
- *  Chris Gralike Ticket Filter
- *  Copyright (C) 2023 by Chris Gralike
+ *  Derrick Smith - PHP SAML Plugin
+ *  Copyright (C) 2014 by Derrick Smith
  *  ------------------------------------------------------------------------
  *
  * LICENSE
  *
- * This file is part of Ticket Filter project.
+ * This file is part of PHP SAML Plugin project.
  *
- * Ticket Filter plugin is free software: you can redistribute it and/or modify
+ * PHP SAML Plugin is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Ticket Filter is distributed in the hope that it will be useful,
+ * PHP SAML Plugin is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with ticket filter. If not, see <http://www.gnu.org/licenses/>.
+ * along with PHP SAML Plugin. If not, see <http://www.gnu.org/licenses/>.
  *
  * ------------------------------------------------------------------------
  *
- *  @package  	    PhpSaml
- *  @version	    1.3.0
+ *  @package        PhpSaml - Excludes dropdown form UI
+ *  @version        1.3.0
+ *  @author         Derrick Smith
  *  @author         Chris Gralike
- *  @copyright 	    Copyright (c) 2023 by Chris Gralike
- *  @license    	GPLv2+
- *  @since     	    1.3.0
+ *  @copyright      Copyright (c) 2018 by Derrick Smith
+ *  @license        GPLv2+
+ *  @since          1.3.0
  * ------------------------------------------------------------------------
  **/
-include '../../../inc/includes.php';
+
+include '../../../inc/includes.php';                            //NOSONAR - Cant be included with USE.
+
 $dropdown = new PluginPhpsamlExclude();
-include GLPI_ROOT . "/front/dropdown.common.form.php";
+
+include GLPI_ROOT . "/front/dropdown.common.form.php";          //NOSONAR - Cant be included with USE.

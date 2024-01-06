@@ -1,5 +1,4 @@
 <?php
-
 /**
  *  ------------------------------------------------------------------------
  *  Derrick Smith - PHP SAML Plugin
@@ -25,15 +24,15 @@
  *
  * ------------------------------------------------------------------------
  *
- *  @package    phpsamlconfig
+ *  @package    phpsaml - Main config class
  *  @version    1.3.0
  *  @author     Chris Gralike
- *  @author	    Derrick Smith
+ *  @author     Derrick Smith
  *  @copyright  Copyright (c) 2018 by Derrick Smith
  *  @license    MIT
  *  @see        https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
  *  @link       https://github.com/derricksmith/phpsaml/
- *  @since     	1.2.2
+ *  @since      1.0.0
  * ------------------------------------------------------------------------
  **/
 
@@ -43,31 +42,31 @@ if (!defined("GLPI_ROOT")) { die("Sorry. You can't access directly to this file"
 class PluginPhpsamlConfig extends CommonDBTM
 {
     // CONSTANTS
-    public const STRICT	 = 'strict';
-    public const DEBUG	 = 'debug';
-    public const SPCERT	 = 'saml_sp_certificate';
-    public const SPKEY	 = 'saml_sp_certificate_key';
-    public const NAMEFM	 = 'saml_sp_nameid_format';
-    public const ENTITY	 = 'saml_idp_entity_id';
-    public const SSOURL	 = 'saml_idp_single_sign_on_service';
-    public const SLOURL	 = 'saml_idp_single_logout_service';
-    public const IPCERT	 = 'saml_idp_certificate';
-    public const CMPREQ	 = true; // Compress requests
-    public const CMPRES	 = true; // Compress response
-    public const ENAME	 = 'saml_security_nameidencrypted';
-    public const SAUTHN	 = 'saml_security_authnrequestssigned';
-    public const SSLORQ	 = 'saml_security_logoutrequestsigned';
-    public const SSLORE	 = 'saml_security_logoutresonsesigned';
-    public const AUTHNC	 = 'requested_authn_context';
-    public const AUTHND	 = 'requested_authn_context_comparison'; //diff
-    public const XMLVAL	 = true;  // Perform xml validation
-    public const DSTVAL	 = false; // relax destination validation
-    public const LOWURL	 = true;  // lowercaseUrlEncoding
-    public const ACSPATH = '/plugins/phpsaml/front/acs.php';
-    public const SLOPATH = '/plugins/phpsaml/front/slo.php';
-    public const FORCED  = 'enforced';
-    public const PROXIED = 'proxied';
-    public const CFNAME  = 'saml_configuration_name';
+    public const STRICT     = 'strict';
+    public const DEBUG      = 'debug';
+    public const SPCERT     = 'saml_sp_certificate';
+    public const SPKEY      = 'saml_sp_certificate_key';
+    public const NAMEFM     = 'saml_sp_nameid_format';
+    public const ENTITY     = 'saml_idp_entity_id';
+    public const SSOURL     = 'saml_idp_single_sign_on_service';
+    public const SLOURL     = 'saml_idp_single_logout_service';
+    public const IPCERT     = 'saml_idp_certificate';
+    public const CMPREQ     = true; // Compress requests
+    public const CMPRES     = true; // Compress response
+    public const ENAME      = 'saml_security_nameidencrypted';
+    public const SAUTHN     = 'saml_security_authnrequestssigned';
+    public const SSLORQ     = 'saml_security_logoutrequestsigned';
+    public const SSLORE     = 'saml_security_logoutresonsesigned';
+    public const AUTHNC     = 'requested_authn_context';
+    public const AUTHND     = 'requested_authn_context_comparison'; //diff
+    public const XMLVAL     = true;  // Perform xml validation
+    public const DSTVAL     = false; // relax destination validation
+    public const LOWURL     = true;  // lowercaseUrlEncoding
+    public const ACSPATH    = '/plugins/phpsaml/front/acs.php';
+    public const SLOPATH    = '/plugins/phpsaml/front/slo.php';
+    public const FORCED     = 'enforced';
+    public const PROXIED    = 'proxied';
+    public const CFNAME     = 'saml_configuration_name';
 
 
     // PROPERTIES
@@ -167,7 +166,6 @@ class PluginPhpsamlConfig extends CommonDBTM
 
     // METHODS
     /**
-     *
      * Generate the configuration htmlForm and return it.
      * @param mixed $id         The id of the configuration
      * @param array $options    Not used
@@ -203,14 +201,12 @@ class PluginPhpsamlConfig extends CommonDBTM
     
 
     /**
-     *
      * process $_POST values of the updated form. On error it will regenerate the form with
      * errors and provided values and will not process the form and will loop untill the errors
      * are fixed. Navigating away will reset the form.
      *
      * @return string   HTML Form or header redirect
      * @since           1.2.1
-     * @todo            add option to reset the form with configuration items calling discarding the POST and caling 'show form'
      */
     public function processChanges()
     {
@@ -228,7 +224,7 @@ class PluginPhpsamlConfig extends CommonDBTM
         }
 
         // If we have fatal errors, then show the form and prevent an update
-        // TODO: For some reason, fatal errors make all the text areas add \r\n characters 
+        // Attention: For some reason, fatal errors make all the text areas add \r\n characters 
         // else process the update.
         if ($this->fatalError) {
             return $this->generateForm();
@@ -240,7 +236,6 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Gets the current configuration from the database. It will first query the columns of the configuration
      * table. It will then use these columns to fetch all the related database configuration values and place them
      * in a structured array. Finally this structured array is returned. The caller should evaluate the 'valid' array
@@ -251,14 +246,13 @@ class PluginPhpsamlConfig extends CommonDBTM
      * @return array $config    returns array of properties
      * @since                   1.2.1
      * @todo                    Needs attention, everything depends on this being succesfull. If config is bugged everything will break, including login, config, etc.
-     * @todo                    Add translations for errors
      */
     public function getConfig($id = '1')
-	{
+    {
         global $DB;
         $config = [];
-		$sql = 'SHOW COLUMNS FROM '.$this->getTable();
-		if ($result = $DB->query($sql)) {
+        $sql = 'SHOW COLUMNS FROM '.$this->getTable();
+        if ($result = $DB->query($sql)) {
             if (is_numeric($id) && $this->getFromDB($id)) {
                 while ($data = $result->fetch_assoc()) {
                     $config[$data['Field']] =  $this->fields[$data['Field']];
@@ -279,11 +273,10 @@ class PluginPhpsamlConfig extends CommonDBTM
         }
         
         return $config;
-	}
+    }
 
 
     /**
-     *
      * The generateForm method is called by the showForm method. It should only be called after all
      * configuration handlers are executed. It will populate all generic form properties, load the
      * configuration template file and replace all template placeholders with the populated fields.
@@ -293,7 +286,6 @@ class PluginPhpsamlConfig extends CommonDBTM
      * @param bool $return  return the generated htmlform as string
      * @return string       HTML of the form
      * @since               1.2.1
-     * @todo                replace with twig templates
      */
     private function generateForm() : string
     {
@@ -362,7 +354,6 @@ class PluginPhpsamlConfig extends CommonDBTM
 
     
     /**
-     *
      * Adds an error message to the errorMsgs class property. The errorMsgs class property is iterated by the generateForm
      * method to inject all errors into the top header of the htmlForm. If fatal is set to true the generateForm method will
      * disable all form elements and make sure an insert/update can no longer be performed.
@@ -394,7 +385,6 @@ class PluginPhpsamlConfig extends CommonDBTM
     }
 
      /**
-     *
      * Adds an error message to the errorMsgs class property. The errorMsgs class property is iterated by the generateForm
      * method to inject all errors into the top header of the htmlForm. If fatal is set to true the generateForm method will
      * disable all form elements and make sure an insert/update can no longer be performed.
@@ -473,16 +463,12 @@ class PluginPhpsamlConfig extends CommonDBTM
         }
     }
 
-
-
-    /**********************************
-     *
+    /**
      * Evaluates the enforced property and populates the form template
      *
      * @param int $cValue   configuration value to process
      * @return void
      * @since               1.2.1
-     * @todo                write unit test
      */
     protected function enforced(int $cValue) : void
     {
@@ -514,13 +500,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
      /**
-     *
      * Evaluates the strict property and populates the form template
      *
      * @param int $cValue
      * @return void
      * @since               1.2.1
-     * @todo                write unit test
      */
     protected function strict(int $cValue) : void
     {
@@ -551,13 +535,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the debug property and populates the form template
      *
      * @param int $cValue
      * @return void
      * @since               1.2.1
-     * @todo                write unit test
      */
     protected function debug(int $cValue) : void
     {
@@ -593,13 +575,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the debug property and populates the form template
      *
      * @param int $cValue
      * @return void
      * @since               1.2.1
-     * @todo                write unit test
      */
     protected function proxied(int $cValue) : void
     {
@@ -630,13 +610,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the sp certificate property and populates the form template
      *
      * @param int $cValue
      * @return void
-     * @since               1.2.1
-     * @todo                write unit test
+     * @since       1.2.1
      */
     protected function jit(int $cValue) : void
     {
@@ -667,15 +645,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the sp certificate property and populates the form template
      *
      * @param string $cValue
      * @return void
      * @since                   1.2.1
-     * @todo                    write unit test
-     * @todo                    Suspected that GLPI is applying input- output filters replacing ch(10) with CRLF that might break certificate on successive updates.
-     *                          now being addressed in the validateAndParseCertString() but is not fully tested (fuzzing) yet .
      */
     protected function saml_sp_certificate(string $cValue) : void
     {
@@ -719,14 +693,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the sp certificate key property and populates the form template
      *
      * @param string $cValue
      * @return void
      * @since                   1.2.1
-     * @todo                    write unit test
-     * @todo                    write key validation function using openssl.
      */
     protected function saml_sp_certificate_key(string $cValue) : void
     {
@@ -748,13 +719,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the saml sp nameid format property and populates the form template
      *
      * @param string $cValue
      * @return void
      * @since                   1.2.1
-     * @todo                    write unit test
      */
     protected function saml_sp_nameid_format(string $cValue) : void
     {
@@ -781,13 +750,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the idp entity id property and populates the form template
      *
      * @param string $cValue
      * @return void
      * @since                   1.2.1
-     * @todo                    write unit test
      */
     protected function saml_idp_entity_id(string $cValue) : void
     {
@@ -815,13 +782,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the idp single sign on service property and populates the form template
      *
      * @param string $cValue
      * @return void
      * @since                   1.2.1
-     * @todo                    write unit test
      */
     protected function saml_idp_single_sign_on_service(string $cValue) : void
     {
@@ -846,13 +811,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the idp single logout service property for changes and populates the form template
      *
      * @param string $cValue
      * @return void
      * @since                   1.2.1
-     * @todo                    write unit test
      */
     protected function saml_idp_single_logout_service(string $cValue) : void
     {
@@ -877,13 +840,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the idp certificate property for changes and populates the form template
      *
      * @param string $cValue
      * @return void
      * @since                   1.2.1
-     * @todo                    write unit test
      */
     protected function saml_idp_certificate(string $cValue) : void
     {
@@ -918,13 +879,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the authn context property for changes and populates the form template
      *
      * @param string $cValue
      * @return boolean
      * @since                   1.2.1
-     * @todo                    write unit test
      */
     protected function requested_authn_context(string $cValue) : void
     {
@@ -957,13 +916,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
    /**
-     *
      * Evaluates the requested authn context comparison property for changes and populates the form template
      *
      * @param string $cValue
      * @return void
      * @since                   1.2.1
-     * @todo                    write unit test
      */
     protected function requested_authn_context_comparison(string $cValue) : void
     {
@@ -991,13 +948,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the nameid encrypted property for changes and populates the form template
      *
      * @param int $cValue
      * @return void
      * @since               1.2.1
-     * @todo                write unit test
      */
     protected function saml_security_nameidencrypted(string $cValue) : void
     {
@@ -1028,13 +983,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the authn requests signed property for changes and populates the form template
      *
      * @param int $cValue
      * @return void
      * @since               1.2.1
-     * @todo                write unit test
      */
     protected function saml_security_authnrequestssigned(string $cValue) : void
     {
@@ -1065,13 +1018,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the Logout Request Signed property and populates the form template
      *
      * @param int $cValue
      * @return void
      * @since               1.2.1
-     * @todo                write unit test
      */
     protected function saml_security_logoutrequestsigned(string $cValue) : void
     {
@@ -1102,13 +1053,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the Logout Response Signed property and populates the form template
      *
      * @param int $cValue
      * @return void
      * @since               1.2.1
-     * @todo                write unit test
      */
     protected function saml_security_logoutresponsesigned(string $cValue) : void
     {
@@ -1139,14 +1088,12 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
      /**
-     *
      * Evaluates the configuration friendly name property for changes and populates the form template
      * https://github.com/derricksmith/phpsaml/issues/126
      *
      * @param string $cValue
      * @return void
      * @since                   1.2.1
-     * @todo                    write unit test
      */
     protected function saml_configuration_name(string $cValue) : void
     {
@@ -1164,13 +1111,11 @@ class PluginPhpsamlConfig extends CommonDBTM
 
 
     /**
-     *
      * Evaluates the id property for changes and populates the form template
      *
      * @param int $cValue
      * @return void
      * @since               1.2.1
-     * @todo                write unit test
      */
     protected function id(int $cValue) : void
     {
@@ -1188,7 +1133,6 @@ class PluginPhpsamlConfig extends CommonDBTM
      * @param bool $return          Return the outcomes
      * @return array|void $outcomes      Optional return
      * @since                       1.2.1
-     * @todo                        write unit test
      */
     public function version($compare, $return = false)
     {
@@ -1251,8 +1195,6 @@ class PluginPhpsamlConfig extends CommonDBTM
         $default_key_sign = DBConnection::getDefaultPrimaryKeySignOption();
         $version = PLUGIN_PHPSAML_VERSION;
         $table = self::getTable();
-
-        // TODO: use mysql transaction and commit only when all queries are successfull.
 
         // Create the base table if it does not yet exist;
         // Dont update this table for later versions, use the migration class;

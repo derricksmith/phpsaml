@@ -24,15 +24,15 @@
  *
  * ------------------------------------------------------------------------
  *
- *  @package  	phpsamlconfig
- *  @version	1.3.0
- *  @author    	Chris Gralike
- *  @author	   	Derrick Smith
- *  @copyright 	Copyright (c) 2018 by Derrick Smith
- *  @license   	MIT
- *  @see       	https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
- *  @link		https://github.com/derricksmith/phpsaml/
- *  @since     	1.2.2
+ *  @package    phpsamlconfig
+ *  @version    1.3.0
+ *  @author     Chris Gralike
+ *  @author     Derrick Smith
+ *  @copyright  Copyright (c) 2018 by Derrick Smith
+ *  @license    MIT
+ *  @see        https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
+ *  @link       https://github.com/derricksmith/phpsaml/
+ *  @since      1.2.2
  * ------------------------------------------------------------------------
  **/
 
@@ -167,7 +167,7 @@ class PluginPhpsamlExclude extends CommonDropdown
         $excludes = [];
         $dropdown = new FilterPattern();
         $table = $dropdown::getTable();
-        foreach($DB->request($table) as $id => $row){
+        foreach($DB->request($table) as $id => $row){                           //NOSONAR - For readability
             $excludes[] = [self::NAME                => $row[self::NAME],
                            self::ACTIVE              => $row[self::ACTIVE],
                            self::DATE_CREATION       => $row[self::DATE_CREATION],

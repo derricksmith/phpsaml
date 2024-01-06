@@ -24,15 +24,15 @@
  *
  * ------------------------------------------------------------------------
  *
- *  @package  	phpsamlconfig
- *  @version	1.3.0
- *  @author    	Chris Gralike
- *  @author	   	Derrick Smith
- *  @copyright 	Copyright (c) 2018 by Derrick Smith
- *  @license   	MIT
- *  @see       	https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
- *  @link		https://github.com/derricksmith/phpsaml/
- *  @since     	1.2.2
+ *  @package    phpsaml - Main Assertion Consumer Service class
+ *  @version    1.3.0
+ *  @author     Chris Gralike
+ *  @author     Derrick Smith
+ *  @copyright  Copyright (c) 2018 by Derrick Smith
+ *  @license    MIT
+ *  @see        https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
+ *  @link       https://github.com/derricksmith/phpsaml/
+ *  @since      1.2.2
  * ------------------------------------------------------------------------
  **/
 
@@ -53,7 +53,7 @@ class PluginPhpsamlAcs
         $this->getDebugConfig();            // Check if debugging is enabled.
     }
 
-
+    // Todo: Simplify this method.
     public function assertSaml($samlResponse) : void
     {
         if(is_array($samlResponse) && array_key_exists('SAMLResponse', $samlResponse)) {
@@ -75,15 +75,15 @@ class PluginPhpsamlAcs
                 // @throws Exception
                 try {
                     $this->samlResponse = new OneLogin\Saml2\Response($samlSettings, $samlResponse['SAMLResponse']);
-                    
+
                     // Dump the response on debug?
                     if($this->debug) { $this->dumpSamlResponse(); }
-                    
+
                 } catch(Exception $e) {
                     // Exit with error
                     $this->printError($e->getMessage());
                 }
-                
+
                 // Validate SamlResponse
                 if (is_object($this->samlResponse) && $this->samlResponse->isValid()) {
                     $this->phpsaml::auth();
@@ -107,11 +107,11 @@ class PluginPhpsamlAcs
             $this->printError('No valid SAMLResponse received in POST.');
         }
     }
-    
+
     private function evalAndAssignProperties() : void
     {
         $error = false;
-        
+
         if(!$response['nameId'] = $this->samlResponse->getNameId()) {
             $error['nameId'] = 'NameId is missing in response';
         } else {
@@ -119,10 +119,10 @@ class PluginPhpsamlAcs
             // transformed properly. Write an error and exit!
             // https://github.com/derricksmith/phpsaml/issues/135
             if(strstr($response['nameId'], '#EXT#@')){
-                $this->printError('Detected an inproperly transformed guest claims, make sure nameid, 
-                                   name are populated using user.mail instead of the uset.principalname.<br> 
+                $this->printError('Detected an inproperly transformed guest claims, make sure nameid,
+                                   name are populated using user.mail instead of the uset.principalname.<br>
                                    You can use the debug saml dumps to validate and compare the claims passed.<br>
-                                   They should contain the original email addresses.<br> 
+                                   They should contain the original email addresses.<br>
                                    Also see: https://learn.microsoft.com/en-us/azure/active-directory/develop/saml-claims-customization');
             }
             $this->phpsaml::$nameid = $response['nameId'];
@@ -145,7 +145,7 @@ class PluginPhpsamlAcs
         } else {
             $this->phpsaml::$sessionindex = $response['sessionIndex'];
         }
-            
+
         // If debugging is on dump outcomes to file
         if(is_array($error) && (count($error) > 1)) {
             // Print error and exit
@@ -170,14 +170,14 @@ class PluginPhpsamlAcs
     {
         // Load GLPI include file
         if(file_exists($this->pathInfo['glpi'].self::DS.'inc'.self::DS.'includes.php')) {
-            require_once $this->pathInfo['glpi'].self::DS.'inc'.self::DS.'includes.php';
+            require_once $this->pathInfo['glpi'].self::DS.'inc'.self::DS.'includes.php';        //NOSONAR - Cant be included with USE.
         } else {
             $this->printError('Required GLPI include file could not be loaded!');
         }
 
         // Load XML libs
         if(file_exists($this->pathInfo['xml'].self::DS.'/xmlseclibs.php')) {
-            require_once $this->pathInfo['xml'].self::DS.'/xmlseclibs.php';
+            require_once $this->pathInfo['xml'].self::DS.'/xmlseclibs.php';                     //NOSONAR - Cant be included with USE.
         } else {
             $this->printError('Required classfile xmlseclibs.php could not be loaded!');
         }
@@ -186,7 +186,7 @@ class PluginPhpsamlAcs
         if(!class_exists(OneLogin\Saml2\Settings::class)) {
             foreach(scandir($this->pathInfo['saml2']) as $classFile) {
                 if (is_file($this->pathInfo['saml2'] . $classFile) && (substr($element, -4) === '.php')) {
-                    require_once $this->pathInfo['saml2'].$classFile;
+                    require_once $this->pathInfo['saml2'].$classFile;                           //NOSONAR - Cant be included with USE.
                 }else{
                     $this->printError('Required Saml2 classfiles could not be loaded!');
                 }
@@ -239,13 +239,9 @@ class PluginPhpsamlAcs
         }
     }
 
-    public static function checkDebugDir() : bool 
+    public static function checkDebugDir() : bool
     {
         $debugdir = dirname(pathinfo(__file__)['dirname'], '1') . self::DS . 'debug';
-        if(is_dir($debugdir)) {
-            return true;
-        } else {
-            return false;
-        }
+        return (is_dir($debugdir)) ? true : false;
     }
 }

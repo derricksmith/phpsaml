@@ -1,6 +1,4 @@
 <?php
-
-
 /**
  *  ------------------------------------------------------------------------
  *  Derrick Smith - PHP SAML Plugin
@@ -26,20 +24,20 @@
  *
  * ------------------------------------------------------------------------
  *
- *  @package  	phpsamlconfig
- *  @version	  1.3.0
- *  @author    	Derrick Smith
- *  @author	   	Chris Gralike
- *  @copyright 	Copyright (c) 2018 by Derrick Smith
- *  @license   	MIT
- *  @see       	https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
- *  @link		    https://github.com/derricksmith/phpsaml/
- *  @since     	0.1
+ *  @package    phpsaml - main User creation rulescollection class
+ *  @version    1.3.0
+ *  @author     Derrick Smith
+ *  @author     Chris Gralike
+ *  @copyright  Copyright (c) 2018 by Derrick Smith
+ *  @license    MIT
+ *  @see        https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
+ *  @link       https://github.com/derricksmith/phpsaml/
+ *  @since      1.3.0
  * ------------------------------------------------------------------------
  **/
 
 if (!defined('GLPI_ROOT')) {
-	die("Sorry. You can't access directly to this file");
+    die("Sorry. You can't access directly to this file");
 }
 
 
@@ -48,65 +46,25 @@ class PluginPhpsamlRuleRightCollection extends RuleCollection {
   /**
      * @see Rule::getCriterias()
      **/
-	public $stop_on_first_match = false;
+    public $stop_on_first_match = false;                    //NOSONAR - Default GLPI property name
 
   /**
      * @see Rule::getCriterias()
      **/
-	static $rightname = "config";
-	
-
-  /**
-     * @see Rule::getCriterias()
-     **/
-	public $menu_option = "";
-
- /**
-     * @see Rule::getCriterias()
-     **/
-   // public $menu_type = "";
+    static $rightname = "config";
 
 
   /**
      * @see Rule::getCriterias()
      **/
-	function getTitle() 
-	{
-		return __('Import rules', 'phpsaml');
-	}
+    public $menu_option = "";                               //NOSONAR - Default GLPI property name
+
+  /**
+     * @see Rule::getCriterias()
+     **/
+    public function getTitle()
+    {
+        return __('Import rules', 'phpsaml');
+    }
 
 }
-
-// class PluginPhpsamlRuleRightCollection extends RuleCollection {
-
-//   /**
-//      * @see Rule::getCriterias()
-//      **/
-// 	public $stop_on_first_match = false;
-
-//   /**
-//      * @see Rule::getCriterias()
-//      **/
-// 	static $rightname = "config";
-	
-
-//   /**
-//      * @see Rule::getCriterias()
-//      **/
-// 	public $menu_option = "";
-
-//  /**
-//      * @see Rule::getCriterias()
-//      **/
-//    // public $menu_type = "";
-
-
-//   /**
-//      * @see Rule::getCriterias()
-//      **/
-// 	function getTitle() 
-// 	{
-// 		return __('Import rules', 'phpsaml');
-// 	}
-
-// }

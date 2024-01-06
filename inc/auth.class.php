@@ -25,19 +25,19 @@
  *
  * ------------------------------------------------------------------------
  *
- *  @package  	phpsamlconfig
- *  @version	1.3.0
- *  @author    	Derrick Smith
- *  @author	   	Chris Gralike
- *  @copyright 	Copyright (c) 2018 by Derrick Smith
- *  @license   	MIT
- *  @see       	https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
- *  @link		https://github.com/derricksmith/phpsaml/
- *  @since     	0.1
+ *  @package    phpsaml - Main Authentication class
+ *  @version    1.3.0
+ *  @author     Chris Gralike
+ *  @author     Derrick Smith
+ *  @copyright  Copyright (c) 2018 by Derrick Smith
+ *  @license    MIT
+ *  @see        https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
+ *  @link       https://github.com/derricksmith/phpsaml/
+ *  @since      1.0.0
  * ------------------------------------------------------------------------
  **/
 
-class  PluginPhpsamlAuth extends Auth
+class PluginPhpsamlAuth extends Auth
 {
 
     public function __construct()
@@ -52,10 +52,10 @@ class  PluginPhpsamlAuth extends Auth
     public function loadUserData($userName)
     {
         if ($this->user->getFromDBbyName(addslashes($userName)) != '') {
-			return $this;
-		} elseif ($this->user->getFromDBbyEmail(addslashes($userName)) != '') {
-			return $this;
-		}
+            return $this;
+        } elseif ($this->user->getFromDBbyEmail(addslashes($userName)) != '') {
+            return $this;
+        }
     }
 
     /**

@@ -1,5 +1,4 @@
 <?php
-
 /**
  *  ------------------------------------------------------------------------
  *  Derrick Smith - PHP SAML Plugin
@@ -25,20 +24,20 @@
  *
  * ------------------------------------------------------------------------
  *
- *  @package  	phpsamlconfig
- *  @version	1.3.0
- *  @author    	Derrick Smith
- *  @author	   	Chris Gralike
- *  @copyright 	Copyright (c) 2018 by Derrick Smith
- *  @license   	MIT
- *  @see       	https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
- *  @link		https://github.com/derricksmith/phpsaml/
- *  @since     	0.1
+ *  @package    phpsaml - main User creation rules class
+ *  @version    1.3.0
+ *  @author     Derrick Smith
+ *  @author     Chris Gralike
+ *  @copyright  Copyright (c) 2018 by Derrick Smith
+ *  @license    MIT
+ *  @see        https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
+ *  @link       https://github.com/derricksmith/phpsaml/
+ *  @since      1.3.0
  * ------------------------------------------------------------------------
  **/
 
 if (!defined('GLPI_ROOT')) {
-	die("Sorry. You can't access this file directly");
+    die("Sorry. You can't access this file directly");
 }
 
 
@@ -60,7 +59,7 @@ class PluginPhpsamlRuleRight extends Rule{
      * getTitle
      * @return Title to use in Rules list
      **/
-	public function getTitle()
+    public function getTitle()
     {
         return __('SAML rules', 'phpsaml');
     }
@@ -69,7 +68,7 @@ class PluginPhpsamlRuleRight extends Rule{
      * getIcon
      * @return icon to use in rules list
      **/
-	public static function getIcon()
+    public static function getIcon()
     {
         return Profile::getIcon();
     }
