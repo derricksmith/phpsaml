@@ -26,20 +26,20 @@
  *
  * ------------------------------------------------------------------------
  *
- *  @package  	phpsamlconfig
- *  @version	1.3.0
- *  @author    	Derrick Smith
- *  @author	   	Chris Gralike
- *  @copyright 	Copyright (c) 2018 by Derrick Smith
- *  @license   	MIT
- *  @see       	https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
- *  @link		https://github.com/derricksmith/phpsaml/
- *  @since     	0.1
+ *  @package    phpsamlconfig
+ *  @version    1.3.0
+ *  @author     Derrick Smith
+ *  @author     Chris Gralike
+ *  @copyright  Copyright (c) 2018 by Derrick Smith
+ *  @license    MIT
+ *  @see        https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
+ *  @link       https://github.com/derricksmith/phpsaml/
+ *  @since      0.1
  * ------------------------------------------------------------------------
  **/
 
-// Add to dropdowns
-function plugin_phpsaml_getDropdown() {
+// Add exclude configuration to glpi dropdowns administration
+function plugin_phpsaml_getDropdown() {                             //NOSONAR - Default GLPI function names
     return [PluginPhpsamlExclude::class => PluginPhpsamlExclude::getTypeName(2)];
 }
 
@@ -51,22 +51,22 @@ function plugin_phpsaml_getDropdown() {
  * @return boolean Needs to return true if success
  */
 
-function plugin_phpsaml_install() {
-	// Install SamlConfig
-	if (method_exists(PluginPhpsamlConfig::class, 'install')) {
-		$version   = plugin_version_phpsaml();
-		$migration = new Migration($version['version']);
-		PluginPhpsamlConfig::install($migration);
-	}
+function plugin_phpsaml_install() {                                 //NOSONAR - Default GLPI function names
+    // Install SamlConfig
+    if (method_exists(PluginPhpsamlConfig::class, 'install')) {
+        $version   = plugin_version_phpsaml();
+        $migration = new Migration($version['version']);
+        PluginPhpsamlConfig::install($migration);
+    }
 
-	// Install Excludes
-	if (method_exists(PluginPhpsamlExclude::class, 'install')) {
-		$version   = plugin_version_phpsaml();
-		$migration = new Migration($version['version']);
-		PluginPhpsamlExclude::install($migration);
-	}
+    // Install Excludes
+    if (method_exists(PluginPhpsamlExclude::class, 'install')) {
+        $version   = plugin_version_phpsaml();
+        $migration = new Migration($version['version']);
+        PluginPhpsamlExclude::install($migration);
+    }
 
-	return true;
+    return true;
 }
 
 /**
@@ -74,24 +74,24 @@ function plugin_phpsaml_install() {
  *
  * @return boolean Needs to return true if success
  */
-function plugin_phpsaml_uninstall() {
-	// Install SamlConfig
-	 if (method_exists(PluginPhpsamlConfig::class, 'uninstall')) {
-		$version   = plugin_version_phpsaml();
-		$migration = new Migration($version['version']);
-		PluginPhpsamlConfig::uninstall($migration);
-	 }
-	 // Install excludes
-	 if (method_exists(PluginPhpsamlExclude::class, 'uninstall')) {
-		$version   = plugin_version_phpsaml();
-		$migration = new Migration($version['version']);
-		PluginPhpsamlExclude::uninstall($migration);
-	 }
-	return true;
+function plugin_phpsaml_uninstall() {                                   //NOSONAR - Default GLPI function names
+    // Install SamlConfig
+     if (method_exists(PluginPhpsamlConfig::class, 'uninstall')) {
+        $version   = plugin_version_phpsaml();
+        $migration = new Migration($version['version']);
+        PluginPhpsamlConfig::uninstall($migration);
+     }
+     // Install excludes
+     if (method_exists(PluginPhpsamlExclude::class, 'uninstall')) {
+        $version   = plugin_version_phpsaml();
+        $migration = new Migration($version['version']);
+        PluginPhpsamlExclude::uninstall($migration);
+     }
+    return true;
 }
 
 // Called by the rule_engine hook if a phpsaml rule has been succesfully matched
-function updateUser($params){
-	// https://github.com/derricksmith/phpsaml/issues/149
-	//var_dump($params);
+function updateUser($params){                                                       //NOSONAR - WorkInProgress
+    // https://github.com/derricksmith/phpsaml/issues/149
+    //var_dump($params);
 }

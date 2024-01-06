@@ -55,6 +55,8 @@ class PluginPhpsamlAuth extends Auth
             return $this;
         } elseif ($this->user->getFromDBbyEmail(addslashes($userName)) != '') {
             return $this;
+        }else {
+            // do nothing.
         }
     }
 

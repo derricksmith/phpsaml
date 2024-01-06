@@ -42,11 +42,11 @@ class PluginPhpsamlExclude extends CommonDropdown
      * Exclude DB fields
      */
     const NAME              = 'name';
-    const ACTIVE            = 'is_active';
     const DATE_CREATION     = 'date_creation';
     const DATE_MOD          = 'date_mod';
     const CLIENTAGENT       = 'ClientAgent';
     const EXCLUDEPATH       = 'ExcludePath';
+    const ACTION            = 'action';
 
      /**
      * getTypeName(int nb) : string -
@@ -105,21 +105,21 @@ class PluginPhpsamlExclude extends CommonDropdown
         return [
             [
                 'name'      => 'ClientAgent',
-                'label'     => __('Client Agent performing the call', 'phpsaml'),
+                'label'     => __('Agent contains', 'phpsaml'),
                 'type'      => 'text',
                 'list'      => true,
+            ],
+            [
+                'name'      => 'action',
+                'label'     => __('Bypass SAML auth', 'phpsaml'),
+                'type'      => 'bool',
             ],
             [
                 'name'      => 'ExcludePath',
-                'label'     => __('To be excluded path', 'phpsaml'),
+                'label'     => __('Url contains path or file', 'phpsaml'),
                 'type'      => 'text',
                 'list'      => true,
                 'min'       => 1,
-            ],
-            [
-                'name'      => 'is_active',
-                'label'     => __('Active', 'phpsaml'),
-                'type'      => 'bool',
             ],
         ];
     }
@@ -165,17 +165,52 @@ class PluginPhpsamlExclude extends CommonDropdown
     {
         global $DB;
         $excludes = [];
-        $dropdown = new FilterPattern();
+        $dropdown = new PluginPhpsamlExclude();
         $table = $dropdown::getTable();
         foreach($DB->request($table) as $id => $row){                           //NOSONAR - For readability
             $excludes[] = [self::NAME                => $row[self::NAME],
-                           self::ACTIVE              => $row[self::ACTIVE],
+                           self::ACTION              => $row[self::ACTION],
                            self::DATE_CREATION       => $row[self::DATE_CREATION],
                            self::DATE_MOD            => $row[self::DATE_MOD],
                            self::CLIENTAGENT         => $row[self::CLIENTAGENT],
                            self::EXCLUDEPATH         => $row[self::EXCLUDEPATH]];
         }
         return $excludes;
+    }
+
+    /**
+     * Process all that need to be excluded from SAML auth.
+     *
+     * @return patterns              Array with all configured patterns
+     * @since                        1.1.0
+     */
+    public static function ProcessExcludes() : bool                             //NOSONAR - Multiple returns by design.
+    {
+        // Never perform auth for CLI calls
+        if ( PHP_SAPI === 'cli' ){
+           return true;
+        }
+
+        // Process configured excluded URIs and agents.
+        foreach( self::getExcludes() as $exclude){
+            if (strpos($_SERVER['REQUEST_URI'], $exclude[PluginPhpsamlExclude::EXCLUDEPATH]) !== false) {
+                // Also validate agent?
+                if(!empty($exclude[PluginPhpsamlExclude::CLIENTAGENT])){
+                    if(strpos($_SERVER['HTTP_USER_AGENT'], $exclude[PluginPhpsamlExclude::CLIENTAGENT]) !== false) {
+                        // return configured action true for bypass, false for auth.
+                        return ($exclude[PluginPhpsamlExclude::ACTION]) ? true : false;
+                    } else {
+                        return false;
+                    }
+                }else{
+                    // return configured action true for bypass, false for auth.
+                    return ($exclude[PluginPhpsamlExclude::ACTION]) ? true : false;
+                }
+            }else{
+                // No matches, continue processing login
+                return false;
+            }
+        }
     }
 
     /**
@@ -200,48 +235,58 @@ class PluginPhpsamlExclude extends CommonDropdown
             $migration->displayMessage("Installing $table");
             $query = <<<SQL
             CREATE TABLE IF NOT EXISTS `$table` (
-            `id`                        int {$default_key_sign} NOT NULL AUTO_INCREMENT,
-            `name`                      varchar(255) DEFAULT NULL,
-            `comment`                   text,
-            `is_active`                 tinyint NOT NULL DEFAULT '0',
-            `date_creation`             timestamp NULL DEFAULT NULL,
-            `date_mod`                  timestamp NULL DEFAULT NULL,
-            `ClientAgent`               text NOT NULL,
-            `ExcludePath`               text NOT NULL,
-            PRIMARY KEY (`id`),
-            KEY `name` (`name`),
-            KEY `is_active` (`is_active`),
-            KEY `date_creation` (`date_creation`),
-            KEY `date_mod` (`date_mod`)
+                `id`                        int {$default_key_sign} NOT NULL AUTO_INCREMENT,
+                `name`                      varchar(255) DEFAULT NULL,
+                `comment`                   text,
+                `date_creation`             timestamp NULL DEFAULT NULL,
+                `date_mod`                  timestamp NULL DEFAULT NULL,
+                `ClientAgent`               text NOT NULL,
+                `ExcludePath`               text NOT NULL,
+                `action`                    tinyint unsigned NOT NULL DEFAULT '0',
+                PRIMARY KEY (`id`)
             ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset} COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;
             SQL;
             $DB->query($query) or die($DB->error());
 
             // insert default excludes;
             $query = <<<SQL
-            INSERT INTO `$table`(name, comment, is_active, ClientAgent, ExcludePath)
-            VALUES('Fusion Inventory 1', 'backport configuration', '1', 'FusionInventory-Agent', '/plugins/fusioninventory/');
+            INSERT INTO `$table`(name, comment, action, ClientAgent, ExcludePath)
+            VALUES('Bypass Cron.php', 'backport configuration', '1', '', '/front/cron.php');
             SQL;
             $DB->query($query) or die($DB->error());
 
             // insert default excludes;
             $query = <<<SQL
-            INSERT INTO `$table`(name, comment, is_active, ClientAgent, ExcludePath)
-            VALUES('Fusion Inventory 2', '', '1', 'FusionInventory-Agent', '/marketplace/fusioninventory/');
+            INSERT INTO `$table`(name, comment, action, ClientAgent, ExcludePath)
+            VALUES('Bypass Inventory.php', '', '1', '', 'front/inventory.php');
             SQL;
             $DB->query($query) or die($DB->error());
 
             // insert default excludes;
             $query = <<<SQL
-            INSERT INTO `$table`(name, comment, is_active, ClientAgent, ExcludePath)
-            VALUES('Fusion Inventory 3', 'backport configuration', '1', 'FusionInventory-Agent', '/plugins/glpiinventory/');
+            INSERT INTO `$table`(name, comment, action, ClientAgent, ExcludePath)
+            VALUES('Bypass ldap_mass_sync.php', '', '1', '', 'ldap_mass_sync.php');
             SQL;
             $DB->query($query) or die($DB->error());
 
             // insert default excludes;
             $query = <<<SQL
-            INSERT INTO `$table`(name, comment, is_active, ClientAgent, ExcludePath)
-            VALUES('Fusion Inventory 3', '', '1', 'FusionInventory-Agent', '/marketplace/glpiinventory/');
+            INSERT INTO `$table`(name, comment, action, ClientAgent, ExcludePath)
+            VALUES('Bypass apirest.php', '', '1', '', 'apirest.php');
+            SQL;
+            $DB->query($query) or die($DB->error());
+
+            // insert default excludes;
+            $query = <<<SQL
+            INSERT INTO `$table`(name, comment, action, ClientAgent, ExcludePath)
+            VALUES('Bypass acs.php', '', '1', '', 'front/acs.php');
+            SQL;
+            $DB->query($query) or die($DB->error());
+
+            // insert default excludes;
+            $query = <<<SQL
+            INSERT INTO `$table`(name, comment, action, ClientAgent, ExcludePath)
+            VALUES('Bypass all fusioninventory files', '', '1', '', '/fusioninventory/');
             SQL;
             $DB->query($query) or die($DB->error());
         }

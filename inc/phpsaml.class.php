@@ -201,32 +201,16 @@ class PluginPhpsamlPhpsaml
         $cfgObj         = new PluginPhpsamlConfig();
         $config         = $cfgObj->getConfig();
 
-        // Return false for fusioninventory agents
-        // Todo: move to excludes class.
-        // https://github.com/derricksmith/phpsaml/issues/134
-        foreach(self::EXCLUDED_USERAGENTS as $agent => $request){
-            if( array_key_exists('HTTP_USER_AGENT', $_SERVER )          &&
-                array_key_exists('REQUEST_URI', $_SERVER)               &&
-                strpos($_SERVER['HTTP_USER_AGENT'], $agent) !== false   &&
-                strpos($_SERVER['REQUEST_URI'], $request)   !== false   ){
-                    return false;
-            }// else continue processing
-        }
-
-        // Return true for local files in Excludes constant
-        foreach (self::EXCLUDED_FILES as $value) {
-            if ( PHP_SAPI === 'cli'                                ||
-                 strpos($_SERVER['REQUEST_URI'], $value) !== false ){
-                    return true;
-            }
-        }
-
         // Perform logout if requested.
         if ((strpos($_SERVER['REQUEST_URI'], 'front/logout.php') !== false) &&
             (!empty($config[PluginPhpsamlConfig::SLOURL]))) {
-
             $_SESSION['noAUTO'] = 1;
             self::sloRequest();
+        }
+
+        // Process configured excludes
+        if(PluginPhpsamlExclude::ProcessExcludes()) {
+            return true;
         }
 
         // Check if the user was authenticated
