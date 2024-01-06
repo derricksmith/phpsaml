@@ -33,6 +33,5 @@
  * ------------------------------------------------------------------------
  **/
 include "../../../inc/includes.php";
-
 $dropdown = new PluginPhpsamlExclude();
 include GLPI_ROOT . '/front/dropdown.common.php';

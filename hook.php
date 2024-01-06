@@ -38,6 +38,11 @@
  * ------------------------------------------------------------------------
  **/
 
+// Add to dropdowns
+function plugin_phpsaml_getDropdown() {
+    return [PluginPhpsamlExclude::class => PluginPhpsamlExclude::getTypeName(2)];
+}
+
 /**
  * It is in these functions that you need to put your SQL queries used for creating your specific tables.
  *

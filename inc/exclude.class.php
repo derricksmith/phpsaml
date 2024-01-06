@@ -38,9 +38,8 @@
 
 class PluginPhpsamlExclude extends CommonDropdown
 {
-
     /**
-     * Table fields
+     * Exclude DB fields
      */
     const NAME              = 'name';
     const ACTIVE            = 'is_active';
@@ -59,12 +58,8 @@ class PluginPhpsamlExclude extends CommonDropdown
      */
     public static function getTypeName($nb = 0) : string
     {
-        if ($nb > 0) {
-           return __('Exclude', 'phpsaml');
-        }
-        return __('Exclude', 'phpsaml');
+        return _n('Saml Exclude path', 'Saml Excluded paths', $nb, 'phpsaml');
     }
-
 
     /**
      * getMenuContent() : array | bool -
@@ -78,11 +73,11 @@ class PluginPhpsamlExclude extends CommonDropdown
         $menu = [];
         if (Config::canUpdate()) {
             $menu['title'] = self::getMenuName();
-            $menu['page']  = '/' . Plugin::getWebDir('phpsaml', false) . 'front/exclude.php';
+            $menu['page']  = '/' . Plugin::getWebDir('phpsaml', false) . '/front/exclude.php';
             $menu['icon']  = self::getIcon();
         }
         if (count($menu)) {
-            return $menu;
+          return $menu;
         }
         return false;
     }
@@ -95,7 +90,7 @@ class PluginPhpsamlExclude extends CommonDropdown
      */
     public static function getIcon() : string
     {
-        return 'fas fa-filter';
+        return 'fas fa-check-square';
     }
 
     /**

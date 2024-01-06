@@ -72,12 +72,38 @@ class PluginPhpsamlConfig extends CommonDBTM
     public const PROXIED = 'proxied';
     public const CFNAME  = 'saml_configuration_name';
 
+    public static $rightname     = 'config';
+
+    /**
+    * getTypeName(int nb) : string -
+    * Method called by pre_item_add hook validates the object and passes
+    * it to the RegEx Matching then decides what to do.
+    *
+    * @param  int      $nb     number of items.
+    * @return void
+    */
+   public static function getTypeName($nb = 0) : string
+   {
+       return _n('Saml config', 'Saml config', $nb, 'phpsaml');
+   }
+
+   /**
+     * getIcon() : string -
+     * Sets icon for object.
+     *
+     * @return string   $icon
+     */
+    public static function getIcon() : string
+    {
+        return 'fas fa-address-book';
+    }
+
     // PROPERTIES
     /**
      * defines the rights a user must posses to be able to access this menu option in the rules section
      * @var string
      **/
-	public static $rightname = 'plugin_phpsaml_config';
+	//public static $rightname = 'plugin_phpsaml_config';
 
 
     /**

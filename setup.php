@@ -134,6 +134,11 @@ function plugin_init_phpsaml() : void
 	Plugin::registerClass('PluginPhpsamlRuleRightCollection', ['rulecollections_types' => true]);
 	Plugin::registerClass('PluginPhpsamlAcs');
 
+	// Menu link
+	$PLUGIN_HOOKS['menu_toadd']['phpsaml'] = [
+		'config' => 'PluginPhpsamlConfig',
+	];
+
 	// Register config page if user has correct rights.
 	$p = new Plugin();
 	if (Session::getLoginUserID() && $p->isActivated("phpsaml") && Session::haveRight('config', UPDATE)) {
