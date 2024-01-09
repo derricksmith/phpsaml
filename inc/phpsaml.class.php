@@ -43,24 +43,6 @@ class PluginPhpsamlPhpsaml
     public const SESSION_GLPI_NAME_ACCESSOR = 'glpiname';
     public const SESSION_VALID_ID_ACCESSOR  = 'valid_id';
 
-    // Excluded local files
-    public const EXCLUDED_FILES             = ['cron.php',
-                                               'ldap_mass_sync.php',
-                                               'apirest.php',
-                                               'acs.php'];
-
-    // Excluded useragents
-    // https://github.com/derricksmith/phpsaml/issues/134
-    // https://github.com/derricksmith/phpsaml/issues/152
-    // "POST / HTTP/1.1" 200 473 "-" "GLPI-Agent_v1.5-gitf0e44092"
-    // "POST / HTTP/1.1" 200 330 "-" "GLPI-Injector_v1.5-gitf0e44092"
-    private const EXCLUDED_USERAGENTS       = ['FusionInventory-Agent'  => '/plugins/fusioninventory/',
-                                               'FusionInventory-Agent'  => '/marketplace/fusioninventory/',
-                                               'FusionInventory-Agent'  => '/plugins/glpiinventory/',
-                                               'FusionInventory-Agent'  => '/marketplace/glpiinventory/',
-                                               'GLPI-Agent'             => '/',
-                                               'GLPI-Injector'          => '/'];
-
     // https://docs.oasis-open.org/security/saml/v2.0/saml-bindings-2.0-os.pdf
     private const SCHEMA_NAME                 = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
     private const SCHEMA_SURNAME              = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname';
