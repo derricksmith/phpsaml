@@ -275,7 +275,11 @@ class PluginPhpsamlConfig extends CommonDBTM
         } else {
             $this->registerError('🟥 Phpsaml was not able to retrieve configuration columns from database', 'general', true);
         }
-        
+
+        // Communicate URLs in Config page
+        $this->formValues['ACSURL']         = "▶️ ACS URL : ".Config::getConfigurationValue('core', 'url_base').Plugin::getWebDir('phpsaml')."/front/acs.php";
+        $this->formValues['REDIRECTURL']    = "▶️ Redirect URL : ".Config::getConfigurationValue('core', 'url_base');
+
         return $config;
     }
 
