@@ -277,7 +277,7 @@ class PluginPhpsamlConfig extends CommonDBTM
         }
 
         // Communicate URLs in Config page
-        $this->formValues['ACSURL']         = "▶️ ACS URL : ".Config::getConfigurationValue('core', 'url_base').Plugin::getWebDir('phpsaml')."/front/acs.php";
+        $this->formValues['ACSURL']         = "▶️ ACS URL : ".Plugin::getWebDir('phpsaml', true, true)."/front/acs.php";
         $this->formValues['REDIRECTURL']    = "▶️ Redirect URL : ".Config::getConfigurationValue('core', 'url_base');
 
         return $config;

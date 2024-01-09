@@ -36,9 +36,8 @@
  * ------------------------------------------------------------------------
  **/
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+// GLPI MUST BE LOADED
+if (!defined("GLPI_ROOT")) { die("Sorry. You can't access directly to this file"); }
 
 
 class PluginPhpsamlRuleRightCollection extends RuleCollection {

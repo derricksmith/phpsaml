@@ -36,7 +36,8 @@
  * ------------------------------------------------------------------------
  **/
 
-if (!defined('GLPI_ROOT')) { define('GLPI_ROOT', '../../..'); }
+// GLPI MUST BE LOADED
+if (!defined("GLPI_ROOT")) { die("Sorry. You can't access directly to this file"); }
 
 // Plugins or marketplace location?
 $phpSamlPath = (strpos(dirname(__FILE__), 'plugins') !== false) ? '/plugins/phpsaml' : '/marketplace/phpsaml';

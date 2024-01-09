@@ -36,6 +36,9 @@
  * ------------------------------------------------------------------------
  **/
 
+// GLPI MUST BE LOADED
+if (!defined("GLPI_ROOT")) { die("Sorry. You can't access directly to this file"); }
+
 class PluginPhpsamlAcs
 {
     private const DS = DIRECTORY_SEPARATOR;
