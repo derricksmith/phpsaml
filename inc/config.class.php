@@ -41,9 +41,14 @@ if (!defined("GLPI_ROOT")) { die("Sorry. You can't access directly to this file"
 
 class PluginPhpsamlConfig extends CommonDBTM
 {
-    // CONSTANTS
+    // DB CONSTANTS
+    public const ID         = 'id';
+    public const VERSION    = 'version';
+    public const FORCED     = 'enforced';
+    public const PROXIED    = 'proxied';
     public const STRICT     = 'strict';
     public const DEBUG      = 'debug';
+    public const JIT        = 'jit';
     public const SPCERT     = 'saml_sp_certificate';
     public const SPKEY      = 'saml_sp_certificate_key';
     public const NAMEFM     = 'saml_sp_nameid_format';
@@ -51,23 +56,22 @@ class PluginPhpsamlConfig extends CommonDBTM
     public const SSOURL     = 'saml_idp_single_sign_on_service';
     public const SLOURL     = 'saml_idp_single_logout_service';
     public const IPCERT     = 'saml_idp_certificate';
-    public const CMPREQ     = true; // Compress requests
-    public const CMPRES     = true; // Compress response
+    public const AUTHNC     = 'requested_authn_context';
+    public const AUTHND     = 'requested_authn_context_comparison'; //diff
     public const ENAME      = 'saml_security_nameidencrypted';
     public const SAUTHN     = 'saml_security_authnrequestssigned';
     public const SSLORQ     = 'saml_security_logoutrequestsigned';
-    public const SSLORE     = 'saml_security_logoutresonsesigned';
-    public const AUTHNC     = 'requested_authn_context';
-    public const AUTHND     = 'requested_authn_context_comparison'; //diff
+    public const SSLORE     = 'saml_security_logoutresponsesigned';
+    public const CFNAME     = 'saml_configuration_name';
+
+    // OTHER CONSTANTS
+    public const CMPREQ     = true; // Compress requests
+    public const CMPRES     = true; // Compress response
     public const XMLVAL     = true;  // Perform xml validation
     public const DSTVAL     = false; // relax destination validation
     public const LOWURL     = true;  // lowercaseUrlEncoding
     public const ACSPATH    = '/plugins/phpsaml/front/acs.php';
     public const SLOPATH    = '/plugins/phpsaml/front/slo.php';
-    public const FORCED     = 'enforced';
-    public const PROXIED    = 'proxied';
-    public const CFNAME     = 'saml_configuration_name';
-
 
     // PROPERTIES
     /**
@@ -1227,60 +1231,55 @@ class PluginPhpsamlConfig extends CommonDBTM
             ) ENGINE=InnoDB DEFAULT CHARSET={$default_charset} COLLATE={$default_collation} ROW_FORMAT=DYNAMIC;
             SQL;
             $DB->query($query) or die($DB->error());
+
+            // If table creation was succesfull.
+            // Add a blank row.
+            if ($DB->tableExists($table)) {
+                // Replace fields with class constants...
+                $input = [
+                    self::ID            =>  '1',
+                    self::VERSION       =>  "$version",
+                    self::FORCED        =>  '0',
+                    self::PROXIED       =>  '0',
+                    self::STRICT        =>  '1',
+                    self::DEBUG         =>  '0',
+                    self::JIT           =>  '0',
+                    self::SPCERT        =>  '',
+                    self::SPKEY         =>  '',
+                    self::NAMEFM        =>  '',
+                    self::ENTITY        =>  '',
+                    self::SSOURL        =>  '',
+                    self::SLOURL        =>  '',
+                    self::IPCERT        =>  '',
+                    self::AUTHNC        =>  '',
+                    self::AUTHND        =>  '',
+                    self::ENAME         =>  '0',
+                    self::SAUTHN        =>  '0',
+                    self::SSLORQ        =>  '0',
+                    self::SSLORE        =>  '0',
+                    self::CFNAME        =>  'default',
+                ];
+    
+                // Will always insert id1 or update if row id1 already exists.
+                $migration->insertInTable($table, $input);
+                $migration->executeMigration();
+            }
+        }else{
+            // We are updating an existing version
+            $migration->backupTables([$table]);
+            Session::addMessageAfterRedirect("<font color='green'>Update detected. Configuration 
+                                              copied into backup_$table.</font><br><br>
+                                              <font color='orange'>Warning: reinstalling phpsaml
+                                               will overwrite the config backup potentially with an
+                                               faulty or empty one!</font><br><br>");
         }
-        
-        if ($DB->tableExists($table)) {
-            // insert default config;
-            $query = <<<SQL
-            INSERT INTO `$table`
-                (`id`,
-                `version`,
-                `enforced`,
-                `proxied`,
-                `strict`,
-                `debug`,
-                `jit`,
-                `saml_sp_certificate`,
-                `saml_sp_certificate_key`,
-                `saml_sp_nameid_format`,
-                `saml_idp_entity_id`,
-                `saml_idp_single_sign_on_service`,
-                `saml_idp_single_logout_service`,
-                `saml_idp_certificate`,
-                `requested_authn_context`,
-                `requested_authn_context_comparison`,
-                `saml_security_nameidencrypted`,
-                `saml_security_authnrequestssigned`,
-                `saml_security_logoutrequestsigned`,
-                `saml_security_logoutresponsesigned`,
-                `saml_configuration_name`)
-            VALUES('1',
-                '$version',
-                '0',
-                '0',
-                '1',
-                '0',
-                '0',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '0',
-                '0',
-                '0',
-                '0',
-                'default');
-            SQL;
-            $DB->query($query) or die($DB->error());        // Die will leave the plugin in an unusable and terrible state.
-        }
-            // Migration
-            //$migration->changeField($table, 'OLDFIELD', 'NEWFIELD', 'DATATYPE', ['null' => false, 'value' => '1']);
-            //$migration->migrationOneTable($table);
+
+        // Perform version migration steps.
+        // Changes for newer versions
+        // Do somthing version related here :)
+        //$migration->changeField($table, 'OLDFIELD', 'NEWFIELD', 'DATATYPE', ['null' => false, 'value' => '1']);
+        //$migration->migrationOneTable($table);
+
     }
 
     /**
@@ -1292,6 +1291,9 @@ class PluginPhpsamlConfig extends CommonDBTM
      */
     public static function uninstall(Migration $migration) : void
     {
+        // Lets just create a backup. 
+        $migration->backupTables([$table]);
+
         $table = self::getTable();
         $migration->displayMessage("Uninstalling $table");
         $migration->dropTable($table);
