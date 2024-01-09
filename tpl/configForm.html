@@ -1,4 +1,3 @@
-
 <script>
     $(function() {
         $('#keep-order').multiSelect({
@@ -149,14 +148,13 @@
 
        {{ERRORS}}
 
-        <h2 class="full-width">{{HEADER_GENERAL}}</h2>
         <div class='alert alert-info mb-o rounded-0 border-top-0 border-bottom-0 border-right-0 full-width' role='alert'>
-            
-            
             {{IP_CERT_VALID}}<br>
             {{SP_CERT_VALID}}<br>
             {{VERSION}}<br>
         </div>
+
+        <h2 class="full-width">{{HEADER_GENERAL}}</h2>
 
         <p class="full-width">
             <em style="color:red">{{CONF_NAME_ERROR}}</em>
@@ -166,7 +164,6 @@
             </label>
             <input {{DISABLED}} type="text" name="saml_configuration_name" id="saml_saml_configuration_name" spaceholder="" title="" value="{{CONF_NAME_VALUE}}">
         </p>
-
 
         <p>
             <label for="enforced">

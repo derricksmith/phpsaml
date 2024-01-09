@@ -91,7 +91,7 @@ class PluginPhpsamlConfig extends CommonDBTM
     */
     public static function getTypeName($nb = 0) : string
     {
-        return _n('Saml config', 'Saml config', $nb, 'phpsaml');
+        return _n('PHP SAML', 'PHP SAML', $nb, 'phpsaml');
     }
 
     /**
@@ -769,7 +769,7 @@ class PluginPhpsamlConfig extends CommonDBTM
                 $this->registerError('🟨 Provided IdP entity ID URL does not look like a valid TLS enabled URL');
             }
         } else {
-            $this->registerError('🟨 The IdP entity ID URL required field.');
+            $this->registerError('🟨 The IdP entity ID URL is a required field.');
         }
 
         
@@ -800,7 +800,7 @@ class PluginPhpsamlConfig extends CommonDBTM
                 $this->registerError('🟨 Provided sign on service URL does not look like a valid TLS enabled URL');
             }
         } else {
-            $this->registerError('🟨 The single sign on service URL required field.');
+            $this->registerError('🟨 The single sign on service URL is a required field.');
         }
         
         // Declare template labels

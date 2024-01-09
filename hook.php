@@ -45,7 +45,6 @@ function plugin_phpsaml_getDropdown() {                             //NOSONAR - 
 
 /**
  * It is in these functions that you need to put your SQL queries used for creating your specific tables.
- *
  * Here, you can now see your plugin in the list of plugins.
  *
  * @return boolean Needs to return true if success
@@ -71,7 +70,6 @@ function plugin_phpsaml_install() {                                 //NOSONAR - 
 
 /**
  * Because we've created a table, do not forget to destroy if the plugin is uninstalled.
- *
  * @return boolean Needs to return true if success
  */
 function plugin_phpsaml_uninstall() {                                   //NOSONAR - Default GLPI function names

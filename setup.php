@@ -44,15 +44,14 @@ if (!defined("GLPI_ROOT")) { die("Sorry. You can't access directly to this file"
 define("PLUGIN_PHPSAML_VERSION", "1.3.0");
 define("PLUGIN_PHPSAML_MIN_GLPI", "9.4");
 define("PLUGIN_PHPSAML_MAX_GLPI", "10.0.99");
-define('PLUGIN_PHPSAML_DIR', __DIR__);
-//define('PLUGIN_PHPSAML_BASEURL', '/' . Plugin::getWebDir('phpsaml', false) . '/'); // Donuts: Used nowhere.
+define('PLUGIN_PHPSAML_DIR', __DIR__);                  //used in config.class.php
 
 /**
  * Definition of the plugin version and its compatibility with the version of core
  *
  * @return array
  */
-function plugin_version_phpsaml() : array
+function plugin_version_phpsaml() : array                           //NOSONAR - Default GLPI function.
 {
     return ['name'             => "PHP SAML",
             'version'         => PLUGIN_PHPSAML_VERSION,
@@ -77,7 +76,7 @@ function plugin_version_phpsaml() : array
  *
  * @return boolean
  */
-function plugin_phpsaml_check_prerequisites() : bool
+function plugin_phpsaml_check_prerequisites() : bool                //NOSONAR - Default GLPI function.
 {
     if (version_compare(GLPI_VERSION, PLUGIN_PHPSAML_MIN_GLPI, 'lt') ||
         version_compare(GLPI_VERSION, PLUGIN_PHPSAML_MAX_GLPI, 'gt')) {
@@ -101,7 +100,7 @@ function plugin_phpsaml_check_prerequisites() : bool
  * @param bool $verbose
  * @return bool
  */
-function plugin_phpsaml_check_config($verbose = false) : bool
+function plugin_phpsaml_check_config($verbose = false) : bool       //NOSONAR - Default GLPI function.
 {
     return true;
 }
@@ -114,28 +113,24 @@ function plugin_phpsaml_check_config($verbose = false) : bool
  * @return void
  * @see                https://glpi-developer-documentation.readthedocs.io/en/master/plugins/hooks.html
  */
-function plugin_init_phpsaml() : void
+function plugin_init_phpsaml() : void                               //NOSONAR - Default GLPI function.
 {
     global $PLUGIN_HOOKS;
 
-    $PLUGIN_HOOKS['csrf_compliant']['phpsaml'] = true;
+    $PLUGIN_HOOKS['csrf_compliant']['phpsaml'] = true;              //NOSONAR - Default GLPI variable
 
     // We dont use composer (yet)
     Plugin::registerClass('PluginPhpsaml');
+    Plugin::registerClass('PluginPhpsamlAcs');
     Plugin::registerClass('PluginPhpsamlExclude');
     Plugin::registerClass('PluginPhpsamlRuleRight');
     Plugin::registerClass('PluginPhpsamlRuleRightCollection', ['rulecollections_types' => true]);
-    Plugin::registerClass('PluginPhpsamlAcs');
 
     // Register config page if user has correct rights.
     $p = new Plugin();
     if (Session::getLoginUserID() && $p->isActivated("phpsaml") && Session::haveRight('config', UPDATE)) {
-        // Add saml config to config menu 
-        $PLUGIN_HOOKS['menu_toadd']['phpsaml'] = [
-            'config' => 'PluginPhpsamlConfig',
-        ];
-
-        //Plugin::registerClass('PluginPhpsamlConfig', ['addtabon' => 'Config']);
+        // Add saml config to config menu
+        $PLUGIN_HOOKS['menu_toadd']['phpsaml'] = ['config' => 'PluginPhpsamlConfig',];
         $PLUGIN_HOOKS['config_page']['phpsaml'] = 'front/config.php';
     }
 
@@ -154,6 +149,7 @@ function plugin_init_phpsaml() : void
     
     // Register hook to include required js and css files.
     // Added key exists validation for Cron https://github.com/derricksmith/phpsaml/issues/130
+    //Maybe move these to /tpl directory?
     if (array_key_exists('REQUEST_URI', $_SERVER) && strpos($_SERVER['REQUEST_URI'], '/front/config.php')) {
         $PLUGIN_HOOKS['add_javascript']['phpsaml'][] = 'js/jquery.multi-select.js';
         $PLUGIN_HOOKS['add_css']['phpsaml'] = 'css/multi-select.css';
@@ -179,30 +175,33 @@ function pluginPhpsamlPostInit()
     if(!empty($config[PluginPhpSamlConfig::SSOURL]) &&
        !empty($config[PluginPhpSamlConfig::IPCERT]) &&
        !empty($config[PluginPhpSamlConfig::SLOURL]) ){
-        $samlnosso = $GLPI_CACHE->get('phpsaml_'.session_id());
 
-        /**
-         * Allow users to bypass enforce switch if needed.
-         * Use GLPI cache because $_SESSION is reset by GLPI and not persist. 
-         * @see     https://github.com/DonutsNL/phpsaml2/issues/1
-         */
-        if( (!isset($_GET['SSO']) && (isset($_GET['nosso']) || ($samlnosso))) ){
-            $GLPI_CACHE->set('phpsaml_'.session_id(), true);
-            $nosso = true;
-        }else{
-            $GLPI_CACHE->set('phpsaml_'.session_id(), false);
-            $nosso = false;
-        }
+            $samlnosso = $GLPI_CACHE->get('phpsaml_'.session_id());
 
-        /**
-         * @since 1.1.0      perform SSO if..
-         */
-        if ((isset($_GET['SSO']) && ($_GET['SSO'] == 1)    ||
-             $config[PluginPhpsamlConfig::FORCED]          ||
-             !empty($_SESSION['plugin_phpsaml_nameid']))   &&
-             !$nosso                                       ){
-                return $phpsaml->processUserLogin();
-        }
+            /**
+             * Allow users to bypass enforce switch if needed.
+             * Use GLPI cache because $_SESSION is reset by GLPI and not persist.
+             * @see     https://github.com/DonutsNL/phpsaml2/issues/1
+             */
+            if(!isset($_GET['SSO'])  &&
+            (isset($_GET['nosso']) ||
+            $samlnosso           )){
+                    $GLPI_CACHE->set('phpsaml_'.session_id(), true);
+                    $nosso = true;
+            }else{
+                    $GLPI_CACHE->set('phpsaml_'.session_id(), false);
+                    $nosso = false;
+            }
+
+            /**
+             * @since 1.1.0      perform SSO if..
+             */
+            if ((isset($_GET['SSO']) && ($_GET['SSO'] == 1)    ||
+                $config[PluginPhpsamlConfig::FORCED]          ||
+                !empty($_SESSION['plugin_phpsaml_nameid']))   &&
+                !$nosso                                       ){
+                    return $phpsaml->processUserLogin();
+            }
     } // else do nothing, we cant use phpsaml for auth.
 }
 
