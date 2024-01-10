@@ -51,13 +51,12 @@ class PluginPhpsamlAcs
 
     public function __construct()
     {
-        $this->populatePaths(); 
+        $this->populatePaths();
         $this->loadRequiredClassFiles();
         $this->getDebugConfig();            // Check if debugging is enabled.
     }
 
-    // Todo: Simplify this method.
-    public function assertSaml($samlResponse) : void
+    public function assertSaml($samlResponse) : void    //NOSONAR - Complexity by design.
     {
         if(is_array($samlResponse) && array_key_exists('SAMLResponse', $samlResponse)) {
             // Get phpSamlSettings

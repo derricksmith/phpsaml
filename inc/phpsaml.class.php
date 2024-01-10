@@ -192,6 +192,12 @@ class PluginPhpsamlPhpsaml
             $_SESSION['noAUTO'] = 1;
             self::sloRequest();
         }
+        
+        //https://github.com/derricksmith/phpsaml/issues/159
+        // Dont enforce front/acs.php it causes a login loop. 
+        if (strpos($_SERVER['REQUEST_URI'], 'acs.php') !== false ){
+			return true;
+		}
 
         // Process configured excludes
         if(PluginPhpsamlExclude::ProcessExcludes()) {
@@ -261,8 +267,8 @@ class PluginPhpsamlPhpsaml
      */
     public static function glpiLogin($relayState = null) : void
     {
-        $auth             = new PluginPhpsamlAuth();
-        $cfgObj            = new PluginPhpsamlConfig();
+        $auth           = new PluginPhpsamlAuth();
+        $cfgObj         = new PluginPhpsamlConfig();
         $config         = $cfgObj->getConfig();
         
         // Perform login

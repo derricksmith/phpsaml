@@ -183,23 +183,24 @@ function pluginPhpsamlPostInit()
              * Use GLPI cache because $_SESSION is reset by GLPI and not persist.
              * @see     https://github.com/DonutsNL/phpsaml2/issues/1
              */
-            if(!isset($_GET['SSO'])  &&
-            (isset($_GET['nosso']) ||
-            $samlnosso           )){
+            if(!isset($_GET['SSO'])   &&
+              (isset($_GET['nosso'])  ||
+               $samlnosso             )){
                     $GLPI_CACHE->set('phpsaml_'.session_id(), true);
                     $nosso = true;
             }else{
                     $GLPI_CACHE->set('phpsaml_'.session_id(), false);
                     $nosso = false;
             }
+            
 
             /**
              * @since 1.1.0      perform SSO if..
              */
             if ((isset($_GET['SSO']) && ($_GET['SSO'] == 1)    ||
-                $config[PluginPhpsamlConfig::FORCED]          ||
-                !empty($_SESSION['plugin_phpsaml_nameid']))   &&
-                !$nosso                                       ){
+                 $config[PluginPhpsamlConfig::FORCED]          ||
+                 !empty($_SESSION['plugin_phpsaml_nameid']))   &&
+                 !$nosso                                       ){
                     return $phpsaml->processUserLogin();
             }
     } // else do nothing, we cant use phpsaml for auth.
@@ -228,7 +229,11 @@ function pluginPhpsamlDisplayLogin()
     $cfgObj     = new PluginPhpsamlConfig();
     $btn         = $cfgObj->getConfig();
 
-    if(!empty($btn[PluginPhpSamlConfig::SSOURL])){
+    // https://github.com/derricksmith/phpsaml/issues/152#issuecomment-1884852309
+    if(!empty($btn[PluginPhpSamlConfig::SSOURL]) &&
+       !empty($btn[PluginPhpSamlConfig::ENTITY]) &&
+       !empty($btn[PluginPhpSamlConfig::IPCERT]) &&
+       !empty($btn[PluginPhpSamlConfig::SLOURL]) ){
 
         $btn          = (array_key_exists(PluginPhpsamlConfig::CFNAME, $btn)) ? $btn[PluginPhpsamlConfig::CFNAME] : 'PHP Saml';
         $redirect     = (isset($_GET['redirect'])) ? '&redirect='.urlencode($_GET['redirect']) : null;
