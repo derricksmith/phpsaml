@@ -282,13 +282,6 @@ class PluginPhpsamlExclude extends CommonDropdown
             // insert default excludes;
             $query = <<<SQL
             INSERT INTO `$table`(name, comment, action, ClientAgent, ExcludePath)
-            VALUES('Bypass acs.php', '', '1', '', 'front/acs.php');
-            SQL;
-            $DB->query($query) or die($DB->error());
-
-            // insert default excludes;
-            $query = <<<SQL
-            INSERT INTO `$table`(name, comment, action, ClientAgent, ExcludePath)
             VALUES('Bypass all fusioninventory files', '', '1', '', '/fusioninventory/');
             SQL;
             $DB->query($query) or die($DB->error());
