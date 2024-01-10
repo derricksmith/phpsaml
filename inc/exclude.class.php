@@ -194,8 +194,9 @@ class PluginPhpsamlExclude extends CommonDropdown
            return true;
         }
 
+        $excludes = self::getExcludes();
         // Process configured excluded URIs and agents.
-        foreach( self::getExcludes() as $exclude){
+        foreach($excludes as $exclude){
             if (strpos($_SERVER['REQUEST_URI'], $exclude[PluginPhpsamlExclude::EXCLUDEPATH]) !== false) {
                 // Also validate agent?
                 if(!empty($exclude[PluginPhpsamlExclude::CLIENTAGENT])){
@@ -209,11 +210,10 @@ class PluginPhpsamlExclude extends CommonDropdown
                     // return configured action true for bypass, false for auth.
                     return ($exclude[PluginPhpsamlExclude::ACTION]) ? true : false;
                 }
-            }else{
-                // No matches, continue processing login
-                return false;
             }
+            //https://github.com/derricksmith/phpsaml/issues/159
         }
+        return false;
     }
 
     /**

@@ -186,21 +186,21 @@ class PluginPhpsamlPhpsaml
         $cfgObj         = new PluginPhpsamlConfig();
         $config         = $cfgObj->getConfig();
 
+        // Process configured excludes
+        if(PluginPhpsamlExclude::ProcessExcludes()) {
+            return true;
+        }
+
         // Perform logout if requested.
         if ((strpos($_SERVER['REQUEST_URI'], 'front/logout.php') !== false) &&
-            (!empty($config[PluginPhpsamlConfig::SLOURL]))) {
-            $_SESSION['noAUTO'] = 1;
-            self::sloRequest();
+            (!empty($config[PluginPhpsamlConfig::SLOURL]))                  ){
+             $_SESSION['noAUTO'] = 1;
+             self::sloRequest();
         }
         
         //https://github.com/derricksmith/phpsaml/issues/159
         // Dont enforce front/acs.php it causes a login loop. 
         if (strpos($_SERVER['REQUEST_URI'], 'acs.php') !== false ){
-			return true;
-		}
-
-        // Process configured excludes
-        if(PluginPhpsamlExclude::ProcessExcludes()) {
             return true;
         }
 
