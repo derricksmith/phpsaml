@@ -1144,41 +1144,48 @@ class PluginPhpsamlConfig extends CommonDBTM
      */
     public function version($compare, $return = false)
     {
-        if ($feed = implode(file($this->phpSamlGitAtomUrl))) {
-            if ($xmlArray = simplexml_load_string($feed)) {
-                $href = (string) $xmlArray->entry->link['href'];
-                preg_match('/.* (.+)/', (string) $xmlArray->entry->title, $version);
-                if (is_array($version)) {
-                    $v = $version['1'];
-                    if ($v <> $compare) {
-                        if ($return) {
-                            return ['gitVersion' => $v,
-                                    'compare'    => $compare,
-                                    'gitUrl'     => $href,
-                                    'latest'     => true];
+        if($feed = file($this->phpSamlGitAtomUrl)){
+            // https://github.com/derricksmith/phpsaml/issues/158
+            if ($feed = implode($feed)) {
+                if ($xmlArray = simplexml_load_string($feed)) {
+                    $href = (string) $xmlArray->entry->link['href'];
+                    preg_match('/.* (.+)/', (string) $xmlArray->entry->title, $version);
+                    if (is_array($version)) {
+                        $v = $version['1'];
+                        if ($v <> $compare) {
+                            if ($return) {
+                                return ['gitVersion' => $v,
+                                        'compare'    => $compare,
+                                        'gitUrl'     => $href,
+                                        'latest'     => true];
+                            }
+                            $this->formValues['VERSION'] = "<a href='$href' target='_blank'>🟨 A different version of Phpsaml is marked latest</a>. Version $v was found in the repository, you are running $compare";
+                        } else {
+                            if ($return) {
+                                return ['gitVersion' => $v,
+                                        'compare'    => $compare,
+                                        'gitUrl'     => $href,
+                                        'latest'     => false];
+                            }
+                            $this->formValues['VERSION'] = "🟩 You are using version $v which is also the <a href='$href' target='_blank'>latest version</a>";
                         }
-                        $this->formValues['VERSION'] = "<a href='$href' target='_blank'>🟨 A different version of Phpsaml is marked latest</a>. Version $v was found in the repository, you are running $compare";
                     } else {
-                        if ($return) {
-                            return ['gitVersion' => $v,
-                                    'compare'    => $compare,
-                                    'gitUrl'     => $href,
-                                    'latest'     => false];
-                        }
-                        $this->formValues['VERSION'] = "🟩 You are using version $v which is also the <a href='$href' target='_blank'>latest version</a>";
+                        $this->registerError("Could not correctly parse xml information from:".$this->phpSamlGitAtomUrl." is simpleXml available?");
+                        $this->formValues['VERSION'] = "🟥 Phpsaml could not verify the latest version, please verify manually";
                     }
                 } else {
                     $this->registerError("Could not correctly parse xml information from:".$this->phpSamlGitAtomUrl." is simpleXml available?");
                     $this->formValues['VERSION'] = "🟥 Phpsaml could not verify the latest version, please verify manually";
                 }
             } else {
-                $this->registerError("Could not correctly parse xml information from:".$this->phpSamlGitAtomUrl." is simpleXml available?");
+                $this->registerError("Could not retrieve version information from:".$this->phpSamlGitAtomUrl." is internet access blocked, dns working?");
                 $this->formValues['VERSION'] = "🟥 Phpsaml could not verify the latest version, please verify manually";
             }
         } else {
-            $this->registerError("Could not retrieve version information from:".$this->phpSamlGitAtomUrl." is internet access blocked?");
+            $this->registerError("Could not retrieve version information from:".$this->phpSamlGitAtomUrl." is internet access blocked, dns working?");
             $this->formValues['VERSION'] = "🟥 Phpsaml could not verify the latest version, please verify manually";
         }
+
         if ($return) {
             // Return dummy array.
             return ['gitVersion' => 'Unknown',
