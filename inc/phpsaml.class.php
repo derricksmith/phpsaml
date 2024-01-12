@@ -362,7 +362,7 @@ class PluginPhpsamlPhpsaml
      */
     public static function glpiLogout()
     {
-        $validId   = $_SESSION['valid_id'];
+        $validId   = @$_SESSION['valid_id'];
         $cookieKey = array_search($validId, $_COOKIE);
         
         Session::destroy();

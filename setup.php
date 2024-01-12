@@ -177,7 +177,6 @@ function pluginPhpsamlPostInit()
        !empty($config[PluginPhpSamlConfig::SLOURL]) ){
 
             $samlnosso = $GLPI_CACHE->get('phpsaml_'.session_id());
-
             /**
              * Allow users to bypass enforce switch if needed.
              * Use GLPI cache because $_SESSION is reset by GLPI and not persist.
