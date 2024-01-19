@@ -272,10 +272,10 @@ class PluginPhpsamlConfig extends CommonDBTM
                     $update = new PluginPhpsamlUpdate();
                 }
             } else {
-                $this->registerError('🟥 Phpsaml could not retrieve configuration values from database.', 'general', true);
+                Session::addMessageAfterRedirect(__("ERROR: Phpsaml could not retrieve configuration values from database config ID1 missing, please reinstall the plugin"), true, ERROR);
             }
         } else {
-            $this->registerError('🟥 Phpsaml was not able to retrieve configuration columns from database', 'general', true);
+            Session::addMessageAfterRedirect(__("ERROR: Config table missing, please reinstall the plugin"), true, ERROR);
         }
 
         // Communicate URLs in Config page
@@ -1141,7 +1141,7 @@ class PluginPhpsamlConfig extends CommonDBTM
      *
      * @param string $compare       Version to compare
      * @param bool $return          Return the outcomes
-     * @return array|void $outcomes      Optional return
+     * @return array|void $outcomes Optional return
      * @since                       1.2.1
      */
     public function version($compare, $return = false)
@@ -1172,23 +1172,19 @@ class PluginPhpsamlConfig extends CommonDBTM
                             $this->formValues['VERSION'] = "🟩 You are using version $v which is also the <a href='$href' target='_blank'>latest version</a>";
                         }
                     } else {
-                        $this->registerError("Could not correctly parse xml information from:".$this->phpSamlGitAtomUrl." is simpleXml available?");
-                        $this->formValues['VERSION'] = "🟥 Phpsaml could not verify the latest version, please verify manually";
+                        $this->formValues['VERSION'] = "🟥 Phpsaml could not verify the latest version, is simpleXml available?";
                     }
                 } else {
-                    $this->registerError("Could not correctly parse xml information from:".$this->phpSamlGitAtomUrl." is simpleXml available?");
-                    $this->formValues['VERSION'] = "🟥 Phpsaml could not verify the latest version, please verify manually";
+                    $this->formValues['VERSION'] = "🟥 Phpsaml could not verify the latest version, is simpleXml available?";
                 }
             } else {
-                $this->registerError("Could not retrieve version information from:".$this->phpSamlGitAtomUrl." is internet access blocked, dns working?");
                 $this->formValues['VERSION'] = "🟥 Phpsaml could not verify the latest version, please verify manually";
             }
         } else {
-            $this->registerError("Could not retrieve version information from:".$this->phpSamlGitAtomUrl." is internet access blocked, dns working?");
             $this->formValues['VERSION'] = "🟥 Phpsaml could not verify the latest version, please verify manually";
         }
 
-        if ($return) {
+        if (!$return) {
             // Return dummy array.
             return ['gitVersion' => 'Unknown',
                     'compare'    => $compare,

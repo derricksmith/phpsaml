@@ -480,82 +480,83 @@ class PluginPhpsamlPhpsaml
         global $CFG_GLPI;
 
         $cfgObj = new PluginPhpsamlConfig();
-        $config = $cfgObj->getConfig();
-        
-        // Populate configuration array using phpsaml configuration in database then return the array
-        return [
-            'strict'                            => (isset($config[PluginPhpsamlConfig::STRICT]) && $config[PluginPhpsamlConfig::STRICT] == 1) ? true : false,
-            'debug'                             => (isset($config[PluginPhpsamlConfig::DEBUG])  && $config[PluginPhpsamlConfig::DEBUG]  == 1) ? true : false,
-            'baseurl'                           => null,
-            // Service provider configuration
-            'sp'                                => [
-                'entityId'                      => $CFG_GLPI['url_base'].'/',
-                'assertionConsumerService'      => [
-                    'url'                       => $CFG_GLPI['url_base'].PluginPhpsamlConfig::ACSPATH
+        if($config = $cfgObj->getConfig()){
+            
+            // Populate configuration array using phpsaml configuration in database then return the array
+            return [
+                'strict'                            => (isset($config[PluginPhpsamlConfig::STRICT]) && $config[PluginPhpsamlConfig::STRICT] == 1) ? true : false,
+                'debug'                             => (isset($config[PluginPhpsamlConfig::DEBUG])  && $config[PluginPhpsamlConfig::DEBUG]  == 1) ? true : false,
+                'baseurl'                           => null,
+                // Service provider configuration
+                'sp'                                => [
+                    'entityId'                      => $CFG_GLPI['url_base'].'/',
+                    'assertionConsumerService'      => [
+                        'url'                       => $CFG_GLPI['url_base'].PluginPhpsamlConfig::ACSPATH
+                    ],
+                    'singleLogoutService'           => [
+                        'url'                       => $CFG_GLPI['url_base'].PluginPhpsamlConfig::SLOPATH
+                    ],
+                    'x509cert'                      => (isset($config[PluginPhpsamlConfig::SPCERT])) ? $config[PluginPhpsamlConfig::SPCERT] : '',
+                    'privateKey'                    => (isset($config[PluginPhpsamlConfig::SPKEY]))  ? $config[PluginPhpsamlConfig::SPKEY]  : '',
+                    'NameIDFormat'                  => 'urn:oasis:names:tc:SAML:1.1:nameid-format:'.(isset($config[PluginPhpsamlConfig::NAMEFM]) ? $config[PluginPhpsamlConfig::NAMEFM] : 'unspecified')
                 ],
-                'singleLogoutService'           => [
-                    'url'                       => $CFG_GLPI['url_base'].PluginPhpsamlConfig::SLOPATH
+                // Identity Provider configuration to connect with our SP
+                'idp'                               => [
+                    'entityId'                      => (isset($config[PluginPhpsamlConfig::ENTITY])) ? $config[PluginPhpsamlConfig::ENTITY] : '',
+                    'singleSignOnService'           => [
+                        'url'                       => (isset($config[PluginPhpsamlConfig::SSOURL])) ? $config[PluginPhpsamlConfig::SSOURL] : '',
+                    ],
+                    'singleLogoutService'           => [
+                        'url'                       => (isset($config[PluginPhpsamlConfig::SLOURL])) ? $config[PluginPhpsamlConfig::SLOURL] : '',
+                    ],
+                    'x509cert'                      => (isset($config[PluginPhpsamlConfig::IPCERT])) ? $config[PluginPhpsamlConfig::IPCERT] : '',
                 ],
-                'x509cert'                      => (isset($config[PluginPhpsamlConfig::SPCERT])) ? $config[PluginPhpsamlConfig::SPCERT] : '',
-                'privateKey'                    => (isset($config[PluginPhpsamlConfig::SPKEY]))  ? $config[PluginPhpsamlConfig::SPKEY]  : '',
-                'NameIDFormat'                  => 'urn:oasis:names:tc:SAML:1.1:nameid-format:'.(isset($config[PluginPhpsamlConfig::NAMEFM]) ? $config[PluginPhpsamlConfig::NAMEFM] : 'unspecified')
-            ],
-            // Identity Provider configuration to connect with our SP
-            'idp'                               => [
-                'entityId'                      => (isset($config[PluginPhpsamlConfig::ENTITY])) ? $config[PluginPhpsamlConfig::ENTITY] : '',
-                'singleSignOnService'           => [
-                    'url'                       => (isset($config[PluginPhpsamlConfig::SSOURL])) ? $config[PluginPhpsamlConfig::SSOURL] : '',
+                // Compress requests and responses
+                'compress'                          => [
+                    'requests'                      => PluginPhpsamlConfig::CMPREQ,
+                    'responses'                     => PluginPhpsamlConfig::CMPRES,
                 ],
-                'singleLogoutService'           => [
-                    'url'                       => (isset($config[PluginPhpsamlConfig::SLOURL])) ? $config[PluginPhpsamlConfig::SLOURL] : '',
-                ],
-                'x509cert'                      => (isset($config[PluginPhpsamlConfig::IPCERT])) ? $config[PluginPhpsamlConfig::IPCERT] : '',
-            ],
-            // Compress requests and responses
-            'compress'                          => [
-                'requests'                      => PluginPhpsamlConfig::CMPREQ,
-                'responses'                     => PluginPhpsamlConfig::CMPRES,
-            ],
-            // Security configuration
-            'security'                          => [
-                'nameIdEncrypted'               => (isset($config[PluginPhpsamlConfig::ENAME])  && $config[PluginPhpsamlConfig::ENAME]  == 1) ? true : false,  // normalize in PluginPhpsamlConfig::getConfig instead of validate and assign here?
-                'authnRequestsSigned'           => (isset($config[PluginPhpsamlConfig::SAUTHN]) && $config[PluginPhpsamlConfig::SAUTHN] == 1) ? true : false,  // normalize in PluginPhpsamlConfig::getConfig instead of validate and assign here?
-                'logoutRequestSigned'           => (isset($config[PluginPhpsamlConfig::SSLORQ]) && $config[PluginPhpsamlConfig::SSLORQ] == 1) ? true : false,  // normalize in PluginPhpsamlConfig::getConfig instead of validate and assign here?
-                'logoutResponseSigned'          => (isset($config[PluginPhpsamlConfig::SSLORE]) && $config[PluginPhpsamlConfig::SSLORE] == 1) ? true : false,  // normalize in PluginPhpsamlConfig::getConfig instead of validate and assign here?
+                // Security configuration
+                'security'                          => [
+                    'nameIdEncrypted'               => (isset($config[PluginPhpsamlConfig::ENAME])  && $config[PluginPhpsamlConfig::ENAME]  == 1) ? true : false,  // normalize in PluginPhpsamlConfig::getConfig instead of validate and assign here?
+                    'authnRequestsSigned'           => (isset($config[PluginPhpsamlConfig::SAUTHN]) && $config[PluginPhpsamlConfig::SAUTHN] == 1) ? true : false,  // normalize in PluginPhpsamlConfig::getConfig instead of validate and assign here?
+                    'logoutRequestSigned'           => (isset($config[PluginPhpsamlConfig::SSLORQ]) && $config[PluginPhpsamlConfig::SSLORQ] == 1) ? true : false,  // normalize in PluginPhpsamlConfig::getConfig instead of validate and assign here?
+                    'logoutResponseSigned'          => (isset($config[PluginPhpsamlConfig::SSLORE]) && $config[PluginPhpsamlConfig::SSLORE] == 1) ? true : false,  // normalize in PluginPhpsamlConfig::getConfig instead of validate and assign here?
 
-                //'signMetadata'                => false,
-                //'wantMessagesSigned'          => false,
-                //'wantAssertionsEncrypted'     => false,
-                //'wantAssertionsSigned'        => false,
-                //'wantNameId'                  => true,
-                //'wantNameIdEncrypted'         => false,
-                // Set true or don't present this parameter and you will get an AuthContext 'exact' 'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport'
-                // Set an array with the possible auth context values: array ('urn:oasis:names:tc:SAML:2.0:ac:classes:Password', 'urn:oasis:names:tc:SAML:2.0:ac:classes:X509'),
-                'requestedAuthnContext'         => self::getAuthn($config[PluginPhpsamlConfig::AUTHNC]),
-                'requestedAuthnContextComparison' => (isset($config[PluginPhpsamlConfig::AUTHND]) ? $config[PluginPhpsamlConfig::AUTHND] : 'exact'),
-                'wantXMLValidation'             => PluginPhpsamlConfig::XMLVAL,
-                'relaxDestinationValidation'    => PluginPhpsamlConfig::DSTVAL,
+                    //'signMetadata'                => false,
+                    //'wantMessagesSigned'          => false,
+                    //'wantAssertionsEncrypted'     => false,
+                    //'wantAssertionsSigned'        => false,
+                    //'wantNameId'                  => true,
+                    //'wantNameIdEncrypted'         => false,
+                    // Set true or don't present this parameter and you will get an AuthContext 'exact' 'urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport'
+                    // Set an array with the possible auth context values: array ('urn:oasis:names:tc:SAML:2.0:ac:classes:Password', 'urn:oasis:names:tc:SAML:2.0:ac:classes:X509'),
+                    'requestedAuthnContext'         => self::getAuthn($config[PluginPhpsamlConfig::AUTHNC]),
+                    'requestedAuthnContextComparison' => (isset($config[PluginPhpsamlConfig::AUTHND]) ? $config[PluginPhpsamlConfig::AUTHND] : 'exact'),
+                    'wantXMLValidation'             => PluginPhpsamlConfig::XMLVAL,
+                    'relaxDestinationValidation'    => PluginPhpsamlConfig::DSTVAL,
 
-                // Algorithm that the toolkit will use on signing process. Options:
-                //    'http://www.w3.org/2000/09/xmldsig#rsa-sha1'
-                //    'http://www.w3.org/2000/09/xmldsig#dsa-sha1'
-                //    'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
-                //    'http://www.w3.org/2001/04/xmldsig-more#rsa-sha384'
-                //    'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512'
-                // Notice that sha1 is a deprecated algorithm and should not be used
-                'signatureAlgorithm'            => 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',
-                //'signatureAlgorithm' => XMLSecurityKey::RSA_SHA256,
+                    // Algorithm that the toolkit will use on signing process. Options:
+                    //    'http://www.w3.org/2000/09/xmldsig#rsa-sha1'
+                    //    'http://www.w3.org/2000/09/xmldsig#dsa-sha1'
+                    //    'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
+                    //    'http://www.w3.org/2001/04/xmldsig-more#rsa-sha384'
+                    //    'http://www.w3.org/2001/04/xmldsig-more#rsa-sha512'
+                    // Notice that sha1 is a deprecated algorithm and should not be used
+                    'signatureAlgorithm'            => 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256',
+                    //'signatureAlgorithm' => XMLSecurityKey::RSA_SHA256,
 
-                // Algorithm that the toolkit will use on digest process. Options:
-                //    'http://www.w3.org/2000/09/xmldsig#sha1'
-                //    'http://www.w3.org/2001/04/xmlenc#sha256'
-                //    'http://www.w3.org/2001/04/xmldsig-more#sha384'
-                //    'http://www.w3.org/2001/04/xmlenc#sha512'
-                // Notice that sha1 is a deprecated algorithm and should not be used
-                'digestAlgorithm'               => 'http://www.w3.org/2001/04/xmlenc#sha256',
-                'lowercaseUrlencoding'          => PluginPhpsamlConfig::LOWURL
-            ]
-        ];
+                    // Algorithm that the toolkit will use on digest process. Options:
+                    //    'http://www.w3.org/2000/09/xmldsig#sha1'
+                    //    'http://www.w3.org/2001/04/xmlenc#sha256'
+                    //    'http://www.w3.org/2001/04/xmldsig-more#sha384'
+                    //    'http://www.w3.org/2001/04/xmlenc#sha512'
+                    // Notice that sha1 is a deprecated algorithm and should not be used
+                    'digestAlgorithm'               => 'http://www.w3.org/2001/04/xmlenc#sha256',
+                    'lowercaseUrlencoding'          => PluginPhpsamlConfig::LOWURL
+                ]
+            ];
+        }
     }
     
     public static function getAuthn($value)
