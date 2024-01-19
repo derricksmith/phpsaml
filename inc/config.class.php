@@ -65,13 +65,15 @@ class PluginPhpsamlConfig extends CommonDBTM
     public const CFNAME     = 'saml_configuration_name';
 
     // OTHER CONSTANTS
-    public const CMPREQ     = true; // Compress requests
-    public const CMPRES     = true; // Compress response
+    // https://github.com/derricksmith/phpsaml/issues/153 - Default disable compression
+    public const CMPREQ     = false; // Compress requests
+    public const CMPRES     = false; // Compress response
     public const XMLVAL     = true;  // Perform xml validation
     public const DSTVAL     = false; // relax destination validation
     public const LOWURL     = true;  // lowercaseUrlEncoding
     public const ACSPATH    = '/plugins/phpsaml/front/acs.php';
-    public const SLOPATH    = '/plugins/phpsaml/front/slo.php';
+    // not used anymore.
+    public const SLOPATH    = '/plugins/phpsaml/front/slo.php'; 
 
     // PROPERTIES
     /**

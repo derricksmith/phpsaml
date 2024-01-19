@@ -228,11 +228,12 @@ class PluginPhpsamlPhpsaml
                 exit();
             } else {
                 // Fix for invalid redirect errors when port number is included in HTTP_HOST.
-                // Maybe replace it with GLPI config: URL of the application?
+                // Maybe replace it with GLPI config: URL of the application.
                 list($realhost,)=explode(':',$_SERVER['HTTP_HOST']);
                 
                 /////////////////// Problematic code //////////////////
                 // https://github.com/derricksmith/phpsaml/issues/120
+                // https://github.com/derricksmith/phpsaml/issues/153 
                 $returnTo = ((((isset($_GET['redirect']) ? $_GET['redirect'] : isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) ?  $_SERVER['HTTP_X_FORWARDED_PROTO'] : isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http") . "://" . $realhost .  $_SERVER['REQUEST_URI']); //NOSONAR - Known issue
 
                 self::ssoRequest($returnTo);
