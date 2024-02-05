@@ -61,7 +61,7 @@ class PluginPhpsamlExclude extends CommonDropdown
      */
     public static function getTypeName($nb = 0) : string
     {
-        return _n('Exclude path', 'Excluded paths', $nb, 'phpsaml');
+        return _n('SAML Excludes', 'SAML Excludes', $nb, 'phpsaml');
     }
 
     /**

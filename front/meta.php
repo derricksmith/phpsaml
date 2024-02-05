@@ -42,8 +42,11 @@ use OneLogin\Saml2\Metadata;
 // This is still problematic on errors and might not work properly.
 header('Content-Type: text/xml');
 $config = PluginPhpsamlPhpsaml::getSettings();
-
-$samlMetadata = Metadata::builder($config['sp'], 
+$samlMetadata = Metadata::builder($config['sp'],
                                   $config['security']['authnRequestsSigned'],
                                   false);
+
+                                
+$samlMetadata = Metadata::addX509KeyDescriptors($samlMetadata, $config['sp']['x509cert'], $wantsEncrypted = false);
+
 echo $samlMetadata;
