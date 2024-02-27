@@ -65,9 +65,11 @@ class PluginPhpsamlConfig extends CommonDBTM
     public const CFNAME     = 'saml_configuration_name';
 
     // OTHER CONSTANTS
-    // https://github.com/derricksmith/phpsaml/issues/153 - Default disable compression
-    public const CMPREQ     = false; // Compress requests
-    public const CMPRES     = false; // Compress response
+    // https://github.com/derricksmith/phpsaml/issues/153 - Default enable compression
+    // Manually disable this if your IDP does not support compression!
+    public const CMPREQ     = true; // Compress requests
+    public const CMPRES     = true; // Compress response
+    
     public const XMLVAL     = true;  // Perform xml validation
     public const DSTVAL     = false; // relax destination validation
     public const LOWURL     = true;  // lowercaseUrlEncoding
