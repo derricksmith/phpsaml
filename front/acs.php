@@ -8,6 +8,7 @@ if (defined('GLPI_ROOT')) {
 
 $post = $_POST;
 unset($_POST);
+$_POST = array();
 
 include ($glpi_root.'/inc/includes.php');
 
