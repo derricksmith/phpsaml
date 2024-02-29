@@ -65,12 +65,20 @@ class PluginPhpsamlAcs
             if(is_array($this->phpsamlsettings)) {
                 // Saml2\Settings
                 // @throws Error If any settings parameter is invalid
-                // @throws Exception If Settings is incorrectly supplied 
+                // @throws Exception If Settings is incorrectly supplied
                 try {
                     $samlSettings = new OneLogin\Saml2\Settings($this->phpsamlsettings);
                 } catch(Exception | Error $e){
                     // Exit with error!
                     $this->printError($e->getMessage());
+                }
+
+                // Get config and the ProxyVars to true if the proxied config is set to true
+                $cfgObj = new PluginPhpsamlConfig();
+                $config = $cfgObj->getConfig();
+                if ($config[PluginPhpsamlConfig::PROXIED]) {
+                    $samltoolkit = new OneLogin\Saml2\Utils();
+                    $samltoolkit::setProxyVars(true);
                 }
 
                 // Saml2\Response
@@ -141,7 +149,7 @@ class PluginPhpsamlAcs
         } else {
             $this->phpsaml::$nameidformat = $response['nameIdFormat'];
         }
-        
+
         if($response['sessionIndex'] = $this->phpsaml::$auth->getSessionIndex()) {
             $error['userData'] = 'No or invalid sessionIndex';
         } else {
@@ -183,7 +191,7 @@ class PluginPhpsamlAcs
         } else {
             $this->printError('Required classfile xmlseclibs.php could not be loaded!');
         }
-       
+
         // Load Saml2 classfiles
         if(!class_exists(OneLogin\Saml2\Settings::class)) {
             foreach(scandir($this->pathInfo['saml2']) as $classFile) {
@@ -205,7 +213,7 @@ class PluginPhpsamlAcs
             $this->debug = true;
         }
     }
-    
+
     public function printError(string $msg) : void
     {
         global $CFG_GLPI;
@@ -231,7 +239,7 @@ class PluginPhpsamlAcs
         }
         $data .= "\n\n POST:\n". print_r($_POST, true);
         $data .= "\n\n GET:\n". print_r($_GET, true);
-        
+
         if(is_dir($this->pathInfo['debug'])) {
             // Dump the data if a debug folder is created
             $dumpfile = '/debug_dump-'.date('Y-m-d-H:i:s').'.php';
