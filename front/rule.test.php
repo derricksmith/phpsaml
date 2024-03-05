@@ -1,43 +1,82 @@
 <?php
+/**
+ *  ------------------------------------------------------------------------
+ *  Derrick Smith - PHP SAML Plugin
+ *  Copyright (C) 2014 by Derrick Smith
+ *  ------------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of PHP SAML Plugin project.
+ *
+ * PHP SAML Plugin is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PHP SAML Plugin is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with PHP SAML Plugin. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * ------------------------------------------------------------------------
+ *
+ *  @package        PhpSaml - Rule Engine Test Object (To be deleted in production!)
+ *  @version        1.3.0
+ *  @author         Derrick Smith
+ *  @author         Chris Gralike
+ *  @copyright      Copyright (c) 2018 by Derrick Smith
+ *  @license        GPLv2+
+ *  @since          1.3.0
+ * ------------------------------------------------------------------------
+ **/
 
-/*
-   ------------------------------------------------------------------------
-   Derrick Smith - PHP SAML Plugin
-   Copyright (C) 2014 by Derrick Smith
-   ------------------------------------------------------------------------
+include_once('../../../inc/includes.php');              //NOSONAR - Cant be included with USE.
 
-   LICENSE
+// Generate a random password
+$password   = bin2hex(random_bytes(20));
+$randomName = bin2hex(random_bytes(5));
 
-   This file is part of phpsaml project.
+$usr = [ 
+  'name'  => $randomName,
+  'realname' => $randomName,
+  'firstname' => $randomName,
+  'email'     => $randomName.'@voorbeeld.tld',
+];
 
-   PHP SAML Plugin is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+$input = [
+  'name'        => $usr['name'],
+  'realname'    => $usr['realname'],
+  'firstname'   => $usr['firstname'],
+  '_useremails' => [$usr['email']],
+  'password'    => $password,
+  'password2'   => $password,
+  '_ruleright_process' => true];
 
-   phpsaml is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU Affero General Public License for more details.
+echo "<pre>";
+var_dump($usr);
+echo "<br/>";
+var_dump($input);
+// Load the rulesEngine and process them
+$phpSamlRuleCollection = new PluginPhpsamlRuleRightCollection();
+$matchInput = ['_useremails' => $input['_useremails']];
+$out['_ldap_rules'] = $phpSamlRuleCollection->processAllRules($matchInput, [], [], []);
+echo "<br/>";
+var_dump($out);
 
-   You should have received a copy of the GNU Affero General Public License
-   along with phpsaml. If not, see <http://www.gnu.org/licenses/>.
+if($out['_ldap_rules']['_rule_process'] > 0) {
+  $input  = array_merge($input, $out);
+  
+}
 
-   ------------------------------------------------------------------------
+echo "<br/>";
+  var_dump($input);
 
-   @package   phpsaml
-   @author    Chris Gralike
-   @co-author
-   @copyright Copyright (c) 2018 by Derrick Smith
-   @license   AGPL License 3.0 or (at your option) any later version
-              http://www.gnu.org/licenses/agpl-3.0-standalone.html
-   @since     2018
+$newUser = new User();
+var_dump($uid = $newUser->add($input));
+echo "<br/>";
+var_dump($newUser->applyRightRules());
 
-   ------------------------------------------------------------------------
- */
-
-include_once('../../../inc/includes.php');
-
-$rulecollection = new PluginPhpsamlRuleRightCollection($_SESSION['glpiactive_entity']);
-
-include_once( GLPI_ROOT . '/front/rule.test.php');

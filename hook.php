@@ -1,106 +1,95 @@
 <?php
 
-/*
-   ------------------------------------------------------------------------
-   fpsaml - Basic Template Plugin
-   Copyright (C) 2014 by Future Processing
-   ------------------------------------------------------------------------
 
-   LICENSE
+/**
+ *  ------------------------------------------------------------------------
+ *  Derrick Smith - PHP SAML Plugin
+ *  Copyright (C) 2014 by Derrick Smith
+ *  ------------------------------------------------------------------------
+ *
+ * LICENSE
+ *
+ * This file is part of phpsaml project.
+ *
+ * PHP SAML Plugin is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * phpsaml is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with phpsaml. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * ------------------------------------------------------------------------
+ *
+ *  @package    phpsamlconfig
+ *  @version    1.3.0
+ *  @author     Derrick Smith
+ *  @author     Chris Gralike
+ *  @copyright  Copyright (c) 2018 by Derrick Smith
+ *  @license    MIT
+ *  @see        https://github.com/derricksmith/phpsaml/blob/master/LICENSE.txt
+ *  @link       https://github.com/derricksmith/phpsaml/
+ *  @since      0.1
+ * ------------------------------------------------------------------------
+ **/
 
-   This file is part of fpsaml project.
-
-   FP Basic Template Plugin is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
-
-   fpsaml is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU Affero General Public License for more details.
-
-   You should have received a copy of the GNU Affero General Public License
-   along with fpsaml. If not, see <http://www.gnu.org/licenses/>.
-
-   ------------------------------------------------------------------------
-
-   @package   fpsaml
-   @author    Future Processing
-   @co-author
-   @copyright Copyright (c) 2014 by Future Processing
-   @license   AGPL License 3.0 or (at your option) any later version
-              http://www.gnu.org/licenses/agpl-3.0-standalone.html
-   @since     2014
-
-   ------------------------------------------------------------------------
- */
+// Add exclude configuration to glpi dropdowns administration
+function plugin_phpsaml_getDropdown() {                             //NOSONAR - Default GLPI function names
+    return [PluginPhpsamlExclude::class => PluginPhpsamlExclude::getTypeName(2)];
+}
 
 /**
  * It is in these functions that you need to put your SQL queries used for creating your specific tables.
- *
  * Here, you can now see your plugin in the list of plugins.
  *
  * @return boolean Needs to return true if success
  */
 
-function plugin_phpsaml_install() {
-	global $DB;
+function plugin_phpsaml_install() {                                 //NOSONAR - Default GLPI function names
+    // Install SamlConfig
+    if (method_exists(PluginPhpsamlConfig::class, 'install')) {
+        $version   = plugin_version_phpsaml();
+        $migration = new Migration($version['version']);
+        PluginPhpsamlConfig::install($migration);
+    }
 
-	if (!$DB->tableExists("glpi_plugin_phpsaml_configs")) {
-      	$query = "CREATE TABLE `glpi_plugin_phpsaml_configs` (
-			`id` int(11) NOT NULL auto_increment,
-			`version` varchar(15) NOT NULL,
-			`enforced` int(2) NOT NULL,
-			`strict` int(2) NOT NULL,
-			`debug` int(2) NOT NULL,
-			`jit` int(2) NOT NULL,
-			`saml_sp_certificate` text collate utf8_unicode_ci NOT NULL,
-			`saml_sp_certificate_key` text collate utf8_unicode_ci NOT NULL,
-			`saml_sp_nameid_format` varchar(128) collate utf8_unicode_ci NOT NULL,
-			`saml_idp_entity_id` varchar(128) collate utf8_unicode_ci NOT NULL,
-			`saml_idp_single_sign_on_service` varchar(128) collate utf8_unicode_ci NOT NULL,
-			`saml_idp_single_logout_service` varchar(128) collate utf8_unicode_ci NOT NULL,
-			`saml_idp_certificate` text collate utf8_unicode_ci NOT NULL,
-			`requested_authn_context` text collate utf8_unicode_ci NOT NULL,
-			`requested_authn_context_comparison` varchar(25) collate utf8_unicode_ci NOT NULL,
-			`saml_security_nameidencrypted` int(2) NOT NULL,
-			`saml_security_authnrequestssigned` int(2) NOT NULL,
-			`saml_security_logoutrequestsigned` int(2) NOT NULL,
-			`saml_security_logoutresponsesigned` int(2) NOT NULL,
-            PRIMARY KEY  (`id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci";
-		$DB->query($query) or die("error creating glpi_plugin_phpsaml_configs ". $DB->error());
+    // Install Excludes
+    if (method_exists(PluginPhpsamlExclude::class, 'install')) {
+        $version   = plugin_version_phpsaml();
+        $migration = new Migration($version['version']);
+        PluginPhpsamlExclude::install($migration);
+    }
 
-		$query = "INSERT INTO `glpi_plugin_phpsaml_configs`
-            (`id`,`version`, `enforced`, `strict`, `debug`, `jit`, `saml_sp_certificate`, `saml_sp_certificate_key`, `saml_sp_nameid_format`, `saml_idp_entity_id`, `saml_idp_single_sign_on_service`, `saml_idp_single_logout_service`, `saml_idp_certificate`, `requested_authn_context`, `requested_authn_context_comparison`, `saml_security_nameidencrypted`, `saml_security_authnrequestssigned`, `saml_security_logoutrequestsigned`, `saml_security_logoutresponsesigned`)
-            VALUES
-            ('1', '". PLUGIN_PHPSAML_VERSION ."', '0', '1','0', '0', '', '', '', '', '', '', '', '', '','0','0','0','0')";
-		$DB->query($query) or die("error populate glpi_plugin_phpsaml_configs ". $DB->error());
-	}
-
-	if ($DB->tableExists('glpi_plugin_phpsaml_configs')) {
-		include_once( PLUGIN_PHPSAML_DIR . "/install/update.class.php" );
-		$update = new PluginPhpsamlUpdate();
-	}
-	return true;
+    return true;
 }
 
 /**
  * Because we've created a table, do not forget to destroy if the plugin is uninstalled.
- *
  * @return boolean Needs to return true if success
  */
-function plugin_phpsaml_uninstall() {
-	global $DB;
+function plugin_phpsaml_uninstall() {                                   //NOSONAR - Default GLPI function names
+    // Install SamlConfig
+     if (method_exists(PluginPhpsamlConfig::class, 'uninstall')) {
+        $version   = plugin_version_phpsaml();
+        $migration = new Migration($version['version']);
+        PluginPhpsamlConfig::uninstall($migration);
+     }
+     // Install excludes
+     if (method_exists(PluginPhpsamlExclude::class, 'uninstall')) {
+        $version   = plugin_version_phpsaml();
+        $migration = new Migration($version['version']);
+        PluginPhpsamlExclude::uninstall($migration);
+     }
+    return true;
+}
 
-	if ($DB->tableExists("glpi_plugin_phpsaml_config")) {
-		$query = "DROP TABLE `glpi_plugin_phpsaml_config`";
-		$DB->query($query) or die("error deleting glpi_plugin_phpsaml_config");
-	}
-	if ($DB->tableExists("glpi_plugin_phpsaml_configs")) {
-		$query = "DROP TABLE `glpi_plugin_phpsaml_configs`";
-		$DB->query($query) or die("error deleting glpi_plugin_phpsaml_configs");
-	}
-	return true;
+// Called by the rule_engine hook if a phpsaml rule has been succesfully matched
+function updateUser($params){                                                       //NOSONAR - WorkInProgress
+    // https://github.com/derricksmith/phpsaml/issues/149
+    //var_dump($params);
 }

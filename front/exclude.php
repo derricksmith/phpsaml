@@ -24,7 +24,7 @@
  *
  * ------------------------------------------------------------------------
  *
- *  @package        PhpSaml - Configuration UI
+ *  @package        PhpSaml - Excludes dropdown UI
  *  @version        1.3.0
  *  @author         Derrick Smith
  *  @author         Chris Gralike
@@ -34,20 +34,8 @@
  * ------------------------------------------------------------------------
  **/
 
-include_once '../../../inc/includes.php';                                               //NOSONAR - Cant be included with USE.
+include "../../../inc/includes.php";                    //NOSONAR - Cant be included with USE.
 
-Session::checkRight("config", UPDATE);
+$dropdown = new PluginPhpsamlExclude();
 
-Html::header(__('PHP SAML', 'phpsaml'), $_SERVER['PHP_SELF'], "config", "plugins");
-
-$phpSamlConfig = new PluginPhpsamlConfig();
-
-// Handle any changes made.
-if (isset($_POST['update'])) {
-  echo $phpSamlConfig->processChanges();
-}else{
-  echo $phpSamlConfig->showForm('1');
-}
-
-// Adds all required JS libs
-Html::footer();
+include GLPI_ROOT . '/front/dropdown.common.php';       //NOSONAR - Cant be included with USE.
