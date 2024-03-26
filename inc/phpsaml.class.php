@@ -137,7 +137,7 @@ class PluginPhpsamlPhpsaml
     
 
     /**
-     * 
+     *
      */
     private static function init() : void
     {
@@ -179,7 +179,7 @@ class PluginPhpsamlPhpsaml
      * @return bool
      * @since 1.2.2
      */
-    public function processUserLogin()
+    public function processUserLogin()                                  //NOSONAR - Maybe fix complexity in the future
     {
         global $CFG_GLPI;
 
@@ -199,7 +199,7 @@ class PluginPhpsamlPhpsaml
         }
         
         //https://github.com/derricksmith/phpsaml/issues/159
-        // Dont enforce front/acs.php it causes a login loop. 
+        // Dont enforce front/acs.php it causes a login loop.
         if (strpos($_SERVER['REQUEST_URI'], 'acs.php') !== false ){
             return true;
         }
@@ -233,7 +233,7 @@ class PluginPhpsamlPhpsaml
                 
                 /////////////////// Problematic code //////////////////
                 // https://github.com/derricksmith/phpsaml/issues/120
-                // https://github.com/derricksmith/phpsaml/issues/153 
+                // https://github.com/derricksmith/phpsaml/issues/153
                 $returnTo = ((((isset($_GET['redirect']) ? $_GET['redirect'] : isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) ?  $_SERVER['HTTP_X_FORWARDED_PROTO'] : isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https" : "http") . "://" . $realhost .  $_SERVER['REQUEST_URI']); //NOSONAR - Known issue
 
                 self::ssoRequest($returnTo);

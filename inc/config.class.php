@@ -74,8 +74,7 @@ class PluginPhpsamlConfig extends CommonDBTM
     public const DSTVAL     = false; // relax destination validation
     public const LOWURL     = true;  // lowercaseUrlEncoding
     public const ACSPATH    = '/plugins/phpsaml/front/acs.php';
-    // not used anymore.
-    public const SLOPATH    = '/plugins/phpsaml/front/slo.php'; 
+    public const SLOPATH    = '/plugins/phpsaml/front/slo.php';
 
     // PROPERTIES
     /**
